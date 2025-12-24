@@ -1,5 +1,4 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import { uploadMiddleware, validateUploadedFile, cleanupTempFile, calculateFileHash } from '../middleware/fileUpload';
 import { createError, asyncHandler } from '../middleware/errorHandler';
 import { parseResume, extractKeyInfo } from '../components/ResumeParser';

@@ -4,8 +4,8 @@
   "description": "AI-powered resume analysis system that identifies specific problems preventing interview success",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && npm run copy-public",
-    "copy-public": "cp -r src/public dist/",
+    "build": "tsc",
+    "copy-public": "cp -r src/public dist/ || xcopy src\\public dist\\public /E /I /Y",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest",
@@ -14,7 +14,7 @@
     "db:migrate": "ts-node src/database/migrate.ts",
     "db:seed": "ts-node src/database/seed.ts",
     "db:reset": "ts-node src/database/reset.ts",
-    "vercel-build": "npm run build",
+    "vercel-build": "tsc",
     "deploy": "vercel --prod",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit"
