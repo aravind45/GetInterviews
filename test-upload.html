@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Upload Test</title>
+</head>
+<body>
+    <h1>Simple Upload Test</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div>
+            <label>Resume File:</label>
+            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+        </div>
+        <div>
+            <label>Job Title:</label>
+            <input type="text" id="targetJobTitle" name="targetJobTitle" value="Product Manager" required>
+        </div>
+        <div>
+            <label>Job Description (optional):</label>
+            <textarea id="jobDescription" name="jobDescription"></textarea>
+        </div>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('resume');
+            const jobTitle = document.getElementById('targetJobTitle').value;
+            const jobDesc = document.getElementById('jobDescription').value;
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+            
+            formData.append('resume', fileInput.files[0]);
+            formData.append('targetJobTitle', jobTitle);
+            if (jobDesc) formData.append('jobDescription', jobDesc);
+            
+            try {
+                console.log('Uploading...', {
+                    fileName: fileInput.files[0].name,
+                    fileSize: fileInput.files[0].size,
+                    jobTitle: jobTitle
+                });
+                
+                const response = await fetch('https://why-no-interviews.vercel.app/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Response:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+                console.log('Response:', result);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
