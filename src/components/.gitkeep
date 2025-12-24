@@ -1,0 +1,6 @@
+# Components directory
+# This directory will contain the main business logic components:
+# - ResumeParser
+# - JobTitleNormalizer  
+# - DiagnosisEngine
+# - ScoringCalculator
