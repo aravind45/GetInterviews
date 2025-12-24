@@ -66,7 +66,7 @@ export const analyzeResume = async (
     throw new ProcessingError('AI analysis service is not configured');
   }
   
-  const model = process.env.GROQ_MODEL || 'llama3-8b-8192';
+  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
   const timeout = parseInt(process.env.ANALYSIS_TIMEOUT || '60') * 1000;
   
   // Anonymize PII before sending to AI (Requirement 9.4)
@@ -95,8 +95,7 @@ export const analyzeResume = async (
           }
         ],
         temperature: 0.3,
-        max_tokens: 4000,
-        response_format: { type: 'json_object' }
+        max_tokens: 4000
       }),
       new Promise<never>((_, reject) => 
         setTimeout(() => reject(new TimeoutError('AI analysis timeout')), timeout)
