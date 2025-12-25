@@ -258,59 +258,49 @@ app.post('/api/search-jobs', async (req, res) => {
 
     const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
     const loc = location || session.profile.location || 'Remote';
+    const skills = (session.profile.hardSkills || []).slice(0, 5).join(', ');
 
-    const prompt = `Generate 8 realistic job listings for this candidate:
+    // Simplified prompt for faster response
+    const prompt = `Generate 6 job listings for: "${query}" in "${loc}"
+Candidate skills: ${skills}
 
-CANDIDATE:
-- Title: ${session.profile.currentTitle}
-- Experience: ${session.profile.yearsExperience} years (${session.profile.experienceLevel})
-- Skills: ${session.profile.hardSkills?.slice(0, 10).join(', ')}
+Return ONLY a JSON array, no other text:
+[{"id":"j1","title":"<title>","company":"<company>","location":"<loc>","salary":"<range>","postedDate":"<X days ago>","description":"<2 sentences>","requirements":["<r1>","<r2>","<r3>"],"matchScore":<0-100>,"recommendation":"APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP","matchingSkills":["<s1>","<s2>"],"missingSkills":["<s1>"],"quickTake":"<1 sentence>"}]
 
-SEARCH: "${query}" in "${loc}"
-
-Return JSON array:
-[
-  {
-    "id": "<unique id>",
-    "title": "<job title>",
-    "company": "<company name>",
-    "location": "<location>",
-    "salary": "<salary range>",
-    "postedDate": "<X days ago>",
-    "description": "<3-4 sentences>",
-    "requirements": ["<req1>", "<req2>"],
-    "niceToHave": ["<nice1>"],
-    "matchScore": <0-100>,
-    "matchLevel": "EXCELLENT|GOOD|MODERATE|LOW",
-    "recommendation": "APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP",
-    "matchingSkills": ["<matching skills>"],
-    "missingSkills": ["<missing skills>"],
-    "quickTake": "<one sentence advice>"
-  }
-]
-
-Include mix: 2 perfect (90%+), 3 good (70-89%), 2 stretch (50-69%), 1 reach (30-49%).`;
+Mix: 2 high match (85-95%), 2 medium (65-80%), 2 lower (40-60%). Use realistic companies.`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 3000
+      max_tokens: 2000
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
+    
+    // Try to extract JSON array
+    let jobs = [];
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     
-    if (!jsonMatch) throw new Error('Failed to generate jobs');
-
-    const jobs = JSON.parse(jsonMatch[0]);
-    jobs.sort((a: any, b: any) => b.matchScore - a.matchScore);
+    if (jsonMatch) {
+      try {
+        jobs = JSON.parse(jsonMatch[0]);
+      } catch (parseErr) {
+        console.error('JSON parse error:', parseErr);
+        // Return empty with helpful message
+        return res.json({ success: true, data: { jobs: [] }, message: 'Could not parse results' });
+      }
+    }
+    
+    // Sort by score
+    jobs.sort((a: any, b: any) => (b.matchScore || 0) - (a.matchScore || 0));
     session.jobs = jobs;
 
     res.json({ success: true, data: { jobs } });
 
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Job search error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Search failed' });
   }
 });
 

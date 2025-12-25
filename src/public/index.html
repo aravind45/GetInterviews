@@ -652,9 +652,17 @@ document.getElementById('search-query').addEventListener('keypress', e => { if (
 
 async function searchJobs() {
   if (!sessionId) { showToast('Upload resume first', 'error'); return; }
-  setLoading('search', true, 'Searching...');
+  setLoading('search', true, 'Searching (may take 10-15s)...');
+  
+  // Set a timeout warning
+  const timeoutId = setTimeout(() => {
+    document.getElementById('search-btn-text').textContent = 'Still searching...';
+  }, 5000);
   
   try {
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    
     const res = await fetch('/api/search-jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -662,22 +670,36 @@ async function searchJobs() {
         sessionId,
         searchQuery: document.getElementById('search-query').value,
         location: document.getElementById('search-location').value
-      })
+      }),
+      signal: controller.signal
     });
+    
+    clearTimeout(fetchTimeout);
     
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    jobs = data.data.jobs;
-    displayJobs(jobs);
+    jobs = data.data.jobs || [];
     
-    document.getElementById('job-results').style.display = 'block';
-    document.getElementById('jobs-badge').textContent = jobs.length;
-    document.getElementById('jobs-badge').style.display = 'inline';
+    if (jobs.length === 0) {
+      showToast('No jobs found. Try different keywords.', 'error');
+    } else {
+      displayJobs(jobs);
+      document.getElementById('job-results').style.display = 'block';
+      document.getElementById('jobs-badge').textContent = jobs.length;
+      document.getElementById('jobs-badge').style.display = 'inline';
+      showToast(`Found ${jobs.length} job matches!`, 'success');
+    }
     
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error('Search error:', err);
+    if (err.name === 'AbortError') {
+      showToast('Search timed out. Please try again.', 'error');
+    } else {
+      showToast(err.message || 'Search failed. Check console for details.', 'error');
+    }
   } finally {
+    clearTimeout(timeoutId);
     setLoading('search', false, '🔍 Search Jobs');
   }
 }
