@@ -66,7 +66,7 @@ export const analyzeResume = async (
     throw new ProcessingError('AI analysis service is not configured');
   }
   
-  const model = process.env.GROQ_MODEL || 'llama3-8b-8192';
+  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
   const timeout = parseInt(process.env.ANALYSIS_TIMEOUT || '60') * 1000;
   
   // Anonymize PII before sending to AI (Requirement 9.4)
