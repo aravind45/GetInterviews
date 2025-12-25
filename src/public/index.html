@@ -289,8 +289,13 @@
       
       <!-- Job Results -->
       <div id="job-results" style="display:none">
+        <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)); border-color: rgba(99, 102, 241, 0.2); margin-bottom: 16px;">
+          <p style="font-size: 0.9rem; color: #a5b4fc;">
+            💡 <strong>These are AI-suggested job matches</strong> based on your profile. Click "LinkedIn" or "Indeed" to find real listings for each role.
+          </p>
+        </div>
         <div class="flex justify-between items-center mb-4">
-          <h3><span id="jobs-count">0</span> Jobs Found</h3>
+          <h3><span id="jobs-count">0</span> Job Matches</h3>
           <div class="flex gap-2">
             <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
             <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
@@ -691,6 +696,12 @@ function displayJobs(list, filter = 'all') {
       const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : 'moderate';
       const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : job.recommendation === 'CUSTOMIZE_FIRST' ? 'customize' : 'skip';
       
+      // Create search URLs for real job boards
+      const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
+      const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
+      const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
+      const googleUrl = `https://www.google.com/search?q=${searchQuery}+jobs`;
+      
       return `
         <div class="job-card ${cardClass}">
           <div class="job-header">
@@ -713,9 +724,11 @@ function displayJobs(list, filter = 'all') {
             ${(job.matchingSkills || []).slice(0, 3).map(s => `<span class="tag tag-success" style="font-size:0.75rem;">${s}</span>`).join('')}
           </div>
           <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description}</p>
-          <div class="flex gap-2 mt-4">
+          <div class="flex gap-2 flex-wrap mt-4">
             <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
             <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
+            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 LinkedIn</a>
+            <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 Indeed</a>
           </div>
         </div>
       `;
@@ -820,7 +833,10 @@ function updateTracker() {
   }
   
   document.getElementById('no-saved-jobs').style.display = 'none';
-  document.getElementById('saved-jobs-list').innerHTML = savedJobs.map(job => `
+  document.getElementById('saved-jobs-list').innerHTML = savedJobs.map(job => {
+    const searchQuery = encodeURIComponent(`${job.title} ${job.company}`);
+    const linkedInUrl = `https://www.linkedin.com/jobs/search/?keywords=${searchQuery}`;
+    return `
     <div class="job-card">
       <div class="job-header">
         <div>
@@ -835,7 +851,7 @@ function updateTracker() {
           <div class="match-percent ${job.matchScore >= 70 ? 'high' : 'medium'}">${job.matchScore}%</div>
         </div>
       </div>
-      <div class="flex gap-2 mt-4">
+      <div class="flex gap-2 flex-wrap mt-4">
         <select onchange="updateJobStatus('${job.id}', this.value)" style="padding:8px; background:#1e1e2e; border:1px solid #2e2e3e; border-radius:8px; color:#e2e8f0;">
           <option value="SAVED" ${job.status === 'SAVED' ? 'selected' : ''}>Saved</option>
           <option value="APPLIED" ${job.status === 'APPLIED' ? 'selected' : ''}>Applied</option>
@@ -844,9 +860,10 @@ function updateTracker() {
           <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
         </select>
         <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
+        <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm">🔗 Find on LinkedIn</a>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 // ========== UTILITIES ==========
