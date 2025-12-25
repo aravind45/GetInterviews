@@ -13,10 +13,10 @@ import {
   getApplicationStats,
   deleteApplication,
   getQuickSearchUrls,
+  ATS_PLATFORMS,
   JobSearchConfig,
   JobApplication
 } from '../services/jobSearch';
-import jobSearchService from '../services/jobSearch';
 import { z } from 'zod';
 
 const router = Router();
@@ -128,7 +128,7 @@ router.get('/platforms', (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      platforms: Object.entries(jobSearchService.ATS_PLATFORMS).map(([key, domain]) => ({
+      platforms: Object.entries(ATS_PLATFORMS).map(([key, domain]) => ({
         id: key,
         name: key.charAt(0).toUpperCase() + key.slice(1),
         domain

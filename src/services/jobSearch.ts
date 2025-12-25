@@ -216,7 +216,7 @@ export const deleteJobSearch = async (searchId: string, sessionId: string): Prom
     `UPDATE job_searches SET is_active = false WHERE id = $1 AND session_id = $2`,
     [searchId, sessionId]
   );
-  return (result.rowCount ?? 0) > 0;
+  return result.rowCount > 0;
 };
 
 // ============================================
@@ -307,7 +307,7 @@ export const updateApplicationStatus = async (
     values
   );
   
-  return (result.rowCount ?? 0) > 0;
+  return result.rowCount > 0;
 };
 
 /**
@@ -411,7 +411,7 @@ export const deleteApplication = async (applicationId: string, sessionId: string
     `DELETE FROM job_applications WHERE id = $1 AND session_id = $2`,
     [applicationId, sessionId]
   );
-  return (result.rowCount ?? 0) > 0;
+  return result.rowCount > 0;
 };
 
 /**

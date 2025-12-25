@@ -45,7 +45,7 @@ export const getPool = (): Pool => {
   return pool;
 };
 
-export const query = async <T extends Record<string, any> = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+export const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
   if (!pool) {
     throw new Error('Database pool not initialized');
   }

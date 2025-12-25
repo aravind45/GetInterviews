@@ -8,13 +8,11 @@ import { connectDatabase } from './database/connection';
 import { connectRedis } from './cache/redis';
 import { initializeGroq } from './services/groq';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
-import { cleanupOldFiles } from './middleware/fileUpload';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Trust proxy for correct IP detection behind load balancers
 app.set('trust proxy', 1);
@@ -38,7 +36,7 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -49,7 +47,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Request logging
+// Request logging (minimal for serverless)
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -61,14 +59,64 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    service: 'resume-diagnosis-engine',
-    version: '1.0.0'
-  });
+// ============================================
+// Lazy Initialization for Serverless
+// ============================================
+let initialized = false;
+
+const ensureInitialized = async () => {
+  if (initialized) return;
+  
+  try {
+    // Initialize database
+    await connectDatabase();
+    
+    // Initialize Redis (with graceful failure)
+    try {
+      await connectRedis();
+    } catch (redisError) {
+      logger.warn('Redis connection failed, continuing without cache:', redisError);
+    }
+    
+    // Initialize Groq
+    initializeGroq();
+    
+    initialized = true;
+    logger.info('Services initialized');
+  } catch (error) {
+    logger.error('Initialization error:', error);
+    throw error;
+  }
+};
+
+// Middleware to ensure initialization
+app.use(async (req, res, next) => {
+  try {
+    await ensureInitialized();
+    next();
+  } catch (error) {
+    logger.error('Failed to initialize services:', error);
+    res.status(503).json({
+      success: false,
+      error: 'Service temporarily unavailable',
+      code: 'INITIALIZATION_ERROR'
+    });
+  }
+});
+
+// Health check endpoint (doesn't require full initialization)
+app.get('/health', async (req, res) => {
+  try {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'resume-diagnosis-engine',
+      version: '1.0.0',
+      initialized
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', error: 'Health check failed' });
+  }
 });
 
 // Import routes
@@ -88,61 +136,21 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     description: 'AI-powered resume analysis for identifying interview barriers',
     endpoints: {
-      upload: {
-        method: 'POST',
-        path: '/api/upload',
-        description: 'Upload resume and create analysis session',
-        contentType: 'multipart/form-data',
-        fields: {
-          resume: 'File (PDF, DOC, DOCX)',
-          targetJobTitle: 'String (required)',
-          jobDescription: 'String (optional)',
-          applicationCount: 'Number (optional)'
-        }
-      },
-      analyze: {
-        method: 'POST',
-        path: '/api/analyze',
-        description: 'Run AI diagnosis on uploaded resume',
-        body: {
-          sessionId: 'UUID',
-          targetJobTitle: 'String',
-          jobDescription: 'String (optional)'
-        }
-      },
-      session: {
-        method: 'GET',
-        path: '/api/session/:sessionId',
-        description: 'Get session and analysis status'
-      },
-      results: {
-        method: 'GET',
-        path: '/api/results/:sessionId',
-        description: 'Get diagnosis results'
-      },
-      deleteSession: {
-        method: 'DELETE',
-        path: '/api/session/:sessionId',
-        description: 'Delete session and all associated data'
-      },
-      admin: {
-        health: 'GET /api/admin/health',
-        migrate: 'POST /api/admin/migrate',
-        seed: 'POST /api/admin/seed',
-        cleanup: 'POST /api/admin/cleanup',
-        stats: 'GET /api/admin/stats'
+      upload: { method: 'POST', path: '/api/upload' },
+      analyze: { method: 'POST', path: '/api/analyze' },
+      session: { method: 'GET', path: '/api/session/:id' },
+      results: { method: 'GET', path: '/api/results/:id' },
+      deleteSession: { method: 'DELETE', path: '/api/session/:id' },
+      jobs: {
+        generateSearch: { method: 'POST', path: '/api/jobs/generate-search' },
+        platforms: { method: 'GET', path: '/api/jobs/platforms' },
+        applications: { method: 'GET/POST', path: '/api/jobs/applications/:sessionId' }
       }
-    },
-    requirements: {
-      maxFileSize: '10MB',
-      maxPages: 10,
-      supportedFormats: ['PDF', 'DOC', 'DOCX'],
-      dataRetention: '24 hours'
     }
   });
 });
 
-// Serve frontend for root and unknown routes
+// Serve frontend for root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -158,89 +166,16 @@ app.get('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Cleanup job for old upload files
-const startCleanupJob = () => {
-  const interval = parseInt(process.env.CLEANUP_INTERVAL_MINUTES || '60') * 60 * 1000;
-  setInterval(async () => {
-    try {
-      const cleaned = await cleanupOldFiles(60 * 60 * 1000); // 1 hour
-      if (cleaned > 0) {
-        logger.info(`Cleanup job removed ${cleaned} old files`);
-      }
-    } catch (error) {
-      logger.error('Cleanup job failed:', error);
-    }
-  }, interval);
-};
+// For local development
+const PORT = process.env.PORT || 3000;
+const isVercel = process.env.VERCEL === '1';
 
-// Start server
-async function startServer() {
-  try {
-    logger.info('Starting Resume Diagnosis Engine...');
-    
-    // Initialize database connection
-    await connectDatabase();
-    logger.info('✓ Database connected');
-
-    // Initialize Redis connection
-    await connectRedis();
-    logger.info('✓ Redis connected');
-
-    // Initialize Groq client
-    initializeGroq();
-    logger.info('✓ Groq client initialized');
-
-    // Start cleanup job
-    startCleanupJob();
-    logger.info('✓ Cleanup job started');
-
-    // Start HTTP server
-    app.listen(PORT, () => {
-      logger.info(`✓ Server running on port ${PORT}`);
-      logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`✓ API: http://localhost:${PORT}/api`);
-      logger.info(`✓ Frontend: http://localhost:${PORT}`);
-    });
-    
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
-  }
+if (!isVercel) {
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
 }
 
-// Graceful shutdown
-const shutdown = async (signal: string) => {
-  logger.info(`${signal} received, shutting down gracefully...`);
-  
-  try {
-    const { closeDatabase } = require('./database/connection');
-    const { closeRedis } = require('./cache/redis');
-    
-    await closeDatabase();
-    await closeRedis();
-    
-    logger.info('Graceful shutdown completed');
-    process.exit(0);
-  } catch (error) {
-    logger.error('Error during shutdown:', error);
-    process.exit(1);
-  }
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-
-// Handle uncaught errors
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// Start the server
-startServer();
-
+// Export for Vercel serverless
 export default app;
+module.exports = app;
