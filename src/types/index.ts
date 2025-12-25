@@ -255,7 +255,7 @@ export const UploadRequestSchema = z.object({
     .min(2, 'Job title must be at least 2 characters')
     .max(100, 'Job title must be less than 100 characters'),
   jobDescription: z.string()
-    .max(10000, 'Job description must be less than 10000 characters')
+    .max(5000, 'Job description must be less than 5000 characters')
     .optional(),
   applicationCount: z.number()
     .int()
@@ -270,7 +270,7 @@ export const AnalyzeRequestSchema = z.object({
     .min(2, 'Job title must be at least 2 characters')
     .max(100, 'Job title must be less than 100 characters'),
   jobDescription: z.string()
-    .max(10000, 'Job description must be less than 10000 characters')
+    .max(5000, 'Job description must be less than 5000 characters')
     .optional(),
   applicationCount: z.number()
     .int()

@@ -66,7 +66,7 @@ export const analyzeResume = async (
     throw new ProcessingError('AI analysis service is not configured');
   }
   
-  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+  const model = process.env.GROQ_MODEL || 'llama3-8b-8192';
   const timeout = parseInt(process.env.ANALYSIS_TIMEOUT || '60') * 1000;
   
   // Anonymize PII before sending to AI (Requirement 9.4)
@@ -95,7 +95,8 @@ export const analyzeResume = async (
           }
         ],
         temperature: 0.3,
-        max_tokens: 4000
+        max_tokens: 4000,
+        response_format: { type: 'json_object' }
       }),
       new Promise<never>((_, reject) => 
         setTimeout(() => reject(new TimeoutError('AI analysis timeout')), timeout)
@@ -123,27 +124,7 @@ export const analyzeResume = async (
       throw error;
     }
     
-    // Log detailed error information
-    logger.error('AI analysis failed:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      model,
-      promptLength: prompt.length,
-      resumeLength: anonymizedResume.length
-    });
-    
-    // Handle specific Groq API errors
-    if (error && typeof error === 'object' && 'status' in error) {
-      const apiError = error as any;
-      if (apiError.status === 422) {
-        throw new ProcessingError('Content policy violation or invalid request format');
-      } else if (apiError.status === 429) {
-        throw new ProcessingError('Rate limit exceeded. Please try again later.');
-      } else if (apiError.status === 401) {
-        throw new ProcessingError('AI service authentication failed');
-      }
-    }
-    
+    logger.error('AI analysis failed:', error);
     throw new ProcessingError('AI analysis failed. Please try again.');
   }
 };

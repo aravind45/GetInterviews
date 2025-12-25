@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 import { logger } from '../utils/logger';
 
 let pool: Pool | null = null;
@@ -45,15 +45,14 @@ export const getPool = (): Pool => {
   return pool;
 };
 
-export const query = async <T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
-  // Auto-connect if not connected (for serverless environments)
+export const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
   if (!pool) {
-    await connectDatabase();
+    throw new Error('Database pool not initialized');
   }
   
   const start = Date.now();
   try {
-    const result = await pool!.query<T>(text, params);
+    const result = await pool.query<T>(text, params);
     const duration = Date.now() - start;
     
     if (duration > 1000) {
@@ -68,11 +67,10 @@ export const query = async <T extends QueryResultRow = any>(text: string, params
 };
 
 export const getClient = async (): Promise<PoolClient> => {
-  // Auto-connect if not connected (for serverless environments)
   if (!pool) {
-    await connectDatabase();
+    throw new Error('Database pool not initialized');
   }
-  return pool!.connect();
+  return pool.connect();
 };
 
 export const transaction = async <T>(

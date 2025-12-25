@@ -74,10 +74,12 @@ app.get('/health', (req, res) => {
 // Import routes
 import apiRoutes from './routes/api';
 import adminRoutes from './routes/admin';
+import jobRoutes from './routes/jobs';
 
 // API routes
 app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -176,43 +178,33 @@ async function startServer() {
   try {
     logger.info('Starting Resume Diagnosis Engine...');
     
-    // In Vercel, we don't need to explicitly start connections
-    // They will be initialized on first use
-    if (!process.env.VERCEL) {
-      // Initialize database connection
-      await connectDatabase();
-      logger.info('✓ Database connected');
+    // Initialize database connection
+    await connectDatabase();
+    logger.info('✓ Database connected');
 
-      // Initialize Redis connection
-      await connectRedis();
-      logger.info('✓ Redis connected');
+    // Initialize Redis connection
+    await connectRedis();
+    logger.info('✓ Redis connected');
 
-      // Start cleanup job
-      startCleanupJob();
-      logger.info('✓ Cleanup job started');
-    }
-
-    // Initialize Groq client (this is just setting up the client, no connection)
+    // Initialize Groq client
     initializeGroq();
     logger.info('✓ Groq client initialized');
 
-    // Start HTTP server (only in non-Vercel environments)
-    if (!process.env.VERCEL) {
-      app.listen(PORT, () => {
-        logger.info(`✓ Server running on port ${PORT}`);
-        logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-        logger.info(`✓ API: http://localhost:${PORT}/api`);
-        logger.info(`✓ Frontend: http://localhost:${PORT}`);
-      });
-    } else {
-      logger.info('✓ Vercel serverless environment detected');
-    }
+    // Start cleanup job
+    startCleanupJob();
+    logger.info('✓ Cleanup job started');
+
+    // Start HTTP server
+    app.listen(PORT, () => {
+      logger.info(`✓ Server running on port ${PORT}`);
+      logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`✓ API: http://localhost:${PORT}/api`);
+      logger.info(`✓ Frontend: http://localhost:${PORT}`);
+    });
     
   } catch (error) {
     logger.error('Failed to start server:', error);
-    if (!process.env.VERCEL) {
-      process.exit(1);
-    }
+    process.exit(1);
   }
 }
 
