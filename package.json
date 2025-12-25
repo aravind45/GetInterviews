@@ -1,10 +1,10 @@
 {
-  "name": "resume-match-analyzer",
+  "name": "jobmatch-ai",
   "version": "1.0.0",
-  "description": "Analyze how well your resume matches a job description",
+  "description": "AI-powered job search that matches jobs to YOUR resume",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && cp -r src/public dist/",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts"
   },

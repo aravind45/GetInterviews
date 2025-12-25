@@ -10,22 +10,18 @@ import mammoth from 'mammoth';
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// File upload configuration
-const upload = multer({ 
-  dest: '/tmp/uploads/',
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
-});
+const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Initialize Groq
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// In-memory storage (use DB in production)
+const sessions: Record<string, any> = {};
 
 /**
- * Parse resume file (PDF or Word)
+ * Parse resume file
  */
 async function parseResume(filePath: string, mimeType: string): Promise<string> {
   const buffer = fs.readFileSync(filePath);
@@ -33,425 +29,447 @@ async function parseResume(filePath: string, mimeType: string): Promise<string> 
   if (mimeType === 'application/pdf' || filePath.endsWith('.pdf')) {
     const data = await pdfParse(buffer);
     return data.text;
-  } 
+  }
   
   if (mimeType.includes('word') || filePath.endsWith('.docx') || filePath.endsWith('.doc')) {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   }
   
-  throw new Error('Unsupported file format. Please upload PDF or Word document.');
+  throw new Error('Unsupported file format');
 }
 
 /**
- * POST /api/analyze-match
- * Analyze resume against job description
+ * POST /api/extract-profile
+ * Extract candidate profile from resume
  */
-app.post('/api/analyze-match', upload.single('resume'), async (req, res) => {
+app.post('/api/extract-profile', upload.single('resume'), async (req, res) => {
   let filePath = '';
   
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, error: 'Resume file is required' });
-    }
-    
-    const jobDescription = req.body.jobDescription;
-    if (!jobDescription || jobDescription.length < 50) {
-      return res.status(400).json({ success: false, error: 'Job description is required (minimum 50 characters)' });
+      return res.status(400).json({ success: false, error: 'Resume file required' });
     }
     
     filePath = req.file.path;
-    
-    // Parse resume
-    console.log('Parsing resume:', req.file.originalname);
     const resumeText = await parseResume(filePath, req.file.mimetype);
     
-    if (!resumeText || resumeText.trim().length < 50) {
-      return res.status(400).json({ success: false, error: 'Could not extract text from resume. Please try a different file.' });
+    if (!resumeText || resumeText.length < 100) {
+      return res.status(400).json({ success: false, error: 'Could not extract text from resume' });
     }
-    
-    console.log('Resume parsed, length:', resumeText.length);
-    
-    // Check if Groq API key is configured
-    if (!process.env.GROQ_API_KEY) {
-      console.log('No GROQ_API_KEY, returning mock response');
-      return res.json({
-        success: true,
-        data: {
-          overallScore: 58,
-          verdict: "MODERATE MATCH",
-          summary: "You have relevant experience, but you're missing 2-3 critical keywords that are likely getting your resume auto-rejected by the ATS. With some targeted changes, you could significantly improve your chances.",
-          
-          sixSecondScan: {
-            firstImpression: "Clean format, but job title doesn't immediately match. Skills section is buried at the bottom where recruiters might not see it.",
-            standoutElements: ["Clear work history", "Recognized company names", "Good education"],
-            immediateRedFlags: ["Job title mismatch", "No quantified achievements visible", "Generic summary"],
-            wouldReadMore: false,
-            whyOrWhyNot: "The job title mismatch and lack of immediate keyword matches would likely cause most recruiters to move on within 6 seconds."
-          },
-          
-          atsAnalysis: {
-            score: 52,
-            likelyToPass: false,
-            keywordsFound: ["JavaScript", "React", "Node.js", "Git", "Agile"],
-            criticalKeywordsMissing: ["TypeScript", "AWS", "Docker", "CI/CD", "PostgreSQL"],
-            suggestionToPassATS: "Add the missing keywords to your skills section. If you have ANY experience with TypeScript or AWS, add them immediately - even if basic."
-          },
-          
-          qualificationGap: {
-            experienceRequired: "5+ years of full-stack development with cloud experience",
-            experienceYouHave: "4 years of frontend-heavy development, limited cloud exposure",
-            gapAssessment: "SLIGHTLY_UNDER",
-            yearsGap: "You're about 1 year short on total experience, and significantly short on cloud/DevOps",
-            canYouCloseGap: true,
-            howToCloseGap: "Emphasize any backend or cloud work you've done. Consider adding a personal project using AWS to demonstrate capability."
-          },
-          
-          dealbreakers: [
-            {
-              requirement: "TypeScript experience required",
-              status: "MISSING",
-              impact: "This alone could disqualify you - TypeScript is in the job title",
-              urgentFix: "Add TypeScript to your resume. If you've used it at all, even in side projects, list it. Consider spending 2-3 hours on a TypeScript tutorial so you can honestly claim familiarity."
-            },
-            {
-              requirement: "AWS/Cloud platform experience",
-              status: "WEAK",
-              impact: "Major gap - most candidates at this level will have cloud experience",
-              urgentFix: "Deploy one of your existing projects to AWS (even a simple S3/CloudFront setup). Then you can legitimately list AWS experience."
-            }
-          ],
-          
-          strengths: [
-            {
-              skill: "Strong React experience",
-              howItHelps: "React is the primary frontend framework they're using",
-              howToHighlight: "Move React higher in your skills list and quantify it: 'React (4 years, 10+ production apps)'"
-            },
-            {
-              skill: "Experience at recognized companies",
-              howItHelps: "Brand-name companies add credibility and suggest you've passed rigorous hiring before",
-              howToHighlight: "Keep company names prominent. Add brief context if company isn't well-known in tech."
-            }
-          ],
-          
-          hiddenRedFlags: [
-            {
-              issue: "Short tenure at last company (10 months)",
-              whatRecruiterThinks: "Job hopper? Fired? Couldn't handle the role?",
-              howToAddress: "Add context if there's a good reason (startup ran out of funding, relocated, etc.) or emphasize what you accomplished in that time."
-            },
-            {
-              issue: "No GitHub or portfolio link",
-              whatRecruiterThinks: "Can't verify skills. What are they hiding?",
-              howToAddress: "Add your GitHub link. If your repos are sparse, spend a weekend cleaning them up or adding one solid project."
-            }
-          ],
-          
-          competitorAnalysis: {
-            typicalWinningCandidate: "5-7 years full-stack experience, TypeScript/React/Node stack, AWS certified or 2+ years cloud experience, has shipped production systems at scale",
-            howYouCompare: "You're competitive on frontend skills but behind on cloud/DevOps. You're in the 40th percentile of applicants for this role.",
-            yourCompetitiveAdvantage: "Strong React depth and experience at established companies gives you credibility",
-            yourBiggestDisadvantage: "Missing cloud experience in a role that explicitly requires it - this is likely why you're not hearing back"
-          },
-          
-          applicationStrategy: {
-            shouldYouApply: true,
-            confidenceLevel: "LOW",
-            bestApproach: "CUSTOMIZE_HEAVILY",
-            timeWorthInvesting: "Worth 1-2 hours to customize, but only if you can honestly add TypeScript and some AWS experience",
-            alternativeStrategy: "Consider reaching out to someone at the company on LinkedIn first. A referral would significantly boost your chances given the experience gap."
-          },
-          
-          resumeRewrites: [
-            {
-              section: "Professional Summary",
-              currentText: "Experienced software developer with a passion for building web applications",
-              problem: "Generic, no keywords, doesn't match job title",
-              rewrittenText: "Full-Stack Engineer with 4+ years building scalable React/TypeScript applications. Experienced in Node.js backends, REST API design, and cloud deployments. Passionate about clean code and developer experience.",
-              whyBetter: "Matches job title, includes key technologies, quantifies experience"
-            },
-            {
-              section: "Work Experience - Bullet Point",
-              currentText: "Worked on the frontend team building new features",
-              problem: "No impact, no technologies, no scale",
-              rewrittenText: "Led development of customer dashboard using React and TypeScript, reducing page load time by 40% and increasing user engagement by 25%",
-              whyBetter: "Shows leadership, specific tech stack, quantified impact"
-            }
-          ],
-          
-          prioritizedActionPlan: {
-            before_applying: [
-              "Add TypeScript to your skills (do a quick tutorial if needed)",
-              "Add at least one AWS service you can speak to",
-              "Rewrite your summary to match the job title",
-              "Add quantified achievements to every bullet point"
-            ],
-            quick_wins: [
-              "Add GitHub link to header",
-              "Move skills section higher on resume",
-              "Mirror exact phrases from job description"
-            ],
-            worth_the_effort: [
-              "Deploy a project to AWS this weekend",
-              "Get AWS Cloud Practitioner cert (can be done in a week)",
-              "Build one TypeScript project you can discuss in interviews"
-            ],
-            long_term: [
-              "Contribute to open source to build public proof of skills",
-              "Write technical blog posts to demonstrate expertise",
-              "Build network at target companies before applying"
-            ]
-          },
-          
-          interviewProbability: {
-            percentage: 15,
-            reasoning: "The missing TypeScript requirement and limited cloud experience are likely causing automatic rejection. Your frontend skills are strong but not differentiated enough to overcome the gaps.",
-            whatWouldIncreaseOdds: "Adding TypeScript and any AWS experience would likely bump this to 40-50%. A referral could push it to 60%+."
-          },
-          
-          bottomLine: {
-            honestAssessment: "You're a borderline candidate right now. Not unqualified, but not competitive either. The good news: the gaps are fixable with a few hours of work. Don't apply to this job yet - spend this weekend on the quick fixes first.",
-            oneThingToFix: "Add TypeScript to your resume. This single change could double your callback rate for senior frontend roles.",
-            encouragement: "Your React experience is genuinely strong, and that's the core of this role. You're closer than you think - you just need to fill in the supporting skills that hiring managers expect to see."
-          }
-        }
-      });
-    }
-    
-    // Call Groq AI for analysis
-    console.log('Calling Groq API for analysis...');
-    
-    const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews. A frustrated jobseeker needs the TRUTH about why they're being ghosted.
+
+    const prompt = `Extract a structured profile from this resume. Return ONLY JSON:
 
 RESUME:
-${resumeText.substring(0, 5000)}
+${resumeText.substring(0, 6000)}
 
-JOB DESCRIPTION:
-${jobDescription.substring(0, 4000)}
-
-Analyze this like you're the hiring manager who has 200 applications to review. Be specific, be honest, be helpful.
-
-Return ONLY this JSON (no other text):
+Return this exact JSON structure:
 {
-  "overallScore": <0-100>,
-  "verdict": "STRONG MATCH|MODERATE MATCH|WEAK MATCH|LONG SHOT|NOT A FIT",
-  "summary": "<2-3 sentences - the brutal truth about their chances>",
+  "name": "<full name>",
+  "email": "<email if found>",
+  "phone": "<phone if found>",
+  "location": "<city, state/country>",
+  "currentTitle": "<most recent job title>",
+  "yearsExperience": <number>,
+  "experienceLevel": "ENTRY|MID|SENIOR|LEAD|EXECUTIVE",
   
-  "sixSecondScan": {
-    "firstImpression": "<what a recruiter notices in first 6 seconds>",
-    "standoutElements": ["<what's good>"],
-    "immediateRedFlags": ["<what makes them move to next resume>"],
-    "wouldReadMore": true/false,
-    "whyOrWhyNot": "<honest explanation>"
+  "targetTitles": ["<job titles they could apply for>"],
+  "targetIndustries": ["<industries they fit>"],
+  
+  "hardSkills": ["<technical skills, tools, languages>"],
+  "softSkills": ["<communication, leadership, etc>"],
+  "certifications": ["<any certifications>"],
+  
+  "education": {
+    "degree": "<highest degree>",
+    "field": "<field of study>",
+    "school": "<school name>"
   },
   
-  "atsAnalysis": {
-    "score": <0-100>,
-    "likelyToPass": true/false,
-    "keywordsFound": ["<exact matches from JD>"],
-    "criticalKeywordsMissing": ["<keywords that will auto-reject>"],
-    "suggestionToPassATS": "<specific fix>"
-  },
-  
-  "qualificationGap": {
-    "experienceRequired": "<what JD asks for>",
-    "experienceYouHave": "<what resume shows>",
-    "gapAssessment": "OVER_QUALIFIED|SLIGHTLY_OVER|GOOD_MATCH|SLIGHTLY_UNDER|SIGNIFICANTLY_UNDER",
-    "yearsGap": "<e.g., 'JD wants 5+ years, you show ~3 years'>",
-    "canYouCloseGap": true/false,
-    "howToCloseGap": "<if possible, how>"
-  },
-  
-  "dealbreakers": [
-    {
-      "requirement": "<exact requirement from JD>",
-      "status": "MISSING|WEAK|UNCLEAR",
-      "impact": "This alone could disqualify you",
-      "urgentFix": "<exactly what to do>"
+  "summary": "<2-3 sentence professional summary>",
+  "strengths": ["<top 3 strengths>"],
+  "searchKeywords": ["<keywords to use when searching for jobs>"]
+}`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+      max_tokens: 1500
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    
+    if (!jsonMatch) {
+      throw new Error('Failed to parse profile');
     }
-  ],
-  
-  "strengths": [
-    {
-      "skill": "<what you have>",
-      "howItHelps": "<why this matters for the job>",
-      "howToHighlight": "<make it more visible>"
-    }
-  ],
-  
-  "hiddenRedFlags": [
-    {
-      "issue": "<something that raises questions>",
-      "whatRecruiterThinks": "<their assumption>",
-      "howToAddress": "<fix or explain>"
-    }
-  ],
-  
-  "competitorAnalysis": {
-    "typicalWinningCandidate": "<profile of who usually gets this job>",
-    "howYouCompare": "<honest comparison>",
-    "yourCompetitiveAdvantage": "<what you have that others might not>",
-    "yourBiggestDisadvantage": "<where you fall short>"
-  },
-  
-  "applicationStrategy": {
-    "shouldYouApply": true/false,
-    "confidenceLevel": "HIGH|MEDIUM|LOW|VERY_LOW",
-    "bestApproach": "APPLY_NOW|CUSTOMIZE_HEAVILY|FIND_REFERRAL|SKIP_THIS_ONE|APPLY_BUT_KEEP_LOOKING",
-    "timeWorthInvesting": "<e.g., 'Worth 30 min to customize' or 'Don't spend more than 10 min'>",
-    "alternativeStrategy": "<if direct apply won't work, what else?>"
-  },
-  
-  "resumeRewrites": [
-    {
-      "section": "<which part of resume>",
-      "currentText": "<weak text from their resume>",
-      "problem": "<why it's weak>",
-      "rewrittenText": "<stronger version using JD keywords>",
-      "whyBetter": "<explains the improvement>"
-    }
-  ],
-  
-  "prioritizedActionPlan": {
-    "before_applying": ["<must do before submitting>"],
-    "quick_wins": ["<easy fixes with big impact>"],
-    "worth_the_effort": ["<harder but valuable>"],
-    "long_term": ["<for future applications>"]
-  },
-  
-  "interviewProbability": {
-    "percentage": <0-100>,
-    "reasoning": "<why this number>",
-    "whatWouldIncreaseOdds": "<specific change that would boost chances>"
-  },
-  
-  "bottomLine": {
-    "honestAssessment": "<real talk - should they pursue this?>",
-    "oneThingToFix": "<if you fix ONE thing, fix this>",
-    "encouragement": "<something genuinely encouraging if possible>"
+
+    const profile = JSON.parse(jsonMatch[0]);
+    
+    // Generate session ID
+    const sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessions[sessionId] = { profile, resumeText, jobs: [], createdAt: Date.now() };
+
+    res.json({ success: true, data: { sessionId, profile, resumeText } });
+
+  } catch (error: any) {
+    console.error('Profile extraction error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
+});
+
+/**
+ * POST /api/search-jobs
+ * Search for jobs based on profile
+ */
+app.post('/api/search-jobs', async (req, res) => {
+  try {
+    const { sessionId, searchQuery, location, jobType } = req.body;
+    
+    const session = sessions[sessionId];
+    if (!session) {
+      return res.status(400).json({ success: false, error: 'Session not found. Please upload resume first.' });
+    }
+
+    // Build search query from profile if not provided
+    const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
+    const loc = location || session.profile.location || 'Remote';
+
+    // In a real implementation, this would call job board APIs
+    // For now, we'll generate realistic job listings based on the profile
+    const prompt = `Generate 8 realistic job listings that would match someone with this profile:
+
+CANDIDATE PROFILE:
+- Current Title: ${session.profile.currentTitle}
+- Experience: ${session.profile.yearsExperience} years
+- Skills: ${session.profile.hardSkills?.slice(0, 10).join(', ')}
+- Target Roles: ${session.profile.targetTitles?.join(', ')}
+
+SEARCH: "${query}" in "${loc}"
+
+Return ONLY a JSON array of jobs. Make them realistic with real company types and requirements:
+[
+  {
+    "id": "<unique id>",
+    "title": "<job title>",
+    "company": "<realistic company name>",
+    "location": "<city or Remote>",
+    "salary": "<salary range if typical>",
+    "jobType": "FULL_TIME|CONTRACT|PART_TIME",
+    "postedDate": "<X days ago>",
+    "url": "<placeholder url>",
+    "description": "<3-4 sentence job description>",
+    "requirements": ["<requirement 1>", "<requirement 2>", ...],
+    "niceToHave": ["<nice to have 1>", ...],
+    "benefits": ["<benefit 1>", ...]
+  }
+]
+
+Include a mix:
+- 2 jobs that are PERFECT matches (90%+)
+- 3 jobs that are GOOD matches (70-89%)
+- 2 jobs that are STRETCH matches (50-69%)
+- 1 job that is a REACH (30-49%)
+
+Vary the company sizes (startup, mid-size, enterprise) and make requirements realistic.`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 3000
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    
+    if (!jsonMatch) {
+      throw new Error('Failed to generate jobs');
+    }
+
+    const jobs = JSON.parse(jsonMatch[0]);
+    
+    // Now score each job
+    const scoredJobs = await Promise.all(jobs.map(async (job: any) => {
+      const score = await quickScoreJob(session.profile, session.resumeText, job);
+      return { ...job, ...score };
+    }));
+
+    // Sort by score
+    scoredJobs.sort((a, b) => b.matchScore - a.matchScore);
+    
+    // Save to session
+    session.jobs = scoredJobs;
+
+    res.json({ success: true, data: { jobs: scoredJobs } });
+
+  } catch (error: any) {
+    console.error('Job search error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Quick score a job against profile
+ */
+async function quickScoreJob(profile: any, resumeText: string, job: any): Promise<any> {
+  const prompt = `Score this job match. Return ONLY JSON:
+
+CANDIDATE:
+- Title: ${profile.currentTitle}
+- Experience: ${profile.yearsExperience} years (${profile.experienceLevel})
+- Skills: ${profile.hardSkills?.join(', ')}
+
+JOB:
+- Title: ${job.title}
+- Requirements: ${job.requirements?.join(', ')}
+- Nice to have: ${job.niceToHave?.join(', ')}
+
+Return:
+{
+  "matchScore": <0-100>,
+  "matchLevel": "EXCELLENT|GOOD|MODERATE|LOW",
+  "recommendation": "APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP",
+  "matchingSkills": ["<skills you have that match>"],
+  "missingSkills": ["<required skills you lack>"],
+  "quickTake": "<one sentence - why apply or not>"
+}`;
+
+  try {
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+      max_tokens: 500
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (e) {
+    console.error('Scoring error:', e);
+  }
+
+  return { matchScore: 50, matchLevel: 'MODERATE', recommendation: 'WORTH_APPLYING', matchingSkills: [], missingSkills: [], quickTake: 'Unable to analyze' };
 }
 
-Be specific. Use actual words from both the resume and JD. No generic advice.`;
+/**
+ * POST /api/analyze-job
+ * Deep analysis of a specific job
+ */
+app.post('/api/analyze-job', async (req, res) => {
+  try {
+    const { sessionId, jobId, jobDescription } = req.body;
+    
+    const session = sessions[sessionId];
+    if (!session) {
+      return res.status(400).json({ success: false, error: 'Session not found' });
+    }
+
+    // Find job or use provided description
+    let job = session.jobs?.find((j: any) => j.id === jobId);
+    const jd = jobDescription || job?.description + '\n\nRequirements:\n' + job?.requirements?.join('\n');
+
+    const prompt = `Deep analysis of job fit. Return ONLY JSON:
+
+RESUME:
+${session.resumeText.substring(0, 4000)}
+
+JOB:
+${jd.substring(0, 3000)}
+
+{
+  "overallScore": <0-100>,
+  "verdict": "STRONG MATCH|MODERATE MATCH|WEAK MATCH|NOT A FIT",
+  "summary": "<2-3 sentences on fit>",
+  
+  "interviewChance": {
+    "percentage": <0-100>,
+    "reasoning": "<why>"
+  },
+  
+  "skillAnalysis": {
+    "matched": [{"skill": "<skill>", "evidence": "<from resume>"}],
+    "missing": [{"skill": "<skill>", "severity": "CRITICAL|IMPORTANT|NICE_TO_HAVE", "suggestion": "<how to address>"}]
+  },
+  
+  "experienceGap": {
+    "required": "<what they want>",
+    "youHave": "<what you have>",
+    "assessment": "OVERQUALIFIED|GOOD_MATCH|SLIGHTLY_UNDER|SIGNIFICANTLY_UNDER"
+  },
+  
+  "strategy": {
+    "shouldApply": true/false,
+    "approach": "APPLY_NOW|CUSTOMIZE_RESUME|GET_REFERRAL|SKIP",
+    "timeToSpend": "<how much time worth investing>",
+    "keyPointsToEmphasize": ["<what to highlight>"]
+  },
+  
+  "dealbreakers": ["<if any critical missing requirements>"],
+  
+  "bottomLine": "<honest 1-2 sentence advice>"
+}`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 3000
+      max_tokens: 1500
     });
-    
+
     const responseText = completion.choices[0]?.message?.content || '';
-    console.log('Groq response:', responseText.substring(0, 200));
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     
-    // Parse JSON from response
-    let analysis;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found in response');
-      }
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Failed to analyze resume. Please try again.' 
-      });
+    if (!jsonMatch) {
+      throw new Error('Analysis failed');
     }
-    
-    // Build comprehensive result
-    const result = {
-      overallScore: Math.min(100, Math.max(0, parseInt(analysis.overallScore) || 50)),
-      verdict: analysis.verdict || 'Analysis Complete',
-      summary: analysis.summary || '',
-      
-      sixSecondScan: {
-        firstImpression: analysis.sixSecondScan?.firstImpression || '',
-        standoutElements: analysis.sixSecondScan?.standoutElements || [],
-        immediateRedFlags: analysis.sixSecondScan?.immediateRedFlags || [],
-        wouldReadMore: analysis.sixSecondScan?.wouldReadMore ?? null,
-        whyOrWhyNot: analysis.sixSecondScan?.whyOrWhyNot || ''
-      },
-      
-      atsAnalysis: {
-        score: Math.min(100, Math.max(0, parseInt(analysis.atsAnalysis?.score) || 50)),
-        likelyToPass: analysis.atsAnalysis?.likelyToPass ?? null,
-        keywordsFound: analysis.atsAnalysis?.keywordsFound || [],
-        criticalKeywordsMissing: analysis.atsAnalysis?.criticalKeywordsMissing || [],
-        suggestionToPassATS: analysis.atsAnalysis?.suggestionToPassATS || ''
-      },
-      
-      qualificationGap: {
-        experienceRequired: analysis.qualificationGap?.experienceRequired || '',
-        experienceYouHave: analysis.qualificationGap?.experienceYouHave || '',
-        gapAssessment: analysis.qualificationGap?.gapAssessment || 'Unknown',
-        yearsGap: analysis.qualificationGap?.yearsGap || '',
-        canYouCloseGap: analysis.qualificationGap?.canYouCloseGap ?? null,
-        howToCloseGap: analysis.qualificationGap?.howToCloseGap || ''
-      },
-      
-      dealbreakers: analysis.dealbreakers || [],
-      strengths: analysis.strengths || [],
-      hiddenRedFlags: analysis.hiddenRedFlags || [],
-      
-      competitorAnalysis: {
-        typicalWinningCandidate: analysis.competitorAnalysis?.typicalWinningCandidate || '',
-        howYouCompare: analysis.competitorAnalysis?.howYouCompare || '',
-        yourCompetitiveAdvantage: analysis.competitorAnalysis?.yourCompetitiveAdvantage || '',
-        yourBiggestDisadvantage: analysis.competitorAnalysis?.yourBiggestDisadvantage || ''
-      },
-      
-      applicationStrategy: {
-        shouldYouApply: analysis.applicationStrategy?.shouldYouApply ?? true,
-        confidenceLevel: analysis.applicationStrategy?.confidenceLevel || 'MEDIUM',
-        bestApproach: analysis.applicationStrategy?.bestApproach || 'APPLY_NOW',
-        timeWorthInvesting: analysis.applicationStrategy?.timeWorthInvesting || '',
-        alternativeStrategy: analysis.applicationStrategy?.alternativeStrategy || ''
-      },
-      
-      resumeRewrites: (analysis.resumeRewrites || []).slice(0, 3),
-      
-      prioritizedActionPlan: {
-        before_applying: analysis.prioritizedActionPlan?.before_applying || [],
-        quick_wins: analysis.prioritizedActionPlan?.quick_wins || [],
-        worth_the_effort: analysis.prioritizedActionPlan?.worth_the_effort || [],
-        long_term: analysis.prioritizedActionPlan?.long_term || []
-      },
-      
-      interviewProbability: {
-        percentage: Math.min(100, Math.max(0, parseInt(analysis.interviewProbability?.percentage) || 30)),
-        reasoning: analysis.interviewProbability?.reasoning || '',
-        whatWouldIncreaseOdds: analysis.interviewProbability?.whatWouldIncreaseOdds || ''
-      },
-      
-      bottomLine: {
-        honestAssessment: analysis.bottomLine?.honestAssessment || '',
-        oneThingToFix: analysis.bottomLine?.oneThingToFix || '',
-        encouragement: analysis.bottomLine?.encouragement || ''
-      }
-    };
-    
-    console.log('Analysis complete, score:', result.overallScore);
-    
-    res.json({
-      success: true,
-      data: result
-    });
-    
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, data: { analysis, job } });
+
   } catch (error: any) {
-    console.error('Analysis error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to analyze resume'
-    });
-  } finally {
-    // Clean up uploaded file
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    console.error('Job analysis error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/generate-cover-letter
+ * Generate tailored cover letter
+ */
+app.post('/api/generate-cover-letter', async (req, res) => {
+  try {
+    const { sessionId, jobId, jobDescription, companyName, jobTitle, tone } = req.body;
+    
+    const session = sessions[sessionId];
+    if (!session) {
+      return res.status(400).json({ success: false, error: 'Session not found' });
     }
+
+    const job = session.jobs?.find((j: any) => j.id === jobId);
+    const company = companyName || job?.company || 'the company';
+    const title = jobTitle || job?.title || 'the position';
+    const jd = jobDescription || job?.description + '\n' + job?.requirements?.join('\n');
+
+    const prompt = `Write a compelling cover letter. 
+
+CANDIDATE:
+${session.resumeText.substring(0, 3000)}
+
+JOB: ${title} at ${company}
+${jd.substring(0, 2000)}
+
+TONE: ${tone || 'professional but personable'}
+
+Write a cover letter that:
+1. Opens with a hook (not "I am writing to apply...")
+2. Connects their specific experience to job requirements
+3. Shows knowledge of the company/role
+4. Includes 2-3 concrete achievements with numbers
+5. Ends with confident call to action
+6. Is 250-350 words
+
+Return ONLY the cover letter text, no JSON or labels.`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 800
+    });
+
+    const coverLetter = completion.choices[0]?.message?.content || '';
+
+    res.json({ 
+      success: true, 
+      data: { 
+        coverLetter: coverLetter.trim(),
+        company,
+        jobTitle: title
+      } 
+    });
+
+  } catch (error: any) {
+    console.error('Cover letter error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/save-job
+ * Save a job to tracking list
+ */
+app.post('/api/save-job', async (req, res) => {
+  try {
+    const { sessionId, job, status } = req.body;
+    
+    const session = sessions[sessionId];
+    if (!session) {
+      return res.status(400).json({ success: false, error: 'Session not found' });
+    }
+
+    if (!session.savedJobs) session.savedJobs = [];
+    
+    const existingIndex = session.savedJobs.findIndex((j: any) => j.id === job.id);
+    
+    if (existingIndex >= 0) {
+      session.savedJobs[existingIndex] = { ...session.savedJobs[existingIndex], ...job, status, updatedAt: Date.now() };
+    } else {
+      session.savedJobs.push({ ...job, status: status || 'SAVED', savedAt: Date.now() });
+    }
+
+    res.json({ success: true, data: { savedJobs: session.savedJobs } });
+
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/saved-jobs
+ */
+app.get('/api/saved-jobs', async (req, res) => {
+  const sessionId = req.query.sessionId as string;
+  const session = sessions[sessionId];
+  
+  if (!session) {
+    return res.json({ success: true, data: { savedJobs: [] } });
+  }
+
+  res.json({ success: true, data: { savedJobs: session.savedJobs || [] } });
+});
+
+/**
+ * POST /api/update-job-status
+ */
+app.post('/api/update-job-status', async (req, res) => {
+  try {
+    const { sessionId, jobId, status, notes } = req.body;
+    
+    const session = sessions[sessionId];
+    if (!session?.savedJobs) {
+      return res.status(400).json({ success: false, error: 'No saved jobs' });
+    }
+
+    const job = session.savedJobs.find((j: any) => j.id === jobId);
+    if (job) {
+      job.status = status;
+      if (notes) job.notes = notes;
+      job.updatedAt = Date.now();
+      if (status === 'APPLIED') job.appliedAt = Date.now();
+    }
+
+    res.json({ success: true, data: { job } });
+
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -467,12 +485,8 @@ app.get('/', (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-const isVercel = process.env.VERCEL === '1';
-
-if (!isVercel) {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 }
 
 export default app;
