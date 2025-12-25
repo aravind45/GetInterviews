@@ -680,10 +680,55 @@ document.getElementById('search-jobs-btn').addEventListener('click', searchJobs)
 document.getElementById('search-query').addEventListener('keypress', e => { if (e.key === 'Enter') searchJobs(); });
 
 async function searchJobs() {
-  if (!sessionId) { showToast('Upload resume first', 'error'); return; }
-  setLoading('search', true, 'Searching...');
+  if (!sessionId || !profile) { showToast('Upload resume first', 'error'); return; }
+  
+  // Generate links INSTANTLY (client-side, no API)
+  const searchLinks = generateSearchLinksClientSide();
+  displaySearchLinks(searchLinks);
+  document.getElementById('job-results').style.display = 'block';
+  showToast('Search links ready!', 'success');
+  
+  // Optionally try to get AI suggestions in background (non-blocking)
+  tryGetSuggestions();
+}
+
+function generateSearchLinksClientSide() {
+  const title = document.getElementById('search-query').value || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
+  const location = document.getElementById('search-location').value || profile.location || '';
+  const encode = encodeURIComponent;
+  
+  return {
+    primary: [
+      { name: 'LinkedIn', icon: '💼', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}`, description: 'Most professional jobs' },
+      { name: 'Indeed', icon: '🔍', url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}`, description: 'Largest job board' },
+      { name: 'Glassdoor', icon: '🚪', url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locKeyword=${encode(location)}`, description: 'Jobs + salary info' }
+    ],
+    secondary: [
+      { name: 'Google Jobs', icon: '🔎', url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs` },
+      { name: 'ZipRecruiter', icon: '⚡', url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}` },
+      { name: 'Dice (Tech)', icon: '🎲', url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}` },
+      { name: 'Wellfound', icon: '🚀', url: `https://wellfound.com/jobs?query=${encode(title)}` }
+    ],
+    bySkill: (profile.hardSkills || []).slice(0, 5).map(skill => ({
+      skill,
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill)}&location=${encode(location)}`
+    })),
+    byTitle: (profile.targetTitles || []).slice(0, 4).map(t => ({
+      title: t,
+      linkedin: `https://www.linkedin.com/jobs/search/?keywords=${encode(t)}&location=${encode(location)}`,
+      indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`
+    }))
+  };
+}
+
+async function tryGetSuggestions() {
+  // Try to get AI suggestions in background - don't block UI
+  setLoading('search', true, 'Getting suggestions...');
   
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max
+    
     const res = await fetch('/api/search-jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -691,34 +736,23 @@ async function searchJobs() {
         sessionId,
         searchQuery: document.getElementById('search-query').value,
         location: document.getElementById('search-location').value
-      })
+      }),
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
     const data = await res.json();
-    if (!data.success) throw new Error(data.error);
     
-    // Display search links (always available)
-    if (data.data.searchLinks) {
-      displaySearchLinks(data.data.searchLinks);
-    }
-    
-    // Display job suggestions if available
-    jobs = data.data.jobs || [];
-    if (jobs.length > 0) {
+    if (data.success && data.data.jobs && data.data.jobs.length > 0) {
+      jobs = data.data.jobs;
       document.getElementById('suggestions-section').style.display = 'block';
       displayJobs(jobs);
       document.getElementById('jobs-badge').textContent = jobs.length;
       document.getElementById('jobs-badge').style.display = 'inline';
-    } else {
-      document.getElementById('suggestions-section').style.display = 'none';
     }
-    
-    document.getElementById('job-results').style.display = 'block';
-    showToast('Search links ready!', 'success');
-    
   } catch (err) {
-    console.error('Search error:', err);
-    showToast(err.message || 'Search failed', 'error');
+    // Silently fail - links already work
+    console.log('AI suggestions unavailable (links still work)');
   } finally {
     setLoading('search', false, '🔍 Search Jobs');
   }
