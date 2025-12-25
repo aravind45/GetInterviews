@@ -3,184 +3,179 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobMatch AI - Find Jobs That Match YOU</title>
+  <title>JobMatch AI - Resume Analyzer + Job Search</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
     
-    /* Layout */
-    .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 260px; background: #12121a; border-right: 1px solid #1e1e2e; padding: 20px; position: fixed; height: 100vh; overflow-y: auto; }
-    .main { flex: 1; margin-left: 260px; padding: 24px; max-width: 1200px; }
-    
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main { margin-left: 0; }
-    }
-    
-    /* Sidebar */
-    .logo { font-size: 1.3rem; font-weight: 700; margin-bottom: 32px; display: flex; align-items: center; gap: 10px; }
+    /* Header */
+    header { background: #12121a; border-bottom: 1px solid #1e1e2e; padding: 16px 24px; position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .logo span { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; cursor: pointer; margin-bottom: 4px; color: #94a3b8; transition: all 0.2s; font-size: 0.95rem; }
-    .nav-item:hover { background: #1e1e2e; color: #e2e8f0; }
-    .nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1)); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
-    .nav-item .icon { font-size: 1.2rem; }
-    .nav-item .badge { background: #6366f1; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+    /* Main Tabs */
+    .main-tabs { display: flex; gap: 8px; }
+    .main-tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; color: #94a3b8; font-weight: 500; transition: all 0.2s; border: 1px solid transparent; }
+    .main-tab:hover { color: #e2e8f0; background: #1e1e2e; }
+    .main-tab.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1)); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3); }
+    .main-tab .badge { background: #6366f1; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
     
-    .profile-mini { margin-top: auto; padding: 16px; background: #1e1e2e; border-radius: 12px; margin-top: 32px; }
-    .profile-mini h4 { font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; }
-    .profile-mini .name { font-weight: 600; font-size: 0.95rem; }
-    .profile-mini .title { font-size: 0.8rem; color: #64748b; }
+    /* Container */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
     
     /* Cards */
     .card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .card-title { font-size: 1.1rem; font-weight: 600; }
-    .card-subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .card-header { margin-bottom: 20px; }
+    .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+    .card-subtitle { font-size: 0.9rem; color: #64748b; }
     
     /* Buttons */
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
     .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-secondary { background: #1e1e2e; color: #e2e8f0; border: 1px solid #2e2e3e; }
     .btn-secondary:hover { background: #2e2e3e; }
     .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
-    .btn-ghost { background: transparent; color: #94a3b8; }
-    .btn-ghost:hover { color: #e2e8f0; }
+    .btn-full { width: 100%; }
     
-    /* Upload Zone */
-    .upload-zone { border: 2px dashed #2e2e3e; border-radius: 16px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .main-tabs { flex-wrap: wrap; } }
+    
+    /* Upload */
+    .upload-zone { border: 2px dashed #2e2e3e; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
     .upload-zone:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); }
     .upload-zone.has-file { border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
-    .upload-zone.dragging { border-color: #6366f1; background: rgba(99, 102, 241, 0.1); }
     .upload-zone input { display: none; }
-    .upload-icon { font-size: 3rem; margin-bottom: 16px; }
-    .upload-text { color: #94a3b8; margin-bottom: 8px; }
-    .upload-hint { color: #64748b; font-size: 0.85rem; }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
     .file-name { color: #10b981; font-weight: 600; margin-top: 12px; }
     
-    /* Profile Display */
-    .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-    .profile-item { background: #1e1e2e; padding: 16px; border-radius: 12px; }
-    .profile-item label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
-    .profile-item .value { font-size: 0.95rem; font-weight: 500; }
+    /* Textarea */
+    textarea { width: 100%; min-height: 200px; padding: 16px; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 10px; color: #e2e8f0; font-family: inherit; font-size: 0.95rem; resize: vertical; }
+    textarea:focus { outline: none; border-color: #6366f1; }
     
-    .skills-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .skill-tag { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; }
+    /* Input */
+    .input { width: 100%; padding: 12px 16px; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 10px; color: #e2e8f0; font-size: 0.95rem; }
+    .input:focus { outline: none; border-color: #6366f1; }
     
-    /* Search Box */
-    .search-box { display: flex; gap: 12px; margin-bottom: 24px; }
-    .search-input { flex: 1; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 10px; padding: 14px 18px; color: #e2e8f0; font-size: 0.95rem; }
-    .search-input:focus { outline: none; border-color: #6366f1; }
-    .search-input::placeholder { color: #64748b; }
+    /* Sections */
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    /* Score Display */
+    .score-hero { text-align: center; padding: 32px; border-radius: 16px; margin-bottom: 24px; }
+    .score-hero.strong { background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); border: 2px solid rgba(16, 185, 129, 0.3); }
+    .score-hero.moderate { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); border: 2px solid rgba(245, 158, 11, 0.3); }
+    .score-hero.weak { background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)); border: 2px solid rgba(239, 68, 68, 0.3); }
+    
+    .score-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 16px; border: 5px solid; }
+    .score-ring.high { border-color: #10b981; color: #10b981; }
+    .score-ring.medium { border-color: #f59e0b; color: #f59e0b; }
+    .score-ring.low { border-color: #ef4444; color: #ef4444; }
+    .score-number { font-size: 2.5rem; font-weight: 800; }
+    .score-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+    
+    .verdict-badge { display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-bottom: 12px; }
+    .verdict-badge.high { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .verdict-badge.medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .verdict-badge.low { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    
+    /* Analysis Items */
+    .analysis-card { background: #1e1e2e; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .analysis-card h4 { font-size: 0.95rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    
+    .item { background: #0a0a0f; padding: 14px; border-radius: 10px; margin-bottom: 8px; }
+    .item.success { border-left: 4px solid #10b981; }
+    .item.danger { border-left: 4px solid #ef4444; }
+    .item.warning { border-left: 4px solid #f59e0b; }
+    .item-title { font-weight: 600; margin-bottom: 4px; }
+    .item-desc { font-size: 0.9rem; color: #94a3b8; }
+    .item-fix { font-size: 0.85rem; color: #6366f1; margin-top: 8px; padding-top: 8px; border-top: 1px solid #2e2e3e; }
+    
+    /* Tags */
+    .tag { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; margin: 3px; }
+    .tag-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .tag-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .tag-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .tag-info { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
+    
+    /* Progress Bar */
+    .progress-bar { height: 8px; background: #1e1e2e; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+    .progress-fill { height: 100%; border-radius: 4px; }
+    .progress-fill.high { background: #10b981; }
+    .progress-fill.medium { background: #f59e0b; }
+    .progress-fill.low { background: #ef4444; }
     
     /* Job Cards */
-    .job-list { display: flex; flex-direction: column; gap: 16px; }
-    
-    .job-card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 14px; padding: 20px; transition: all 0.2s; cursor: pointer; }
+    .job-card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 14px; padding: 20px; margin-bottom: 16px; cursor: pointer; transition: all 0.2s; }
     .job-card:hover { border-color: #3e3e4e; transform: translateX(4px); }
     .job-card.excellent { border-left: 4px solid #10b981; }
     .job-card.good { border-left: 4px solid #6366f1; }
     .job-card.moderate { border-left: 4px solid #f59e0b; }
-    .job-card.low { border-left: 4px solid #ef4444; }
-    
-    .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    .job-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+    .job-header { display: flex; justify-content: space-between; }
+    .job-title { font-size: 1.05rem; font-weight: 600; }
     .job-company { color: #94a3b8; font-size: 0.9rem; }
     .job-meta { display: flex; gap: 16px; color: #64748b; font-size: 0.85rem; margin-top: 8px; }
-    
-    .match-score { text-align: right; }
-    .match-percent { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .match-percent { font-size: 1.5rem; font-weight: 700; }
     .match-percent.high { color: #10b981; }
     .match-percent.medium { color: #f59e0b; }
     .match-percent.low { color: #ef4444; }
-    .match-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; }
     
-    .job-quick-take { background: #1e1e2e; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; color: #94a3b8; }
+    .recommendation { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .recommendation.apply-now { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .recommendation.worth-it { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+    .recommendation.customize { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .recommendation.skip { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
     
-    .job-actions { display: flex; gap: 8px; margin-top: 16px; }
+    /* Bottom Line */
+    .bottom-line { background: linear-gradient(135deg, #1e1e2e, #12121a); border: 1px solid #2e2e3e; border-radius: 16px; padding: 28px; text-align: center; margin-top: 24px; }
+    .bottom-line h3 { color: #f59e0b; margin-bottom: 16px; }
+    .one-thing { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .one-thing-label { font-size: 0.75rem; color: #818cf8; text-transform: uppercase; margin-bottom: 6px; }
+    .one-thing-text { font-weight: 600; }
+    .encouragement { color: #10b981; font-style: italic; }
     
-    .recommendation-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-    .recommendation-badge.apply-now { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    .recommendation-badge.worth-it { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
-    .recommendation-badge.customize { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-    .recommendation-badge.skip { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    /* Cover Letter */
+    .cover-letter-box { background: #1e1e2e; border-radius: 12px; padding: 24px; font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; }
+    
+    /* Tracker Stats */
+    .tracker-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: #1e1e2e; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-number { font-size: 2rem; font-weight: 700; }
+    .stat-number.saved { color: #6366f1; }
+    .stat-number.applied { color: #f59e0b; }
+    .stat-number.interview { color: #10b981; }
+    .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
+    @media (max-width: 600px) { .tracker-stats { grid-template-columns: repeat(2, 1fr); } }
+    
+    /* Actions */
+    .action-list { list-style: none; }
+    .action-list li { padding: 12px 14px; background: #0a0a0f; border-radius: 8px; margin-bottom: 6px; border-left: 3px solid; }
+    .action-list.urgent li { border-left-color: #ef4444; }
+    .action-list.quick li { border-left-color: #10b981; }
+    .action-list.effort li { border-left-color: #f59e0b; }
     
     /* Modal */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal.open { display: flex; }
     .modal-content { background: #12121a; border: 1px solid #2e2e3e; border-radius: 20px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #1e1e2e; position: sticky; top: 0; background: #12121a; z-index: 1; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #1e1e2e; position: sticky; top: 0; background: #12121a; }
     .modal-body { padding: 24px; }
-    .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; padding: 4px; }
-    .modal-close:hover { color: #e2e8f0; }
+    .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
     
-    /* Analysis in Modal */
-    .analysis-section { margin-bottom: 24px; }
-    .analysis-section h4 { font-size: 0.9rem; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    
-    .analysis-item { background: #1e1e2e; padding: 14px; border-radius: 10px; margin-bottom: 8px; }
-    .analysis-item.success { border-left: 3px solid #10b981; }
-    .analysis-item.danger { border-left: 3px solid #ef4444; }
-    .analysis-item.warning { border-left: 3px solid #f59e0b; }
-    
-    /* Cover Letter */
-    .cover-letter-box { background: #1e1e2e; border-radius: 12px; padding: 20px; font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; }
-    
-    /* Saved Jobs / Tracker */
-    .tracker-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: #1e1e2e; padding: 16px; border-radius: 12px; text-align: center; }
-    .stat-number { font-size: 1.8rem; font-weight: 700; }
-    .stat-number.saved { color: #6366f1; }
-    .stat-number.applied { color: #f59e0b; }
-    .stat-number.interview { color: #10b981; }
-    .stat-number.rejected { color: #ef4444; }
-    .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
-    
-    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-    .status-badge.saved { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
-    .status-badge.applied { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-    .status-badge.interview { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    .status-badge.rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-    .status-badge.offer { background: rgba(16, 185, 129, 0.3); color: #10b981; }
-    
-    /* Empty State */
-    .empty-state { text-align: center; padding: 48px; color: #64748b; }
-    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
-    .empty-state h3 { color: #94a3b8; margin-bottom: 8px; }
-    
-    /* Loading */
+    /* Misc */
     .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .loading-overlay { position: absolute; inset: 0; background: rgba(10, 10, 15, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; z-index: 10; }
-    .loading-text { margin-top: 16px; color: #94a3b8; }
-    
-    /* Toast */
     .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: #1e1e2e; border: 1px solid #2e2e3e; color: white; border-radius: 12px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000; }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { border-color: #10b981; }
     .toast.error { border-color: #ef4444; background: #ef4444; }
-    
-    /* Tabs */
-    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #1e1e2e; padding: 4px; border-radius: 12px; }
-    .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; color: #94a3b8; font-weight: 500; transition: all 0.2s; }
-    .tab:hover { color: #e2e8f0; }
-    .tab.active { background: #6366f1; color: white; }
-    
-    /* Section visibility */
-    .section { display: none; }
-    .section.active { display: block; }
-    
-    /* Misc */
-    .divider { height: 1px; background: #1e1e2e; margin: 24px 0; }
+    .empty-state { text-align: center; padding: 48px; color: #64748b; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+    .divider { height: 1px; background: #1e1e2e; margin: 20px 0; }
     .text-muted { color: #64748b; }
-    .text-success { color: #10b981; }
-    .text-danger { color: #ef4444; }
-    .text-warning { color: #f59e0b; }
-    .mb-2 { margin-bottom: 8px; }
     .mb-4 { margin-bottom: 16px; }
     .mt-4 { margin-top: 16px; }
     .flex { display: flex; }
@@ -188,198 +183,148 @@
     .gap-4 { gap: 16px; }
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+    .flex-wrap { flex-wrap: wrap; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar">
+  <header>
+    <div class="header-content">
       <div class="logo">🎯 <span>JobMatch AI</span></div>
-      
-      <nav>
-        <div class="nav-item active" data-section="profile">
-          <span class="icon">👤</span>
-          <span>My Profile</span>
-        </div>
-        <div class="nav-item" data-section="search">
-          <span class="icon">🔍</span>
-          <span>Find Jobs</span>
-          <span class="badge" id="jobs-count" style="display: none;">0</span>
-        </div>
-        <div class="nav-item" data-section="tracker">
-          <span class="icon">📋</span>
-          <span>My Jobs</span>
-          <span class="badge" id="saved-count" style="display: none;">0</span>
-        </div>
+      <nav class="main-tabs">
+        <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
+        <div class="main-tab" data-tab="search">💼 Find Jobs <span class="badge" id="jobs-badge" style="display:none">0</span></div>
+        <div class="main-tab" data-tab="tracker">📋 Tracker <span class="badge" id="saved-badge" style="display:none">0</span></div>
       </nav>
-      
-      <div class="profile-mini" id="profile-mini" style="display: none;">
-        <h4>Current Profile</h4>
-        <div class="name" id="mini-name">-</div>
-        <div class="title" id="mini-title">-</div>
-      </div>
-    </aside>
-    
-    <!-- Main Content -->
-    <main class="main">
-      <!-- Profile Section -->
-      <section class="section active" id="section-profile">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Upload Your Resume</h2>
-              <p class="card-subtitle">We'll extract your profile and find matching jobs</p>
+    </div>
+  </header>
+  
+  <div class="container">
+    <!-- TAB 1: ANALYZE RESUME -->
+    <section class="section active" id="tab-analyze">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🔍 Why No Interviews?</h2>
+          <p class="card-subtitle">Get brutally honest feedback on why your resume isn't getting callbacks</p>
+        </div>
+        
+        <div class="grid-2">
+          <div>
+            <label style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 8px;">Your Resume</label>
+            <div class="upload-zone" id="analyze-upload-zone">
+              <input type="file" id="analyze-resume-input" accept=".pdf,.doc,.docx">
+              <div class="upload-icon">📄</div>
+              <div style="color: #94a3b8;">Drop resume or click to browse</div>
+              <div class="file-name" id="analyze-file-name"></div>
             </div>
           </div>
-          
-          <div class="upload-zone" id="upload-zone">
-            <input type="file" id="resume-input" accept=".pdf,.doc,.docx">
-            <div class="upload-icon">📄</div>
-            <div class="upload-text">Drop your resume here or click to browse</div>
-            <div class="upload-hint">PDF or Word document</div>
-            <div class="file-name" id="file-name"></div>
+          <div>
+            <label style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 8px;">Job Description</label>
+            <textarea id="job-description" placeholder="Paste the complete job description here..."></textarea>
           </div>
-          
-          <button class="btn btn-primary" id="extract-btn" style="width: 100%; margin-top: 20px;" disabled>
-            <span id="extract-btn-text">Extract My Profile</span>
-            <span class="loading" id="extract-loading" style="display: none;"></span>
+        </div>
+        
+        <button class="btn btn-primary btn-full mt-4" id="analyze-btn" disabled>
+          <span id="analyze-btn-text">🎯 Analyze My Match</span>
+          <span class="loading" id="analyze-loading" style="display:none"></span>
+        </button>
+      </div>
+      
+      <!-- Analysis Results -->
+      <div id="analysis-results" style="display:none">
+        <!-- Filled by JS -->
+      </div>
+    </section>
+    
+    <!-- TAB 2: FIND JOBS -->
+    <section class="section" id="tab-search">
+      <!-- Upload Profile First -->
+      <div class="card" id="search-upload-card">
+        <div class="card-header">
+          <h2 class="card-title">💼 Upload Resume to Find Matching Jobs</h2>
+          <p class="card-subtitle">We'll analyze your profile and find jobs ranked by how well YOU match</p>
+        </div>
+        
+        <div class="upload-zone" id="search-upload-zone">
+          <input type="file" id="search-resume-input" accept=".pdf,.doc,.docx">
+          <div class="upload-icon">📄</div>
+          <div style="color: #94a3b8;">Drop resume or click to browse</div>
+          <div class="file-name" id="search-file-name"></div>
+        </div>
+        
+        <button class="btn btn-primary btn-full mt-4" id="extract-btn" disabled>
+          <span id="extract-btn-text">Extract My Profile & Find Jobs</span>
+          <span class="loading" id="extract-loading" style="display:none"></span>
+        </button>
+      </div>
+      
+      <!-- Profile Display -->
+      <div class="card" id="profile-card" style="display:none">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 id="profile-name">Your Name</h3>
+            <p class="text-muted" id="profile-title">Your Title</p>
+          </div>
+          <button class="btn btn-primary" id="search-jobs-btn">
+            <span id="search-btn-text">🔍 Search Jobs</span>
+            <span class="loading" id="search-loading" style="display:none"></span>
           </button>
         </div>
         
-        <!-- Extracted Profile -->
-        <div class="card" id="profile-card" style="display: none;">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Your Profile</h2>
-              <p class="card-subtitle">Extracted from your resume</p>
-            </div>
-            <button class="btn btn-primary" id="find-jobs-btn">🔍 Find Matching Jobs</button>
-          </div>
-          
-          <div class="profile-grid" id="profile-display">
-            <!-- Filled by JS -->
-          </div>
-          
-          <div class="divider"></div>
-          
-          <div>
-            <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px; display: block;">Skills</label>
-            <div class="skills-list" id="skills-display"></div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <div>
-            <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px; display: block;">Target Roles</label>
-            <div class="skills-list" id="titles-display"></div>
-          </div>
-        </div>
-      </section>
-      
-      <!-- Search Section -->
-      <section class="section" id="section-search">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Find Jobs</h2>
-              <p class="card-subtitle">Jobs ranked by how well YOU match</p>
-            </div>
-          </div>
-          
-          <div class="search-box">
-            <input type="text" class="search-input" id="search-query" placeholder="Job title, skills, or company...">
-            <input type="text" class="search-input" id="search-location" placeholder="Location" style="max-width: 200px;">
-            <button class="btn btn-primary" id="search-btn">
-              <span id="search-btn-text">Search</span>
-              <span class="loading" id="search-loading" style="display: none;"></span>
-            </button>
-          </div>
+        <div class="flex gap-2 flex-wrap mb-4">
+          <span class="tag tag-info" id="profile-exp">- years</span>
+          <span class="tag tag-info" id="profile-level">-</span>
+          <span class="tag tag-info" id="profile-location">-</span>
         </div>
         
-        <!-- No Profile Warning -->
-        <div class="card" id="no-profile-warning" style="display: none;">
-          <div class="empty-state">
-            <div class="icon">👤</div>
-            <h3>Upload Your Resume First</h3>
-            <p>We need your profile to find matching jobs</p>
-            <button class="btn btn-primary mt-4" onclick="showSection('profile')">Upload Resume</button>
-          </div>
+        <div class="flex gap-4 mb-4">
+          <input type="text" class="input" id="search-query" placeholder="Job title or keywords..." style="flex:1">
+          <input type="text" class="input" id="search-location" placeholder="Location" style="width:150px">
         </div>
         
-        <!-- Job Results -->
-        <div id="job-results" style="display: none;">
-          <div class="flex justify-between items-center mb-4">
-            <h3><span id="results-count">0</span> Jobs Found</h3>
-            <div class="tabs" style="margin: 0; width: auto;">
-              <div class="tab active" data-filter="all">All</div>
-              <div class="tab" data-filter="excellent">🟢 Best</div>
-              <div class="tab" data-filter="good">🔵 Good</div>
-            </div>
-          </div>
-          
-          <div class="job-list" id="job-list">
-            <!-- Filled by JS -->
-          </div>
-        </div>
-      </section>
-      
-      <!-- Tracker Section -->
-      <section class="section" id="section-tracker">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Application Tracker</h2>
-              <p class="card-subtitle">Track your job applications</p>
-            </div>
-          </div>
-          
-          <div class="tracker-stats">
-            <div class="stat-card">
-              <div class="stat-number saved" id="stat-saved">0</div>
-              <div class="stat-label">Saved</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number applied" id="stat-applied">0</div>
-              <div class="stat-label">Applied</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number interview" id="stat-interview">0</div>
-              <div class="stat-label">Interviews</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number rejected" id="stat-rejected">0</div>
-              <div class="stat-label">Rejected</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="job-list" id="saved-jobs-list">
-          <div class="empty-state" id="no-saved-jobs">
-            <div class="icon">📋</div>
-            <h3>No Saved Jobs Yet</h3>
-            <p>Save jobs from search results to track them here</p>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-  
-  <!-- Job Detail Modal -->
-  <div class="modal" id="job-modal">
-    <div class="modal-content">
-      <div class="modal-header">
         <div>
-          <h3 id="modal-job-title">Job Title</h3>
-          <p class="text-muted" id="modal-job-company">Company</p>
+          <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px; display: block;">Your Skills:</label>
+          <div id="profile-skills" class="flex gap-2 flex-wrap"></div>
         </div>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
-      <div class="modal-body" id="modal-body">
-        <!-- Filled by JS -->
+      
+      <!-- Job Results -->
+      <div id="job-results" style="display:none">
+        <div class="flex justify-between items-center mb-4">
+          <h3><span id="jobs-count">0</span> Jobs Found</h3>
+          <div class="flex gap-2">
+            <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
+            <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
+            <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
+          </div>
+        </div>
+        <div id="job-list"></div>
       </div>
-    </div>
+    </section>
+    
+    <!-- TAB 3: TRACKER -->
+    <section class="section" id="tab-tracker">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📋 Application Tracker</h2>
+          <p class="card-subtitle">Track your job applications in one place</p>
+        </div>
+        
+        <div class="tracker-stats">
+          <div class="stat-card"><div class="stat-number saved" id="stat-saved">0</div><div class="stat-label">Saved</div></div>
+          <div class="stat-card"><div class="stat-number applied" id="stat-applied">0</div><div class="stat-label">Applied</div></div>
+          <div class="stat-card"><div class="stat-number interview" id="stat-interview">0</div><div class="stat-label">Interview</div></div>
+          <div class="stat-card"><div class="stat-number" style="color:#ef4444" id="stat-rejected">0</div><div class="stat-label">Rejected</div></div>
+        </div>
+      </div>
+      
+      <div id="saved-jobs-list">
+        <div class="empty-state" id="no-saved-jobs">
+          <div class="icon">📋</div>
+          <h3>No Saved Jobs Yet</h3>
+          <p>Save jobs from search results to track them here</p>
+        </div>
+      </div>
+    </section>
   </div>
   
   <!-- Cover Letter Modal -->
@@ -387,17 +332,15 @@
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h3>Cover Letter</h3>
+          <h3>📝 Cover Letter</h3>
           <p class="text-muted" id="cl-job-info">For: Job at Company</p>
         </div>
-        <button class="modal-close" onclick="closeCoverLetterModal()">&times;</button>
+        <button class="modal-close" onclick="closeCoverLetterModal()">×</button>
       </div>
       <div class="modal-body">
-        <div class="cover-letter-box" id="cover-letter-text">
-          Generating...
-        </div>
+        <div class="cover-letter-box" id="cover-letter-text">Generating...</div>
         <div class="flex gap-2 mt-4">
-          <button class="btn btn-primary" onclick="copyCoverLetter()">📋 Copy to Clipboard</button>
+          <button class="btn btn-primary" onclick="copyCoverLetter()">📋 Copy</button>
           <button class="btn btn-secondary" onclick="regenerateCoverLetter()">🔄 Regenerate</button>
         </div>
       </div>
@@ -405,450 +348,533 @@
   </div>
   
   <div class="toast" id="toast"></div>
+
+<script>
+// State
+let sessionId = localStorage.getItem('jobmatch_session');
+let profile = null;
+let jobs = [];
+let savedJobs = [];
+let currentJob = null;
+let analyzeFile = null;
+let searchFile = null;
+
+// Tab Navigation
+document.querySelectorAll('.main-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ========== ANALYZE TAB ==========
+const analyzeZone = document.getElementById('analyze-upload-zone');
+const analyzeInput = document.getElementById('analyze-resume-input');
+const analyzeBtn = document.getElementById('analyze-btn');
+const jobDescInput = document.getElementById('job-description');
+
+analyzeZone.addEventListener('click', () => analyzeInput.click());
+analyzeZone.addEventListener('dragover', e => { e.preventDefault(); analyzeZone.style.borderColor = '#6366f1'; });
+analyzeZone.addEventListener('dragleave', () => { analyzeZone.style.borderColor = analyzeFile ? '#10b981' : '#2e2e3e'; });
+analyzeZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleAnalyzeFile(e.dataTransfer.files[0]); });
+analyzeInput.addEventListener('change', e => { if (e.target.files[0]) handleAnalyzeFile(e.target.files[0]); });
+
+function handleAnalyzeFile(file) {
+  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
+  analyzeFile = file;
+  document.getElementById('analyze-file-name').textContent = '✓ ' + file.name;
+  analyzeZone.classList.add('has-file');
+  checkAnalyzeReady();
+}
+
+jobDescInput.addEventListener('input', checkAnalyzeReady);
+function checkAnalyzeReady() {
+  analyzeBtn.disabled = !(analyzeFile && jobDescInput.value.trim().length > 50);
+}
+
+analyzeBtn.addEventListener('click', async () => {
+  setLoading('analyze', true, 'Analyzing (15-20 sec)...');
   
-  <script>
-    // State
-    let sessionId = localStorage.getItem('jobmatch_session') || null;
-    let profile = null;
-    let jobs = [];
-    let savedJobs = [];
-    let currentJob = null;
-    let selectedFile = null;
+  try {
+    const formData = new FormData();
+    formData.append('resume', analyzeFile);
+    formData.append('jobDescription', jobDescInput.value.trim());
     
-    // Elements
-    const uploadZone = document.getElementById('upload-zone');
-    const resumeInput = document.getElementById('resume-input');
-    const fileNameEl = document.getElementById('file-name');
-    const extractBtn = document.getElementById('extract-btn');
+    const res = await fetch('/api/analyze-match', { method: 'POST', body: formData });
+    const data = await res.json();
     
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const section = item.dataset.section;
-        showSection(section);
-      });
-    });
+    if (!data.success) throw new Error(data.error);
+    displayAnalysisResults(data.data);
     
-    function showSection(section) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById(`section-${section}`).classList.add('active');
-      
-      if (section === 'search' && !profile) {
-        document.getElementById('no-profile-warning').style.display = 'block';
-        document.getElementById('job-results').style.display = 'none';
-      }
-    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    setLoading('analyze', false, '🎯 Analyze My Match');
+  }
+});
+
+function displayAnalysisResults(d) {
+  const score = d.overallScore || 0;
+  const scoreClass = score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
+  const heroClass = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
+  
+  document.getElementById('analysis-results').style.display = 'block';
+  document.getElementById('analysis-results').innerHTML = `
+    <div class="score-hero ${heroClass}">
+      <div class="score-ring ${scoreClass}">
+        <div class="score-number">${score}%</div>
+        <div class="score-label">Match</div>
+      </div>
+      <div class="verdict-badge ${scoreClass}">${d.verdict || 'ANALYZED'}</div>
+      <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
+    </div>
     
-    // File Upload
-    uploadZone.addEventListener('click', () => resumeInput.click());
-    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragging'); });
-    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
-    uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragging'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
-    resumeInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+    <div class="card">
+      <div class="flex justify-between items-center mb-4">
+        <span>Interview Probability</span>
+        <span style="font-size:1.5rem; font-weight:700;" class="${scoreClass === 'high' ? 'text-success' : scoreClass === 'medium' ? 'text-warning' : 'text-danger'}">${d.interviewProbability?.percentage || 0}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${scoreClass}" style="width:${d.interviewProbability?.percentage || 0}%"></div></div>
+      <p class="text-muted" style="font-size:0.9rem;">${d.interviewProbability?.reasoning || ''}</p>
+      ${d.interviewProbability?.whatWouldIncreaseOdds ? `<div class="item success mt-4"><div class="item-title">💡 To increase your odds:</div><div class="item-desc">${d.interviewProbability.whatWouldIncreaseOdds}</div></div>` : ''}
+    </div>
     
-    function handleFile(file) {
-      if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
-      selectedFile = file;
-      fileNameEl.textContent = '✓ ' + file.name;
-      uploadZone.classList.add('has-file');
-      extractBtn.disabled = false;
-    }
-    
-    // Extract Profile
-    extractBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
-      
-      setLoading(extractBtn, 'extract', true, 'Analyzing resume...');
-      
-      try {
-        const formData = new FormData();
-        formData.append('resume', selectedFile);
-        
-        const res = await fetch('/api/extract-profile', { method: 'POST', body: formData });
-        const data = await res.json();
-        
-        if (!data.success) throw new Error(data.error);
-        
-        sessionId = data.data.sessionId;
-        profile = data.data.profile;
-        localStorage.setItem('jobmatch_session', sessionId);
-        
-        displayProfile(profile);
-        showToast('Profile extracted successfully!', 'success');
-        
-      } catch (err) {
-        showToast(err.message || 'Failed to extract profile', 'error');
-      } finally {
-        setLoading(extractBtn, 'extract', false, 'Extract My Profile');
-      }
-    });
-    
-    function displayProfile(p) {
-      document.getElementById('profile-card').style.display = 'block';
-      document.getElementById('profile-mini').style.display = 'block';
-      
-      document.getElementById('mini-name').textContent = p.name || 'Unknown';
-      document.getElementById('mini-title').textContent = p.currentTitle || 'Professional';
-      
-      document.getElementById('profile-display').innerHTML = `
-        <div class="profile-item"><label>Name</label><div class="value">${p.name || '-'}</div></div>
-        <div class="profile-item"><label>Current Title</label><div class="value">${p.currentTitle || '-'}</div></div>
-        <div class="profile-item"><label>Experience</label><div class="value">${p.yearsExperience || '?'} years (${p.experienceLevel || 'Unknown'})</div></div>
-        <div class="profile-item"><label>Location</label><div class="value">${p.location || '-'}</div></div>
-        <div class="profile-item"><label>Education</label><div class="value">${p.education?.degree || '-'} in ${p.education?.field || '-'}</div></div>
-      `;
-      
-      document.getElementById('skills-display').innerHTML = (p.hardSkills || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
-      document.getElementById('titles-display').innerHTML = (p.targetTitles || []).map(t => `<span class="skill-tag">${t}</span>`).join('');
-      
-      // Pre-fill search
-      if (p.targetTitles?.[0]) document.getElementById('search-query').value = p.targetTitles[0];
-      if (p.location) document.getElementById('search-location').value = p.location;
-    }
-    
-    // Find Jobs Button
-    document.getElementById('find-jobs-btn').addEventListener('click', () => {
-      showSection('search');
-      if (profile) searchJobs();
-    });
-    
-    // Search Jobs
-    document.getElementById('search-btn').addEventListener('click', searchJobs);
-    document.getElementById('search-query').addEventListener('keypress', e => { if (e.key === 'Enter') searchJobs(); });
-    
-    async function searchJobs() {
-      if (!sessionId) { showToast('Please upload resume first', 'error'); return; }
-      
-      const searchBtn = document.getElementById('search-btn');
-      setLoading(searchBtn, 'search', true, 'Searching...');
-      
-      try {
-        const res = await fetch('/api/search-jobs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            searchQuery: document.getElementById('search-query').value,
-            location: document.getElementById('search-location').value
-          })
-        });
-        
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        
-        jobs = data.data.jobs;
-        displayJobs(jobs);
-        
-        document.getElementById('no-profile-warning').style.display = 'none';
-        document.getElementById('job-results').style.display = 'block';
-        document.getElementById('jobs-count').textContent = jobs.length;
-        document.getElementById('jobs-count').style.display = 'inline';
-        
-      } catch (err) {
-        showToast(err.message || 'Search failed', 'error');
-      } finally {
-        setLoading(searchBtn, 'search', false, 'Search');
-      }
-    }
-    
-    function displayJobs(jobList, filter = 'all') {
-      let filtered = jobList;
-      if (filter === 'excellent') filtered = jobList.filter(j => j.matchScore >= 80);
-      else if (filter === 'good') filtered = jobList.filter(j => j.matchScore >= 60 && j.matchScore < 80);
-      
-      document.getElementById('results-count').textContent = filtered.length;
-      
-      document.getElementById('job-list').innerHTML = filtered.length === 0 
-        ? '<div class="empty-state"><div class="icon">🔍</div><h3>No jobs match this filter</h3></div>'
-        : filtered.map(job => {
-          const scoreClass = job.matchScore >= 80 ? 'high' : job.matchScore >= 60 ? 'medium' : 'low';
-          const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : job.matchScore >= 40 ? 'moderate' : 'low';
-          const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : job.recommendation === 'CUSTOMIZE_FIRST' ? 'customize' : 'skip';
-          
-          return `
-            <div class="job-card ${cardClass}" onclick="openJobDetail('${job.id}')">
-              <div class="job-header">
-                <div>
-                  <div class="job-title">${job.title}</div>
-                  <div class="job-company">${job.company}</div>
-                  <div class="job-meta">
-                    <span>📍 ${job.location}</span>
-                    ${job.salary ? `<span>💰 ${job.salary}</span>` : ''}
-                    <span>🕐 ${job.postedDate}</span>
-                  </div>
-                </div>
-                <div class="match-score">
-                  <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
-                  <div class="match-label">Match</div>
-                </div>
-              </div>
-              <div class="flex gap-2 items-center">
-                <span class="recommendation-badge ${recClass}">${(job.recommendation || '').replace(/_/g, ' ')}</span>
-                ${job.matchingSkills?.length ? `<span class="text-muted" style="font-size: 0.8rem;">✓ ${job.matchingSkills.slice(0, 3).join(', ')}</span>` : ''}
-              </div>
-              <div class="job-quick-take">${job.quickTake || job.description}</div>
-              <div class="job-actions" onclick="event.stopPropagation()">
-                <button class="btn btn-primary btn-sm" onclick="openJobDetail('${job.id}')">View Details</button>
-                <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
-                <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
-              </div>
+    <div class="grid-2">
+      <div>
+        <div class="analysis-card">
+          <h4>👁️ 6-Second Scan</h4>
+          <div class="flex items-center gap-4 mb-4">
+            <span style="font-size:2rem;">${d.sixSecondScan?.wouldReadMore === true ? '✅' : d.sixSecondScan?.wouldReadMore === false ? '❌' : '🤔'}</span>
+            <div>
+              <div style="font-weight:600;">${d.sixSecondScan?.wouldReadMore === true ? 'They\'d keep reading!' : d.sixSecondScan?.wouldReadMore === false ? 'Probably not...' : 'Borderline'}</div>
+              <div class="text-muted" style="font-size:0.9rem;">${d.sixSecondScan?.whyOrWhyNot || ''}</div>
             </div>
-          `;
-        }).join('');
-    }
-    
-    // Filter tabs
-    document.querySelectorAll('[data-filter]').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('[data-filter]').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        displayJobs(jobs, tab.dataset.filter);
-      });
-    });
-    
-    // Job Detail Modal
-    async function openJobDetail(jobId) {
-      currentJob = jobs.find(j => j.id === jobId);
-      if (!currentJob) return;
-      
-      document.getElementById('modal-job-title').textContent = currentJob.title;
-      document.getElementById('modal-job-company').textContent = currentJob.company;
-      document.getElementById('job-modal').classList.add('open');
-      
-      const scoreClass = currentJob.matchScore >= 80 ? 'high' : currentJob.matchScore >= 60 ? 'medium' : 'low';
-      
-      document.getElementById('modal-body').innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-          <div>
-            <div class="match-percent ${scoreClass}" style="font-size: 2.5rem;">${currentJob.matchScore}%</div>
-            <div class="text-muted">Match Score</div>
+          </div>
+          <p class="text-muted" style="font-size:0.9rem;">${d.sixSecondScan?.firstImpression || ''}</p>
+        </div>
+        
+        <div class="analysis-card">
+          <h4>🤖 ATS Compatibility</h4>
+          <div class="flex justify-between items-center mb-2">
+            <span class="tag ${d.atsAnalysis?.likelyToPass ? 'tag-success' : 'tag-danger'}">${d.atsAnalysis?.likelyToPass ? '✓ Likely to pass' : '✗ Likely to fail'}</span>
+            <span style="font-weight:700;">${d.atsAnalysis?.score || 0}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill ${(d.atsAnalysis?.score || 0) >= 70 ? 'high' : 'low'}" style="width:${d.atsAnalysis?.score || 0}%"></div></div>
+          <div class="mb-4">
+            <div style="font-size:0.8rem; color:#10b981; margin-bottom:6px;">✓ Keywords found:</div>
+            <div>${(d.atsAnalysis?.keywordsFound || []).map(k => `<span class="tag tag-success">${k}</span>`).join('') || '<span class="text-muted">None</span>'}</div>
           </div>
           <div>
-            <span class="recommendation-badge ${currentJob.recommendation === 'APPLY_NOW' ? 'apply-now' : currentJob.recommendation === 'WORTH_APPLYING' ? 'worth-it' : 'customize'}" style="font-size: 0.9rem; padding: 8px 16px;">
-              ${(currentJob.recommendation || '').replace(/_/g, ' ')}
-            </span>
+            <div style="font-size:0.8rem; color:#ef4444; margin-bottom:6px;">✗ Missing keywords:</div>
+            <div>${(d.atsAnalysis?.criticalKeywordsMissing || []).map(k => `<span class="tag tag-danger">${k}</span>`).join('') || '<span class="text-muted">None</span>'}</div>
           </div>
+          ${d.atsAnalysis?.suggestionToPassATS ? `<div class="item warning mt-4"><div class="item-title">🔧 To pass ATS:</div><div class="item-desc">${d.atsAnalysis.suggestionToPassATS}</div></div>` : ''}
         </div>
         
-        <div class="analysis-section">
-          <h4>📝 Job Description</h4>
-          <p style="color: #94a3b8; line-height: 1.7;">${currentJob.description}</p>
+        ${(d.hiddenRedFlags || []).length > 0 ? `
+        <div class="analysis-card">
+          <h4>🚩 Hidden Red Flags</h4>
+          ${d.hiddenRedFlags.map(f => `
+            <div class="item warning">
+              <div class="item-title">${f.issue}</div>
+              <div class="item-desc">🤔 Recruiter thinks: "${f.whatRecruiterThinks}"</div>
+              ${f.howToAddress ? `<div class="item-fix">🔧 ${f.howToAddress}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+      </div>
+      
+      <div>
+        <div class="analysis-card">
+          <h4>📏 Experience Gap</h4>
+          <div class="grid-2 mb-4" style="gap:12px;">
+            <div class="item"><div style="font-size:0.75rem; color:#64748b;">They want:</div><div>${d.qualificationGap?.experienceRequired || '-'}</div></div>
+            <div class="item"><div style="font-size:0.75rem; color:#64748b;">You have:</div><div>${d.qualificationGap?.experienceYouHave || '-'}</div></div>
+          </div>
+          <span class="tag ${(d.qualificationGap?.gapAssessment || '').includes('GOOD') ? 'tag-success' : 'tag-warning'}">${(d.qualificationGap?.gapAssessment || 'Unknown').replace(/_/g, ' ')}</span>
+          <p class="text-muted mt-4" style="font-size:0.9rem;">${d.qualificationGap?.yearsGap || ''}</p>
+          ${d.qualificationGap?.howToCloseGap ? `<div class="item success mt-4"><div class="item-desc">${d.qualificationGap.howToCloseGap}</div></div>` : ''}
         </div>
         
-        <div class="analysis-section">
-          <h4>✅ Requirements</h4>
-          ${(currentJob.requirements || []).map(r => `<div class="analysis-item">${r}</div>`).join('')}
-        </div>
-        
-        ${currentJob.matchingSkills?.length ? `
-        <div class="analysis-section">
-          <h4>💪 Your Matching Skills</h4>
-          <div class="skills-list">${currentJob.matchingSkills.map(s => `<span class="skill-tag">${s}</span>`).join('')}</div>
+        ${(d.dealbreakers || []).length > 0 ? `
+        <div class="analysis-card">
+          <h4>🛑 Dealbreakers</h4>
+          ${d.dealbreakers.map(db => `
+            <div class="item danger">
+              <div class="item-title">${db.requirement}</div>
+              <div class="item-desc">Status: ${db.status}</div>
+              ${db.urgentFix ? `<div class="item-fix">🔧 ${db.urgentFix}</div>` : ''}
+            </div>
+          `).join('')}
         </div>
         ` : ''}
         
-        ${currentJob.missingSkills?.length ? `
-        <div class="analysis-section">
-          <h4>⚠️ Skills to Highlight/Address</h4>
-          <div class="skills-list">${currentJob.missingSkills.map(s => `<span class="skill-tag" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">${s}</span>`).join('')}</div>
+        ${(d.strengths || []).length > 0 ? `
+        <div class="analysis-card">
+          <h4>💪 Your Strengths</h4>
+          ${d.strengths.map(s => `
+            <div class="item success">
+              <div class="item-title">${s.skill}</div>
+              <div class="item-desc">${s.howItHelps}</div>
+              ${s.howToHighlight ? `<div class="item-fix">💡 ${s.howToHighlight}</div>` : ''}
+            </div>
+          `).join('')}
         </div>
         ` : ''}
         
-        <div class="analysis-section">
-          <h4>💡 Quick Take</h4>
-          <div class="analysis-item">${currentJob.quickTake}</div>
-        </div>
-        
-        <div class="flex gap-2 mt-4">
-          <button class="btn btn-primary" onclick="generateCoverLetter('${currentJob.id}')">📝 Generate Cover Letter</button>
-          <button class="btn btn-secondary" onclick="saveJob('${currentJob.id}'); closeModal();">💾 Save Job</button>
-          <a href="${currentJob.url || '#'}" target="_blank" class="btn btn-secondary">🔗 View Original</a>
-        </div>
-      `;
-    }
-    
-    function closeModal() {
-      document.getElementById('job-modal').classList.remove('open');
-    }
-    
-    // Cover Letter
-    async function generateCoverLetter(jobId) {
-      const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
-      if (!job) return;
-      
-      currentJob = job;
-      document.getElementById('cl-job-info').textContent = `For: ${job.title} at ${job.company}`;
-      document.getElementById('cover-letter-text').innerHTML = '<div class="loading"></div> Generating your personalized cover letter...';
-      document.getElementById('cover-letter-modal').classList.add('open');
-      
-      try {
-        const res = await fetch('/api/generate-cover-letter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, jobId, companyName: job.company, jobTitle: job.title })
-        });
-        
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        
-        document.getElementById('cover-letter-text').textContent = data.data.coverLetter;
-        
-      } catch (err) {
-        document.getElementById('cover-letter-text').textContent = 'Failed to generate cover letter. Please try again.';
-        showToast(err.message, 'error');
-      }
-    }
-    
-    function closeCoverLetterModal() {
-      document.getElementById('cover-letter-modal').classList.remove('open');
-    }
-    
-    function copyCoverLetter() {
-      const text = document.getElementById('cover-letter-text').textContent;
-      navigator.clipboard.writeText(text);
-      showToast('Copied to clipboard!', 'success');
-    }
-    
-    function regenerateCoverLetter() {
-      if (currentJob) generateCoverLetter(currentJob.id);
-    }
-    
-    // Save Job
-    async function saveJob(jobId) {
-      const job = jobs.find(j => j.id === jobId);
-      if (!job) return;
-      
-      try {
-        const res = await fetch('/api/save-job', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, job, status: 'SAVED' })
-        });
-        
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        
-        savedJobs = data.data.savedJobs;
-        updateTrackerUI();
-        showToast('Job saved!', 'success');
-        
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-    }
-    
-    // Update Status
-    async function updateJobStatus(jobId, status) {
-      try {
-        const res = await fetch('/api/update-job-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, jobId, status })
-        });
-        
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        
-        const job = savedJobs.find(j => j.id === jobId);
-        if (job) job.status = status;
-        updateTrackerUI();
-        showToast(`Status updated to ${status}`, 'success');
-        
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-    }
-    
-    function updateTrackerUI() {
-      const counts = { SAVED: 0, APPLIED: 0, INTERVIEW: 0, REJECTED: 0 };
-      savedJobs.forEach(j => { if (counts[j.status] !== undefined) counts[j.status]++; });
-      
-      document.getElementById('stat-saved').textContent = counts.SAVED;
-      document.getElementById('stat-applied').textContent = counts.APPLIED;
-      document.getElementById('stat-interview').textContent = counts.INTERVIEW;
-      document.getElementById('stat-rejected').textContent = counts.REJECTED;
-      document.getElementById('saved-count').textContent = savedJobs.length;
-      document.getElementById('saved-count').style.display = savedJobs.length ? 'inline' : 'none';
-      
-      if (savedJobs.length === 0) {
-        document.getElementById('no-saved-jobs').style.display = 'block';
-        return;
-      }
-      
-      document.getElementById('no-saved-jobs').style.display = 'none';
-      
-      document.getElementById('saved-jobs-list').innerHTML = savedJobs.map(job => {
-        const statusClass = job.status.toLowerCase();
-        return `
-          <div class="job-card">
-            <div class="job-header">
-              <div>
-                <div class="job-title">${job.title}</div>
-                <div class="job-company">${job.company}</div>
-                <div class="job-meta">
-                  <span>📍 ${job.location}</span>
-                  <span class="status-badge ${statusClass}">${job.status}</span>
-                </div>
-              </div>
-              <div class="match-score">
-                <div class="match-percent ${job.matchScore >= 70 ? 'high' : 'medium'}">${job.matchScore}%</div>
-                <div class="match-label">Match</div>
-              </div>
-            </div>
-            <div class="job-actions">
-              <select onchange="updateJobStatus('${job.id}', this.value)" style="padding: 8px 12px; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 8px; color: #e2e8f0;">
-                <option value="SAVED" ${job.status === 'SAVED' ? 'selected' : ''}>Saved</option>
-                <option value="APPLIED" ${job.status === 'APPLIED' ? 'selected' : ''}>Applied</option>
-                <option value="INTERVIEW" ${job.status === 'INTERVIEW' ? 'selected' : ''}>Interview</option>
-                <option value="OFFER" ${job.status === 'OFFER' ? 'selected' : ''}>Offer</option>
-                <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
-              </select>
-              <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
-              <a href="${job.url || '#'}" target="_blank" class="btn btn-secondary btn-sm">🔗 Apply</a>
-            </div>
+        <div class="analysis-card">
+          <h4>👥 Your Competition</h4>
+          <div class="item mb-4"><div style="font-size:0.8rem; color:#64748b;">Typical winner:</div><div style="font-size:0.9rem;">${d.competitorAnalysis?.typicalWinningCandidate || '-'}</div></div>
+          <div class="item mb-4"><div style="font-size:0.8rem; color:#64748b;">How you compare:</div><div style="font-size:0.9rem;">${d.competitorAnalysis?.howYouCompare || '-'}</div></div>
+          <div class="grid-2" style="gap:8px;">
+            <div class="item success"><div style="font-size:0.75rem; color:#10b981;">Your advantage:</div><div style="font-size:0.85rem;">${d.competitorAnalysis?.yourCompetitiveAdvantage || '-'}</div></div>
+            <div class="item danger"><div style="font-size:0.75rem; color:#ef4444;">Your disadvantage:</div><div style="font-size:0.85rem;">${d.competitorAnalysis?.yourBiggestDisadvantage || '-'}</div></div>
           </div>
-        `;
-      }).join('');
-    }
+        </div>
+      </div>
+    </div>
     
-    // Utilities
-    function setLoading(btn, prefix, loading, text) {
-      document.getElementById(`${prefix}-btn-text`).textContent = text;
-      document.getElementById(`${prefix}-loading`).style.display = loading ? 'inline-block' : 'none';
-      btn.disabled = loading;
-    }
+    <div class="card">
+      <h3 class="mb-4">📋 Action Plan</h3>
+      <div class="grid-2">
+        <div>
+          <div style="color:#ef4444; font-size:0.85rem; font-weight:600; margin-bottom:8px;">🚨 Before applying:</div>
+          <ul class="action-list urgent">${(d.prioritizedActionPlan?.before_applying || []).map(a => `<li>${a}</li>`).join('') || '<li class="text-muted">None</li>'}</ul>
+        </div>
+        <div>
+          <div style="color:#10b981; font-size:0.85rem; font-weight:600; margin-bottom:8px;">⚡ Quick wins:</div>
+          <ul class="action-list quick">${(d.prioritizedActionPlan?.quick_wins || []).map(a => `<li>${a}</li>`).join('') || '<li class="text-muted">None</li>'}</ul>
+        </div>
+      </div>
+    </div>
     
-    function showToast(message, type = 'info') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
+    ${(d.resumeRewrites || []).length > 0 ? `
+    <div class="card">
+      <h3 class="mb-4">✍️ Suggested Rewrites</h3>
+      ${d.resumeRewrites.map(r => `
+        <div style="background:#1e1e2e; border-radius:10px; padding:16px; margin-bottom:12px;">
+          <div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">${r.section || 'Resume section'}</div>
+          <div style="font-size:0.75rem; color:#ef4444; margin-bottom:4px;">BEFORE:</div>
+          <div style="background:#0a0a0f; padding:10px; border-radius:6px; text-decoration:line-through; color:#64748b;">${r.currentText}</div>
+          <div style="font-size:0.75rem; color:#10b981; margin:12px 0 4px;">AFTER:</div>
+          <div style="background:rgba(16,185,129,0.1); padding:10px; border-radius:6px;">${r.rewrittenText}</div>
+          ${r.whyBetter ? `<div style="font-size:0.85rem; color:#64748b; margin-top:8px; font-style:italic;">Why: ${r.whyBetter}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
     
-    // Close modals on escape
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        closeModal();
-        closeCoverLetterModal();
-      }
+    <div class="bottom-line">
+      <h3>💬 The Bottom Line</h3>
+      <p style="font-size:1.05rem; margin-bottom:16px; color:#e2e8f0;">${d.bottomLine?.honestAssessment || ''}</p>
+      <div class="one-thing">
+        <div class="one-thing-label">If you fix ONE thing, fix this:</div>
+        <div class="one-thing-text">${d.bottomLine?.oneThingToFix || ''}</div>
+      </div>
+      <p class="encouragement">${d.bottomLine?.encouragement || ''}</p>
+    </div>
+  `;
+  
+  document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ========== SEARCH TAB ==========
+const searchZone = document.getElementById('search-upload-zone');
+const searchInput = document.getElementById('search-resume-input');
+const extractBtn = document.getElementById('extract-btn');
+
+searchZone.addEventListener('click', () => searchInput.click());
+searchZone.addEventListener('dragover', e => { e.preventDefault(); searchZone.style.borderColor = '#6366f1'; });
+searchZone.addEventListener('dragleave', () => { searchZone.style.borderColor = searchFile ? '#10b981' : '#2e2e3e'; });
+searchZone.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleSearchFile(e.dataTransfer.files[0]); });
+searchInput.addEventListener('change', e => { if (e.target.files[0]) handleSearchFile(e.target.files[0]); });
+
+function handleSearchFile(file) {
+  if (!file.name.match(/\.(pdf|doc|docx)$/i)) { showToast('Please upload PDF or Word', 'error'); return; }
+  searchFile = file;
+  document.getElementById('search-file-name').textContent = '✓ ' + file.name;
+  searchZone.classList.add('has-file');
+  extractBtn.disabled = false;
+}
+
+extractBtn.addEventListener('click', async () => {
+  if (!searchFile) return;
+  setLoading('extract', true, 'Extracting profile...');
+  
+  try {
+    const formData = new FormData();
+    formData.append('resume', searchFile);
+    
+    const res = await fetch('/api/extract-profile', { method: 'POST', body: formData });
+    const data = await res.json();
+    
+    if (!data.success) throw new Error(data.error);
+    
+    sessionId = data.data.sessionId;
+    profile = data.data.profile;
+    localStorage.setItem('jobmatch_session', sessionId);
+    
+    displayProfile();
+    showToast('Profile extracted!', 'success');
+    
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    setLoading('extract', false, 'Extract My Profile & Find Jobs');
+  }
+});
+
+function displayProfile() {
+  document.getElementById('search-upload-card').style.display = 'none';
+  document.getElementById('profile-card').style.display = 'block';
+  
+  document.getElementById('profile-name').textContent = profile.name || 'Your Profile';
+  document.getElementById('profile-title').textContent = profile.currentTitle || '';
+  document.getElementById('profile-exp').textContent = `${profile.yearsExperience || '?'} years`;
+  document.getElementById('profile-level').textContent = profile.experienceLevel || '';
+  document.getElementById('profile-location').textContent = profile.location || '';
+  document.getElementById('profile-skills').innerHTML = (profile.hardSkills || []).slice(0, 8).map(s => `<span class="tag tag-info">${s}</span>`).join('');
+  
+  if (profile.targetTitles?.[0]) document.getElementById('search-query').value = profile.targetTitles[0];
+  if (profile.location) document.getElementById('search-location').value = profile.location;
+}
+
+document.getElementById('search-jobs-btn').addEventListener('click', searchJobs);
+document.getElementById('search-query').addEventListener('keypress', e => { if (e.key === 'Enter') searchJobs(); });
+
+async function searchJobs() {
+  if (!sessionId) { showToast('Upload resume first', 'error'); return; }
+  setLoading('search', true, 'Searching...');
+  
+  try {
+    const res = await fetch('/api/search-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        searchQuery: document.getElementById('search-query').value,
+        location: document.getElementById('search-location').value
+      })
     });
     
-    // Load saved jobs on init
-    async function loadSavedJobs() {
-      if (!sessionId) return;
-      try {
-        const res = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
-        const data = await res.json();
-        if (data.success) {
-          savedJobs = data.data.savedJobs || [];
-          updateTrackerUI();
-        }
-      } catch (e) { console.error(e); }
-    }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
     
-    loadSavedJobs();
-  </script>
+    jobs = data.data.jobs;
+    displayJobs(jobs);
+    
+    document.getElementById('job-results').style.display = 'block';
+    document.getElementById('jobs-badge').textContent = jobs.length;
+    document.getElementById('jobs-badge').style.display = 'inline';
+    
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    setLoading('search', false, '🔍 Search Jobs');
+  }
+}
+
+function displayJobs(list, filter = 'all') {
+  let filtered = list;
+  if (filter === 'excellent') filtered = list.filter(j => j.matchScore >= 80);
+  else if (filter === 'good') filtered = list.filter(j => j.matchScore >= 60 && j.matchScore < 80);
+  
+  document.getElementById('jobs-count').textContent = filtered.length;
+  
+  document.getElementById('job-list').innerHTML = filtered.length === 0 
+    ? '<div class="empty-state"><div class="icon">🔍</div><h3>No jobs match this filter</h3></div>'
+    : filtered.map(job => {
+      const scoreClass = job.matchScore >= 80 ? 'high' : job.matchScore >= 60 ? 'medium' : 'low';
+      const cardClass = job.matchScore >= 80 ? 'excellent' : job.matchScore >= 60 ? 'good' : 'moderate';
+      const recClass = job.recommendation === 'APPLY_NOW' ? 'apply-now' : job.recommendation === 'WORTH_APPLYING' ? 'worth-it' : job.recommendation === 'CUSTOMIZE_FIRST' ? 'customize' : 'skip';
+      
+      return `
+        <div class="job-card ${cardClass}">
+          <div class="job-header">
+            <div>
+              <div class="job-title">${job.title}</div>
+              <div class="job-company">${job.company}</div>
+              <div class="job-meta">
+                <span>📍 ${job.location}</span>
+                ${job.salary ? `<span>💰 ${job.salary}</span>` : ''}
+                <span>🕐 ${job.postedDate}</span>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
+              <div style="font-size:0.7rem; color:#64748b;">MATCH</div>
+            </div>
+          </div>
+          <div class="flex gap-2 items-center mt-4">
+            <span class="recommendation ${recClass}">${(job.recommendation || '').replace(/_/g, ' ')}</span>
+            ${(job.matchingSkills || []).slice(0, 3).map(s => `<span class="tag tag-success" style="font-size:0.75rem;">${s}</span>`).join('')}
+          </div>
+          <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description}</p>
+          <div class="flex gap-2 mt-4">
+            <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    displayJobs(jobs, btn.dataset.filter);
+  });
+});
+
+// ========== COVER LETTER ==========
+async function generateCoverLetter(jobId) {
+  const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
+  if (!job) return;
+  
+  currentJob = job;
+  document.getElementById('cl-job-info').textContent = `For: ${job.title} at ${job.company}`;
+  document.getElementById('cover-letter-text').innerHTML = '<div class="loading"></div> Generating...';
+  document.getElementById('cover-letter-modal').classList.add('open');
+  
+  try {
+    const res = await fetch('/api/generate-cover-letter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, jobId, companyName: job.company, jobTitle: job.title })
+    });
+    
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    
+    document.getElementById('cover-letter-text').textContent = data.data.coverLetter;
+  } catch (err) {
+    document.getElementById('cover-letter-text').textContent = 'Failed to generate. Please try again.';
+  }
+}
+
+function closeCoverLetterModal() { document.getElementById('cover-letter-modal').classList.remove('open'); }
+function copyCoverLetter() { navigator.clipboard.writeText(document.getElementById('cover-letter-text').textContent); showToast('Copied!', 'success'); }
+function regenerateCoverLetter() { if (currentJob) generateCoverLetter(currentJob.id); }
+
+// ========== TRACKER ==========
+async function saveJob(jobId) {
+  const job = jobs.find(j => j.id === jobId);
+  if (!job) return;
+  
+  try {
+    const res = await fetch('/api/save-job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, job, status: 'SAVED' })
+    });
+    
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    
+    savedJobs = data.data.savedJobs;
+    updateTracker();
+    showToast('Job saved!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function updateJobStatus(jobId, status) {
+  try {
+    const res = await fetch('/api/update-job-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, jobId, status })
+    });
+    
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    
+    const job = savedJobs.find(j => j.id === jobId);
+    if (job) job.status = status;
+    updateTracker();
+    showToast('Status updated!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function updateTracker() {
+  const counts = { SAVED: 0, APPLIED: 0, INTERVIEW: 0, REJECTED: 0 };
+  savedJobs.forEach(j => { if (counts[j.status] !== undefined) counts[j.status]++; });
+  
+  document.getElementById('stat-saved').textContent = counts.SAVED;
+  document.getElementById('stat-applied').textContent = counts.APPLIED;
+  document.getElementById('stat-interview').textContent = counts.INTERVIEW;
+  document.getElementById('stat-rejected').textContent = counts.REJECTED;
+  document.getElementById('saved-badge').textContent = savedJobs.length;
+  document.getElementById('saved-badge').style.display = savedJobs.length ? 'inline' : 'none';
+  
+  if (savedJobs.length === 0) {
+    document.getElementById('no-saved-jobs').style.display = 'block';
+    return;
+  }
+  
+  document.getElementById('no-saved-jobs').style.display = 'none';
+  document.getElementById('saved-jobs-list').innerHTML = savedJobs.map(job => `
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">${job.title}</div>
+          <div class="job-company">${job.company}</div>
+          <div class="job-meta">
+            <span>📍 ${job.location}</span>
+            <span class="tag ${job.status === 'INTERVIEW' ? 'tag-success' : job.status === 'APPLIED' ? 'tag-warning' : job.status === 'REJECTED' ? 'tag-danger' : 'tag-info'}">${job.status}</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="match-percent ${job.matchScore >= 70 ? 'high' : 'medium'}">${job.matchScore}%</div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <select onchange="updateJobStatus('${job.id}', this.value)" style="padding:8px; background:#1e1e2e; border:1px solid #2e2e3e; border-radius:8px; color:#e2e8f0;">
+          <option value="SAVED" ${job.status === 'SAVED' ? 'selected' : ''}>Saved</option>
+          <option value="APPLIED" ${job.status === 'APPLIED' ? 'selected' : ''}>Applied</option>
+          <option value="INTERVIEW" ${job.status === 'INTERVIEW' ? 'selected' : ''}>Interview</option>
+          <option value="OFFER" ${job.status === 'OFFER' ? 'selected' : ''}>Offer</option>
+          <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== UTILITIES ==========
+function setLoading(prefix, loading, text) {
+  document.getElementById(`${prefix}-btn-text`).textContent = text;
+  document.getElementById(`${prefix}-loading`).style.display = loading ? 'inline-block' : 'none';
+  document.getElementById(`${prefix}-btn`).disabled = loading;
+}
+
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCoverLetterModal(); });
+
+// Load saved on init
+async function loadSaved() {
+  if (!sessionId) return;
+  try {
+    const res = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
+    const data = await res.json();
+    if (data.success) { savedJobs = data.data.savedJobs || []; updateTracker(); }
+  } catch (e) {}
+}
+loadSaved();
+</script>
 </body>
 </html>

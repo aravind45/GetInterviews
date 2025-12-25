@@ -1,7 +1,7 @@
 {
-  "name": "jobmatch-ai",
+  "name": "jobmatch-ai-complete",
   "version": "1.0.0",
-  "description": "AI-powered job search that matches jobs to YOUR resume",
+  "description": "Resume Analyzer + Job Search + Cover Letters + Tracker - All in One",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

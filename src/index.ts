@@ -17,7 +17,7 @@ const upload = multer({ dest: '/tmp/uploads/', limits: { fileSize: 10 * 1024 * 1
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// In-memory storage (use DB in production)
+// In-memory storage
 const sessions: Record<string, any> = {};
 
 /**
@@ -39,10 +39,154 @@ async function parseResume(filePath: string, mimeType: string): Promise<string> 
   throw new Error('Unsupported file format');
 }
 
-/**
- * POST /api/extract-profile
- * Extract candidate profile from resume
- */
+// ============================================================
+// FEATURE 1: RESUME ANALYSIS (Deep Diagnosis)
+// ============================================================
+
+app.post('/api/analyze-match', upload.single('resume'), async (req, res) => {
+  let filePath = '';
+  
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Resume file is required' });
+    }
+    
+    const jobDescription = req.body.jobDescription;
+    if (!jobDescription || jobDescription.length < 50) {
+      return res.status(400).json({ success: false, error: 'Job description is required (minimum 50 characters)' });
+    }
+    
+    filePath = req.file.path;
+    const resumeText = await parseResume(filePath, req.file.mimetype);
+    
+    if (!resumeText || resumeText.trim().length < 50) {
+      return res.status(400).json({ success: false, error: 'Could not extract text from resume' });
+    }
+
+    // Store for later use
+    const sessionId = req.body.sessionId || 'sess_' + Math.random().toString(36).substring(2);
+    sessions[sessionId] = sessions[sessionId] || {};
+    sessions[sessionId].resumeText = resumeText;
+
+    const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews.
+
+RESUME:
+${resumeText.substring(0, 5000)}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 4000)}
+
+Analyze like you're the hiring manager with 200 applications to review. Be specific, honest, helpful.
+
+Return ONLY this JSON:
+{
+  "overallScore": <0-100>,
+  "verdict": "STRONG MATCH|MODERATE MATCH|WEAK MATCH|LONG SHOT|NOT A FIT",
+  "summary": "<2-3 sentences - brutal truth about their chances>",
+  
+  "sixSecondScan": {
+    "firstImpression": "<what recruiter notices in first 6 seconds>",
+    "standoutElements": ["<what's good>"],
+    "immediateRedFlags": ["<what makes them move to next resume>"],
+    "wouldReadMore": true/false,
+    "whyOrWhyNot": "<explanation>"
+  },
+  
+  "atsAnalysis": {
+    "score": <0-100>,
+    "likelyToPass": true/false,
+    "keywordsFound": ["<matches from JD>"],
+    "criticalKeywordsMissing": ["<will auto-reject>"],
+    "suggestionToPassATS": "<specific fix>"
+  },
+  
+  "qualificationGap": {
+    "experienceRequired": "<what JD asks>",
+    "experienceYouHave": "<what resume shows>",
+    "gapAssessment": "OVER_QUALIFIED|GOOD_MATCH|SLIGHTLY_UNDER|SIGNIFICANTLY_UNDER",
+    "yearsGap": "<e.g., 'JD wants 5+, you show ~3'>",
+    "howToCloseGap": "<if possible>"
+  },
+  
+  "dealbreakers": [
+    {"requirement": "<from JD>", "status": "MISSING|WEAK", "urgentFix": "<what to do>"}
+  ],
+  
+  "strengths": [
+    {"skill": "<what you have>", "howItHelps": "<why matters>", "howToHighlight": "<make visible>"}
+  ],
+  
+  "hiddenRedFlags": [
+    {"issue": "<concern>", "whatRecruiterThinks": "<assumption>", "howToAddress": "<fix>"}
+  ],
+  
+  "competitorAnalysis": {
+    "typicalWinningCandidate": "<who gets this job>",
+    "howYouCompare": "<honest comparison>",
+    "yourCompetitiveAdvantage": "<what you have>",
+    "yourBiggestDisadvantage": "<where you fall short>"
+  },
+  
+  "applicationStrategy": {
+    "shouldYouApply": true/false,
+    "confidenceLevel": "HIGH|MEDIUM|LOW",
+    "bestApproach": "APPLY_NOW|CUSTOMIZE_HEAVILY|GET_REFERRAL|SKIP",
+    "timeWorthInvesting": "<how much time>"
+  },
+  
+  "resumeRewrites": [
+    {"section": "<part>", "currentText": "<weak>", "rewrittenText": "<better>", "whyBetter": "<reason>"}
+  ],
+  
+  "prioritizedActionPlan": {
+    "before_applying": ["<must do>"],
+    "quick_wins": ["<easy fixes>"],
+    "worth_the_effort": ["<harder but valuable>"],
+    "long_term": ["<for future>"]
+  },
+  
+  "interviewProbability": {
+    "percentage": <0-100>,
+    "reasoning": "<why>",
+    "whatWouldIncreaseOdds": "<specific change>"
+  },
+  
+  "bottomLine": {
+    "honestAssessment": "<real talk>",
+    "oneThingToFix": "<most important>",
+    "encouragement": "<something positive>"
+  }
+}`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 3000
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    
+    if (!jsonMatch) {
+      throw new Error('Failed to analyze');
+    }
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, data: analysis, sessionId });
+
+  } catch (error: any) {
+    console.error('Analysis error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+});
+
+// ============================================================
+// FEATURE 2: PROFILE EXTRACTION (for Job Search)
+// ============================================================
+
 app.post('/api/extract-profile', upload.single('resume'), async (req, res) => {
   let filePath = '';
   
@@ -53,42 +197,25 @@ app.post('/api/extract-profile', upload.single('resume'), async (req, res) => {
     
     filePath = req.file.path;
     const resumeText = await parseResume(filePath, req.file.mimetype);
-    
-    if (!resumeText || resumeText.length < 100) {
-      return res.status(400).json({ success: false, error: 'Could not extract text from resume' });
-    }
 
     const prompt = `Extract a structured profile from this resume. Return ONLY JSON:
 
 RESUME:
 ${resumeText.substring(0, 6000)}
 
-Return this exact JSON structure:
 {
   "name": "<full name>",
-  "email": "<email if found>",
-  "phone": "<phone if found>",
-  "location": "<city, state/country>",
+  "email": "<email>",
+  "location": "<city, state>",
   "currentTitle": "<most recent job title>",
   "yearsExperience": <number>,
-  "experienceLevel": "ENTRY|MID|SENIOR|LEAD|EXECUTIVE",
-  
+  "experienceLevel": "ENTRY|MID|SENIOR|LEAD",
   "targetTitles": ["<job titles they could apply for>"],
-  "targetIndustries": ["<industries they fit>"],
-  
-  "hardSkills": ["<technical skills, tools, languages>"],
-  "softSkills": ["<communication, leadership, etc>"],
-  "certifications": ["<any certifications>"],
-  
-  "education": {
-    "degree": "<highest degree>",
-    "field": "<field of study>",
-    "school": "<school name>"
-  },
-  
+  "hardSkills": ["<technical skills>"],
+  "softSkills": ["<soft skills>"],
+  "education": {"degree": "<degree>", "field": "<field>", "school": "<school>"},
   "summary": "<2-3 sentence professional summary>",
-  "strengths": ["<top 3 strengths>"],
-  "searchKeywords": ["<keywords to use when searching for jobs>"]
+  "searchKeywords": ["<keywords for job search>"]
 }`;
 
     const completion = await groq.chat.completions.create({
@@ -101,80 +228,68 @@ Return this exact JSON structure:
     const responseText = completion.choices[0]?.message?.content || '';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     
-    if (!jsonMatch) {
-      throw new Error('Failed to parse profile');
-    }
+    if (!jsonMatch) throw new Error('Failed to parse profile');
 
     const profile = JSON.parse(jsonMatch[0]);
-    
-    // Generate session ID
     const sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-    sessions[sessionId] = { profile, resumeText, jobs: [], createdAt: Date.now() };
+    sessions[sessionId] = { profile, resumeText, jobs: [], savedJobs: [] };
 
     res.json({ success: true, data: { sessionId, profile, resumeText } });
 
   } catch (error: any) {
-    console.error('Profile extraction error:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
 });
 
-/**
- * POST /api/search-jobs
- * Search for jobs based on profile
- */
+// ============================================================
+// FEATURE 3: JOB SEARCH
+// ============================================================
+
 app.post('/api/search-jobs', async (req, res) => {
   try {
-    const { sessionId, searchQuery, location, jobType } = req.body;
-    
+    const { sessionId, searchQuery, location } = req.body;
     const session = sessions[sessionId];
+    
     if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found. Please upload resume first.' });
+      return res.status(400).json({ success: false, error: 'Session not found. Upload resume first.' });
     }
 
-    // Build search query from profile if not provided
     const query = searchQuery || session.profile.targetTitles?.[0] || session.profile.currentTitle;
     const loc = location || session.profile.location || 'Remote';
 
-    // In a real implementation, this would call job board APIs
-    // For now, we'll generate realistic job listings based on the profile
-    const prompt = `Generate 8 realistic job listings that would match someone with this profile:
+    const prompt = `Generate 8 realistic job listings for this candidate:
 
-CANDIDATE PROFILE:
-- Current Title: ${session.profile.currentTitle}
-- Experience: ${session.profile.yearsExperience} years
+CANDIDATE:
+- Title: ${session.profile.currentTitle}
+- Experience: ${session.profile.yearsExperience} years (${session.profile.experienceLevel})
 - Skills: ${session.profile.hardSkills?.slice(0, 10).join(', ')}
-- Target Roles: ${session.profile.targetTitles?.join(', ')}
 
 SEARCH: "${query}" in "${loc}"
 
-Return ONLY a JSON array of jobs. Make them realistic with real company types and requirements:
+Return JSON array:
 [
   {
     "id": "<unique id>",
     "title": "<job title>",
-    "company": "<realistic company name>",
-    "location": "<city or Remote>",
-    "salary": "<salary range if typical>",
-    "jobType": "FULL_TIME|CONTRACT|PART_TIME",
+    "company": "<company name>",
+    "location": "<location>",
+    "salary": "<salary range>",
     "postedDate": "<X days ago>",
-    "url": "<placeholder url>",
-    "description": "<3-4 sentence job description>",
-    "requirements": ["<requirement 1>", "<requirement 2>", ...],
-    "niceToHave": ["<nice to have 1>", ...],
-    "benefits": ["<benefit 1>", ...]
+    "description": "<3-4 sentences>",
+    "requirements": ["<req1>", "<req2>"],
+    "niceToHave": ["<nice1>"],
+    "matchScore": <0-100>,
+    "matchLevel": "EXCELLENT|GOOD|MODERATE|LOW",
+    "recommendation": "APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP",
+    "matchingSkills": ["<matching skills>"],
+    "missingSkills": ["<missing skills>"],
+    "quickTake": "<one sentence advice>"
   }
 ]
 
-Include a mix:
-- 2 jobs that are PERFECT matches (90%+)
-- 3 jobs that are GOOD matches (70-89%)
-- 2 jobs that are STRETCH matches (50-69%)
-- 1 job that is a REACH (30-49%)
-
-Vary the company sizes (startup, mid-size, enterprise) and make requirements realistic.`;
+Include mix: 2 perfect (90%+), 3 good (70-89%), 2 stretch (50-69%), 1 reach (30-49%).`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
@@ -186,169 +301,28 @@ Vary the company sizes (startup, mid-size, enterprise) and make requirements rea
     const responseText = completion.choices[0]?.message?.content || '';
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     
-    if (!jsonMatch) {
-      throw new Error('Failed to generate jobs');
-    }
+    if (!jsonMatch) throw new Error('Failed to generate jobs');
 
     const jobs = JSON.parse(jsonMatch[0]);
-    
-    // Now score each job
-    const scoredJobs = await Promise.all(jobs.map(async (job: any) => {
-      const score = await quickScoreJob(session.profile, session.resumeText, job);
-      return { ...job, ...score };
-    }));
+    jobs.sort((a: any, b: any) => b.matchScore - a.matchScore);
+    session.jobs = jobs;
 
-    // Sort by score
-    scoredJobs.sort((a, b) => b.matchScore - a.matchScore);
-    
-    // Save to session
-    session.jobs = scoredJobs;
-
-    res.json({ success: true, data: { jobs: scoredJobs } });
+    res.json({ success: true, data: { jobs } });
 
   } catch (error: any) {
-    console.error('Job search error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-/**
- * Quick score a job against profile
- */
-async function quickScoreJob(profile: any, resumeText: string, job: any): Promise<any> {
-  const prompt = `Score this job match. Return ONLY JSON:
+// ============================================================
+// FEATURE 4: COVER LETTER GENERATION
+// ============================================================
 
-CANDIDATE:
-- Title: ${profile.currentTitle}
-- Experience: ${profile.yearsExperience} years (${profile.experienceLevel})
-- Skills: ${profile.hardSkills?.join(', ')}
-
-JOB:
-- Title: ${job.title}
-- Requirements: ${job.requirements?.join(', ')}
-- Nice to have: ${job.niceToHave?.join(', ')}
-
-Return:
-{
-  "matchScore": <0-100>,
-  "matchLevel": "EXCELLENT|GOOD|MODERATE|LOW",
-  "recommendation": "APPLY_NOW|WORTH_APPLYING|CUSTOMIZE_FIRST|SKIP",
-  "matchingSkills": ["<skills you have that match>"],
-  "missingSkills": ["<required skills you lack>"],
-  "quickTake": "<one sentence - why apply or not>"
-}`;
-
-  try {
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-      max_tokens: 500
-    });
-
-    const responseText = completion.choices[0]?.message?.content || '';
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (e) {
-    console.error('Scoring error:', e);
-  }
-
-  return { matchScore: 50, matchLevel: 'MODERATE', recommendation: 'WORTH_APPLYING', matchingSkills: [], missingSkills: [], quickTake: 'Unable to analyze' };
-}
-
-/**
- * POST /api/analyze-job
- * Deep analysis of a specific job
- */
-app.post('/api/analyze-job', async (req, res) => {
-  try {
-    const { sessionId, jobId, jobDescription } = req.body;
-    
-    const session = sessions[sessionId];
-    if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found' });
-    }
-
-    // Find job or use provided description
-    let job = session.jobs?.find((j: any) => j.id === jobId);
-    const jd = jobDescription || job?.description + '\n\nRequirements:\n' + job?.requirements?.join('\n');
-
-    const prompt = `Deep analysis of job fit. Return ONLY JSON:
-
-RESUME:
-${session.resumeText.substring(0, 4000)}
-
-JOB:
-${jd.substring(0, 3000)}
-
-{
-  "overallScore": <0-100>,
-  "verdict": "STRONG MATCH|MODERATE MATCH|WEAK MATCH|NOT A FIT",
-  "summary": "<2-3 sentences on fit>",
-  
-  "interviewChance": {
-    "percentage": <0-100>,
-    "reasoning": "<why>"
-  },
-  
-  "skillAnalysis": {
-    "matched": [{"skill": "<skill>", "evidence": "<from resume>"}],
-    "missing": [{"skill": "<skill>", "severity": "CRITICAL|IMPORTANT|NICE_TO_HAVE", "suggestion": "<how to address>"}]
-  },
-  
-  "experienceGap": {
-    "required": "<what they want>",
-    "youHave": "<what you have>",
-    "assessment": "OVERQUALIFIED|GOOD_MATCH|SLIGHTLY_UNDER|SIGNIFICANTLY_UNDER"
-  },
-  
-  "strategy": {
-    "shouldApply": true/false,
-    "approach": "APPLY_NOW|CUSTOMIZE_RESUME|GET_REFERRAL|SKIP",
-    "timeToSpend": "<how much time worth investing>",
-    "keyPointsToEmphasize": ["<what to highlight>"]
-  },
-  
-  "dealbreakers": ["<if any critical missing requirements>"],
-  
-  "bottomLine": "<honest 1-2 sentence advice>"
-}`;
-
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 1500
-    });
-
-    const responseText = completion.choices[0]?.message?.content || '';
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    
-    if (!jsonMatch) {
-      throw new Error('Analysis failed');
-    }
-
-    const analysis = JSON.parse(jsonMatch[0]);
-    res.json({ success: true, data: { analysis, job } });
-
-  } catch (error: any) {
-    console.error('Job analysis error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-/**
- * POST /api/generate-cover-letter
- * Generate tailored cover letter
- */
 app.post('/api/generate-cover-letter', async (req, res) => {
   try {
-    const { sessionId, jobId, jobDescription, companyName, jobTitle, tone } = req.body;
-    
+    const { sessionId, jobId, jobDescription, companyName, jobTitle } = req.body;
     const session = sessions[sessionId];
+    
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found' });
     }
@@ -356,27 +330,25 @@ app.post('/api/generate-cover-letter', async (req, res) => {
     const job = session.jobs?.find((j: any) => j.id === jobId);
     const company = companyName || job?.company || 'the company';
     const title = jobTitle || job?.title || 'the position';
-    const jd = jobDescription || job?.description + '\n' + job?.requirements?.join('\n');
+    const jd = jobDescription || (job?.description + '\n' + job?.requirements?.join('\n'));
 
-    const prompt = `Write a compelling cover letter. 
+    const prompt = `Write a compelling cover letter.
 
 CANDIDATE:
 ${session.resumeText.substring(0, 3000)}
 
 JOB: ${title} at ${company}
-${jd.substring(0, 2000)}
-
-TONE: ${tone || 'professional but personable'}
+${jd?.substring(0, 2000) || 'Position at company'}
 
 Write a cover letter that:
-1. Opens with a hook (not "I am writing to apply...")
-2. Connects their specific experience to job requirements
-3. Shows knowledge of the company/role
-4. Includes 2-3 concrete achievements with numbers
+1. Opens with a hook (NOT "I am writing to apply...")
+2. Connects specific experience to job requirements
+3. Includes 2-3 achievements with numbers
+4. Shows genuine interest in company
 5. Ends with confident call to action
 6. Is 250-350 words
 
-Return ONLY the cover letter text, no JSON or labels.`;
+Return ONLY the cover letter text.`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
@@ -386,31 +358,22 @@ Return ONLY the cover letter text, no JSON or labels.`;
     });
 
     const coverLetter = completion.choices[0]?.message?.content || '';
-
-    res.json({ 
-      success: true, 
-      data: { 
-        coverLetter: coverLetter.trim(),
-        company,
-        jobTitle: title
-      } 
-    });
+    res.json({ success: true, data: { coverLetter: coverLetter.trim(), company, jobTitle: title } });
 
   } catch (error: any) {
-    console.error('Cover letter error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-/**
- * POST /api/save-job
- * Save a job to tracking list
- */
+// ============================================================
+// FEATURE 5: JOB TRACKER
+// ============================================================
+
 app.post('/api/save-job', async (req, res) => {
   try {
     const { sessionId, job, status } = req.body;
-    
     const session = sessions[sessionId];
+    
     if (!session) {
       return res.status(400).json({ success: false, error: 'Session not found' });
     }
@@ -418,7 +381,6 @@ app.post('/api/save-job', async (req, res) => {
     if (!session.savedJobs) session.savedJobs = [];
     
     const existingIndex = session.savedJobs.findIndex((j: any) => j.id === job.id);
-    
     if (existingIndex >= 0) {
       session.savedJobs[existingIndex] = { ...session.savedJobs[existingIndex], ...job, status, updatedAt: Date.now() };
     } else {
@@ -426,34 +388,22 @@ app.post('/api/save-job', async (req, res) => {
     }
 
     res.json({ success: true, data: { savedJobs: session.savedJobs } });
-
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-/**
- * GET /api/saved-jobs
- */
-app.get('/api/saved-jobs', async (req, res) => {
+app.get('/api/saved-jobs', (req, res) => {
   const sessionId = req.query.sessionId as string;
   const session = sessions[sessionId];
-  
-  if (!session) {
-    return res.json({ success: true, data: { savedJobs: [] } });
-  }
-
-  res.json({ success: true, data: { savedJobs: session.savedJobs || [] } });
+  res.json({ success: true, data: { savedJobs: session?.savedJobs || [] } });
 });
 
-/**
- * POST /api/update-job-status
- */
 app.post('/api/update-job-status', async (req, res) => {
   try {
-    const { sessionId, jobId, status, notes } = req.body;
-    
+    const { sessionId, jobId, status } = req.body;
     const session = sessions[sessionId];
+    
     if (!session?.savedJobs) {
       return res.status(400).json({ success: false, error: 'No saved jobs' });
     }
@@ -461,29 +411,20 @@ app.post('/api/update-job-status', async (req, res) => {
     const job = session.savedJobs.find((j: any) => j.id === jobId);
     if (job) {
       job.status = status;
-      if (notes) job.notes = notes;
       job.updatedAt = Date.now();
       if (status === 'APPLIED') job.appliedAt = Date.now();
     }
 
     res.json({ success: true, data: { job } });
-
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Health & Static
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Start server
 const PORT = process.env.PORT || 3000;
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
