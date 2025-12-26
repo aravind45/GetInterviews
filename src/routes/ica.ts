@@ -19,13 +19,28 @@ const router = Router();
 
 /**
  * Helper function to get session UUID from session token
+ * Auto-creates session if it doesn't exist (for development)
  */
 async function getSessionUuid(sessionToken: string): Promise<string | null> {
   const pool = getPool();
-  const result = await pool.query(
+
+  // First try to find existing session
+  let result = await pool.query(
     'SELECT id FROM user_sessions WHERE session_token = $1 AND is_active = true AND expires_at > NOW()',
     [sessionToken]
   );
+
+  // If session doesn't exist, create it
+  if (result.rows.length === 0) {
+    console.log(`Creating new session for token: ${sessionToken}`);
+    result = await pool.query(
+      `INSERT INTO user_sessions (session_token, ip_address, user_agent, expires_at, is_active)
+       VALUES ($1, '127.0.0.1', 'Auto-created', NOW() + INTERVAL '7 days', true)
+       RETURNING id`,
+      [sessionToken]
+    );
+  }
+
   return result.rows.length > 0 ? result.rows[0].id : null;
 }
 
