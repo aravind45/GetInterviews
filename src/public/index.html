@@ -1257,6 +1257,13 @@ analyzeBtn.addEventListener('click', async () => {
     const data = await res.json();
     
     if (!data.success) throw new Error(data.error);
+    
+    // IMPORTANT: Capture sessionId from response
+    if (data.sessionId) {
+      sessionId = data.sessionId;
+      localStorage.setItem('jobmatch_session', sessionId);
+    }
+    
     lastAnalysisData = data.data; // Store for cover letter generation
     
     // Save resume for logged-in users
@@ -1479,14 +1486,14 @@ function displayAnalysisResults(d) {
 let lastAnalysisData = null; // Store the analysis data for cover letter
 
 async function generateAnalysisCoverLetter() {
-  if (!sessionId) {
-    showToast('Please analyze your resume first', 'error');
-    return;
-  }
-  
   const jobDesc = document.getElementById('job-description').value.trim();
   if (!jobDesc) {
     showToast('Job description is required for cover letter', 'error');
+    return;
+  }
+  
+  if (!lastAnalysisData) {
+    showToast('Please analyze your resume first', 'error');
     return;
   }
   
@@ -1500,7 +1507,7 @@ async function generateAnalysisCoverLetter() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        sessionId, 
+        sessionId: sessionId || 'temp_' + Date.now(), 
         jobDescription: jobDesc,
         analysisData: lastAnalysisData
       })

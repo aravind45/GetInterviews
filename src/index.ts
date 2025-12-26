@@ -580,11 +580,7 @@ app.post('/api/update-job-status', async (req, res) => {
 app.post('/api/generate-specific-cover-letter', async (req, res) => {
   try {
     const { sessionId, jobDescription, analysisData } = req.body;
-    const session = sessions[sessionId];
-    
-    if (!session) {
-      return res.status(400).json({ success: false, error: 'Session not found' });
-    }
+    const session = sessions[sessionId] || {};
     
     if (!jobDescription) {
       return res.status(400).json({ success: false, error: 'Job description required' });
@@ -596,7 +592,8 @@ app.post('/api/generate-specific-cover-letter', async (req, res) => {
                        jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
 
     const resumeText = session.resumeText || '';
-    const profile = session.profile || {};
+    // Use profile from session, or extract from analysisData, or use empty object
+    const profile = session.profile || analysisData?.profile || {};
     
     // Extract specific achievements from resume
     const achievementPatterns = [
