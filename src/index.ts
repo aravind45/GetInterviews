@@ -575,21 +575,97 @@ app.post('/api/update-job-status', async (req, res) => {
 });
 
 // ============================================================
+// COMPANY RESEARCH HELPER
+// ============================================================
+async function researchCompany(companyName: string): Promise<string> {
+  if (!companyName || companyName.length < 2) {
+    return 'No company information available.';
+  }
+
+  try {
+    // Use Tavily API for company research if available
+    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+
+    if (TAVILY_API_KEY) {
+      const searchQuery = `${companyName} company products services recent news 2024 2025`;
+      const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          api_key: TAVILY_API_KEY,
+          query: searchQuery,
+          search_depth: 'basic',
+          max_results: 5,
+          include_answer: true
+        })
+      });
+
+      if (response.ok) {
+        const data: any = await response.json();
+        let companyInfo = '';
+
+        if (data.answer) {
+          companyInfo += `Overview: ${data.answer}\n\n`;
+        }
+
+        if (data.results && data.results.length > 0) {
+          companyInfo += 'Key Information:\n';
+          data.results.slice(0, 3).forEach((result: any, i: number) => {
+            companyInfo += `${i + 1}. ${result.title}\n${result.content}\n\n`;
+          });
+        }
+
+        return companyInfo || 'Limited company information found.';
+      }
+    }
+
+    // Fallback: Use Groq to generate a research summary based on company name
+    // This provides context about what the company likely does
+    const prompt = `Provide factual, publicly known information about ${companyName}. Include:
+1. What industry/sector they operate in
+2. Main products or services (if well-known)
+3. Company size/type (startup, enterprise, etc.) if publicly known
+
+Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If you don't have reliable information, say "Limited public information available about this company."`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 300
+    });
+
+    return completion.choices[0]?.message?.content?.trim() || 'No additional company information available.';
+
+  } catch (error) {
+    console.error('Company research error:', error);
+    return 'Unable to retrieve company information.';
+  }
+}
+
+// ============================================================
 // SPECIFIC COVER LETTER GENERATOR (for Analyze Resume page)
 // ============================================================
 app.post('/api/generate-specific-cover-letter', async (req, res) => {
   try {
-    const { sessionId, jobDescription, analysisData } = req.body;
+    const { sessionId, jobDescription, analysisData, companyName: providedCompanyName } = req.body;
     const session = sessions[sessionId] || {};
-    
+
     if (!jobDescription) {
       return res.status(400).json({ success: false, error: 'Job description required' });
     }
 
     // Extract company name and role from job description
     const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
-    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) || 
+    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
                        jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+
+    const companyName = providedCompanyName || companyMatch?.[1]?.trim() || 'the company';
+
+    // Research company information
+    const companyResearch = await researchCompany(companyName);
 
     const resumeText = session.resumeText || '';
     // Use profile from session, or extract from analysisData, or use empty object
@@ -609,64 +685,71 @@ app.post('/api/generate-specific-cover-letter', async (req, res) => {
     });
     achievements = [...new Set(achievements)].slice(0, 5);
 
-    const prompt = `You are a cover letter expert. Write an EXTREMELY SPECIFIC, IMPRESSIVE cover letter.
+    const prompt = `You are a cover letter expert. Write a professional, factual cover letter using ONLY information provided below.
 
 CANDIDATE PROFILE:
 Name: ${profile.name || 'Candidate'}
-Current Role: ${profile.currentTitle || 'Technology Leader'}
-Experience: ${profile.yearsExperience || 10}+ years
-Key Skills: ${(profile.hardSkills || []).join(', ')}
+Current Role: ${profile.currentTitle || 'Professional'}
+Experience: ${profile.yearsExperience || 'Several'}+ years
+Key Skills: ${(profile.hardSkills || []).join(', ') || 'various technical skills'}
 Key Achievements from Resume:
-${achievements.map((a, i) => `${i+1}. ${a}`).join('\n')}
+${achievements.length > 0 ? achievements.map((a, i) => `${i+1}. ${a}`).join('\n') : 'Professional experience as detailed in resume'}
+
+COMPANY INFORMATION (${companyName}):
+${companyResearch}
 
 JOB DESCRIPTION:
 ${jobDescription.substring(0, 3000)}
 
 ANALYSIS INSIGHTS:
 - Match Score: ${analysisData?.overallScore || 'N/A'}%
-- Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ')}
-- Key Gaps: ${(analysisData?.dealbreakers || []).map((d: any) => d.requirement).join(', ')}
+- Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ') || 'Multiple relevant skills'}
+- Areas to Address: ${(analysisData?.dealbreakers || []).map((d: any) => d.requirement).join(', ') || 'None identified'}
 
-WRITE A COVER LETTER WITH THESE EXACT SECTIONS (but make it flow naturally, not with headers):
+WRITE A PROFESSIONAL COVER LETTER WITH THESE SECTIONS (flowing naturally, no headers):
 
-1. OPENING HOOK (1-2 sentences)
-- Start with something specific about the company's recent news, product, or AI initiative
-- NOT generic like "I'm excited to apply"
-- Example: "When I saw [Company]'s recent announcement about [specific AI feature], I knew my experience building [specific thing] could directly accelerate your roadmap."
+1. OPENING (1-2 sentences)
+- Express interest in the specific role and company
+- If company information is available, you may reference specific facts from the COMPANY INFORMATION section
+- Connect your background to the position
+- Example: "I am writing to express my interest in the [Job Title] position at [Company]. With [X] years of experience in [relevant field], I am confident I can contribute to your team's success."
 
 2. WHY THIS COMPANY (2-3 sentences)
-- Reference something SPECIFIC about the company
-- Their AI/tech products, recent funding, mission, tech stack
-- Show you've done research
+- Use ONLY information from the COMPANY INFORMATION section provided above
+- If company research shows specific products, services, or initiatives, you may reference them
+- Show genuine interest based on researched facts
+- If limited company information is available, focus on the role and industry instead
 
-3. WHY THIS AI ROLE (2-3 sentences)
-- Connect the specific job requirements to your experience
-- Mention specific technologies from the job description
-- Show you understand what they're trying to build
+3. RELEVANT EXPERIENCE (2-3 sentences)
+- Connect your skills and experience to the job requirements listed in the job description
+- Reference only technologies and requirements mentioned in the provided job description
+- Demonstrate understanding of role requirements
 
-4. YOUR IMPACT WITH PROOF (3-4 sentences)
-- Use SPECIFIC numbers and achievements from the candidate's resume
-- Show SWE → AI leadership transition if applicable
-- Examples like: "At [Company], I led [specific project] that [specific measurable result]"
-- Include metrics: revenue, users, efficiency gains, team size
+4. YOUR ACHIEVEMENTS (3-4 sentences)
+- Use ONLY the achievements listed above from the resume
+- DO NOT embellish or add details not present in the achievements
+- If no specific achievements are provided, describe general professional competencies
+- Include only metrics that appear in the provided achievements
 
-5. WHAT YOU'LL CONTRIBUTE (2-3 sentences)
-- Be specific about what you'll do in first 90 days
-- Reference specific challenges from the job description
-- Show strategic thinking
+5. VALUE PROPOSITION (2-3 sentences)
+- Explain how your background aligns with the role's requirements
+- Reference only challenges or needs explicitly mentioned in the job description or company research
+- Connect your skills to company needs identified in the research
 
 6. CLOSING (1-2 sentences)
-- Confident but not arrogant
-- Specific call to action
+- Express enthusiasm for the opportunity
+- Include a professional call to action
+- Example: "I would welcome the opportunity to discuss how my experience aligns with your needs. Thank you for your consideration."
 
-CRITICAL RULES:
-- NO generic phrases like "I'm excited to apply" or "I believe I would be a great fit"
-- EVERY paragraph must have specific details
-- Use actual achievements and numbers from the resume
+CRITICAL RULES - ABSOLUTE REQUIREMENTS:
+- ONLY use company facts from the COMPANY INFORMATION section provided above
+- DO NOT add achievements or metrics not listed in the provided achievements
+- DO NOT invent or assume information beyond what's provided
+- ONLY use facts from: company research provided, resume achievements provided, job description text, and candidate profile
+- If company information says "Limited public information available", focus on the role instead of the company
 - Keep it under 400 words
-- Sound confident and accomplished, not desperate
-- Write in first person, conversational but professional tone
-- Make it sound human, not AI-generated
+- Write in first person, professional tone
+- Be honest and factual above all else - only reference what's been researched
 
 Return ONLY the cover letter text, no additional commentary.`;
 
@@ -679,9 +762,13 @@ Return ONLY the cover letter text, no additional commentary.`;
 
     const coverLetter = completion.choices[0]?.message?.content || '';
 
-    res.json({ 
-      success: true, 
-      data: { coverLetter: coverLetter.trim() }
+    res.json({
+      success: true,
+      data: {
+        coverLetter: coverLetter.trim(),
+        companyResearch: companyResearch,
+        companyName: companyName
+      }
     });
 
   } catch (error: any) {

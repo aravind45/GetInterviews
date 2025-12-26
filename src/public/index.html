@@ -687,11 +687,17 @@ function handleSignup(e) {
   
   users[email] = user;
   localStorage.setItem('jobmatch_users', JSON.stringify(users));
-  
+
   // Log in the user
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
-  
+
+  // Ensure sessionId is created for new user
+  if (!sessionId) {
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    localStorage.setItem('jobmatch_session', sessionId);
+  }
+
   hideAuthModal();
   initAuth();
   showToast(`Welcome, ${name.split(' ')[0]}! Your account has been created.`, 'success');
@@ -714,7 +720,13 @@ function handleLogin(e) {
   // Log in
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
-  
+
+  // Ensure sessionId is created/restored after login
+  if (!sessionId) {
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    localStorage.setItem('jobmatch_session', sessionId);
+  }
+
   hideAuthModal();
   initAuth();
   showToast(`Welcome back, ${user.name.split(' ')[0]}!`, 'success');
@@ -790,7 +802,7 @@ function fetchGoogleUserInfo(accessToken) {
 
 function completeGoogleAuth(email, name, picture, googleId) {
   const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
-  
+
   let user = users[email];
   if (!user) {
     // Create new user
@@ -817,10 +829,17 @@ function completeGoogleAuth(email, name, picture, googleId) {
     localStorage.setItem('jobmatch_users', JSON.stringify(users));
     showToast(`Welcome back, ${name.split(' ')[0]}!`, 'success');
   }
-  
+
   currentUser = user;
   localStorage.setItem('jobmatch_user', JSON.stringify(user));
-  
+
+  // CRITICAL FIX: Ensure sessionId is created/restored after Google login
+  if (!sessionId) {
+    // Create a new session tied to the user's email
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    localStorage.setItem('jobmatch_session', sessionId);
+  }
+
   hideAuthModal();
   initAuth();
 }
@@ -1491,23 +1510,34 @@ async function generateAnalysisCoverLetter() {
     showToast('Job description is required for cover letter', 'error');
     return;
   }
-  
+
   if (!lastAnalysisData) {
     showToast('Please analyze your resume first', 'error');
     return;
   }
-  
+
+  // Ensure sessionId exists before generating cover letter
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    } else {
+      sessionId = 'temp_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    }
+  }
+
   // Show loading
   document.getElementById('cover-letter-btn-text').textContent = 'Generating...';
   document.getElementById('cover-letter-loading').style.display = 'inline-block';
   document.getElementById('generate-cover-letter-btn').disabled = true;
-  
+
   try {
     const res = await fetch('/api/generate-specific-cover-letter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        sessionId: sessionId || 'temp_' + Date.now(), 
+      body: JSON.stringify({
+        sessionId: sessionId,
         jobDescription: jobDesc,
         analysisData: lastAnalysisData
       })
@@ -1921,12 +1951,23 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 async function generateCoverLetter(jobId) {
   const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
   if (!job) return;
-  
+
+  // Ensure sessionId exists before generating cover letter
+  if (!sessionId) {
+    if (currentUser && currentUser.email) {
+      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    } else {
+      sessionId = 'temp_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+    }
+  }
+
   currentJob = job;
   document.getElementById('cl-job-info').textContent = `For: ${job.title} at ${job.company}`;
   document.getElementById('cover-letter-text').innerHTML = '<div class="loading"></div> Generating...';
   document.getElementById('cover-letter-modal').classList.add('open');
-  
+
   try {
     const res = await fetch('/api/generate-cover-letter', {
       method: 'POST',

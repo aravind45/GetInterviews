@@ -76,7 +76,14 @@ REDIS_URL=redis://...
 GROQ_API_KEY=your-groq-api-key
 ADMIN_KEY=your-admin-key
 ENCRYPTION_KEY=32-character-key
+TAVILY_API_KEY=your-tavily-api-key  # Optional: For company research in cover letters
+JSEARCH_API_KEY=your-jsearch-api-key  # Optional: For real job search API
 ```
+
+**Note on Cover Letter Company Research:**
+- If `TAVILY_API_KEY` is provided, the app will research real company information (products, services, news) when generating cover letters
+- Without it, the app falls back to using Groq's knowledge base for basic company information
+- This ensures cover letters include factual, researched details instead of fabricated information
 
 ## API Endpoints
 
