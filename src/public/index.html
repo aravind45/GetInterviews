@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JobMatch AI - Resume Analyzer + Job Search</title>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
@@ -219,6 +221,10 @@
     .form-divider::before, .form-divider::after { content: ''; flex: 1; height: 1px; background: #2e2e3e; }
     .auth-switch { text-align: center; margin-top: 16px; font-size: 0.9rem; color: #64748b; }
     .auth-switch a { color: #6366f1; cursor: pointer; text-decoration: underline; }
+    .btn-google { background: white; color: #1f1f1f; border: 1px solid #dadce0; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 500; }
+    .btn-google:hover { background: #f8f9fa; border-color: #dadce0; }
+    .btn-google svg { flex-shrink: 0; }
+    .google-btn-container { display: flex; justify-content: center; margin-bottom: 12px; }
     
     /* Saved Items indicator */
     .saved-indicator { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
@@ -307,6 +313,16 @@
           <h2>Welcome Back</h2>
           <p>Log in to access your saved resumes and cover letters</p>
         </div>
+        
+        <!-- Google Sign In -->
+        <div id="google-signin-btn-login" class="google-btn-container"></div>
+        <button type="button" class="btn btn-google btn-full" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 3.58c1.22 0 2.31.42 3.17 1.25l2.38-2.38A8 8 0 0 0 1.83 5.4L4.5 7.49a4.8 4.8 0 0 1 4.48-3.9z"/></svg>
+          Continue with Google
+        </button>
+        
+        <div class="form-divider">or</div>
+        
         <form onsubmit="handleLogin(event)">
           <div class="form-group">
             <label>Email</label>
@@ -333,6 +349,15 @@
           <h2>Create Account</h2>
           <p>Save your resumes and cover letters for easy access</p>
         </div>
+        
+        <!-- Google Sign In -->
+        <button type="button" class="btn btn-google btn-full" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 3.58c1.22 0 2.31.42 3.17 1.25l2.38-2.38A8 8 0 0 0 1.83 5.4L4.5 7.49a4.8 4.8 0 0 1 4.48-3.9z"/></svg>
+          Sign up with Google
+        </button>
+        
+        <div class="form-divider">or</div>
+        
         <form onsubmit="handleSignup(event)">
           <div class="form-group">
             <label>Full Name</label>
@@ -704,6 +729,109 @@ function logout() {
   showToast('Logged out successfully', 'success');
 }
 
+// ========== GOOGLE OAUTH ==========
+const GOOGLE_CLIENT_ID = '1003386519443-uenaqfp471k2lp69chptqi4t7gqp6dfd.apps.googleusercontent.com';
+
+function initGoogleSignIn() {
+  if (typeof google !== 'undefined' && google.accounts) {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleSignIn,
+      auto_select: false
+    });
+  }
+}
+
+function signInWithGoogle() {
+  if (typeof google !== 'undefined' && google.accounts) {
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Fallback to popup
+        try {
+          google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'email profile',
+            callback: (response) => {
+              if (response.access_token) {
+                fetchGoogleUserInfo(response.access_token);
+              }
+            }
+          }).requestAccessToken();
+        } catch (e) {
+          showToast('Google Sign-In failed. Try again.', 'error');
+        }
+      }
+    });
+  } else {
+    showToast('Google Sign-In loading... Try again in a moment.', 'error');
+  }
+}
+
+function handleGoogleSignIn(response) {
+  // Decode JWT token
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  const { email, name, picture, sub: googleId } = payload;
+  
+  completeGoogleAuth(email, name, picture, googleId);
+}
+
+function fetchGoogleUserInfo(accessToken) {
+  fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    completeGoogleAuth(data.email, data.name, data.picture, data.id);
+  })
+  .catch(err => {
+    showToast('Failed to get Google user info', 'error');
+  });
+}
+
+function completeGoogleAuth(email, name, picture, googleId) {
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  
+  let user = users[email];
+  if (!user) {
+    // Create new user
+    user = {
+      name,
+      email,
+      picture,
+      googleId,
+      authProvider: 'google',
+      createdAt: Date.now(),
+      savedResumes: [],
+      savedCoverLetters: [],
+      savedProfile: null
+    };
+    users[email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    showToast(`Welcome, ${name.split(' ')[0]}! Account created with Google.`, 'success');
+  } else {
+    // Update existing user with Google info
+    user.picture = picture;
+    user.googleId = googleId;
+    user.authProvider = 'google';
+    users[email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    showToast(`Welcome back, ${name.split(' ')[0]}!`, 'success');
+  }
+  
+  currentUser = user;
+  localStorage.setItem('jobmatch_user', JSON.stringify(user));
+  
+  hideAuthModal();
+  initAuth();
+}
+
+// Initialize Google Sign-In when ready
+if (document.readyState === 'complete') {
+  initGoogleSignIn();
+} else {
+  window.addEventListener('load', initGoogleSignIn);
+}
+
 function toggleUserDropdown() {
   document.getElementById('user-dropdown').classList.toggle('show');
 }
@@ -726,7 +854,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ========== USER DATA PERSISTENCE ==========
-function saveUserResume(resumeText, fileName, profileData) {
+function saveUserResume(resumeText, fileName, profileData, fileBase64 = null) {
   if (!currentUser) return;
   
   const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
@@ -738,22 +866,57 @@ function saveUserResume(resumeText, fileName, profileData) {
     user.lastResumeText = resumeText;
     user.lastResumeFileName = fileName;
     user.lastResumeDate = Date.now();
+    if (fileBase64) {
+      user.lastResumeBase64 = fileBase64; // Store actual file for re-upload
+    }
     
-    // Keep history (max 5)
+    // Keep history (max 3 resumes with full data)
     if (!user.savedResumes) user.savedResumes = [];
+    
+    // Check if this resume already exists (by name)
+    const existingIdx = user.savedResumes.findIndex(r => r.fileName === fileName);
+    if (existingIdx >= 0) {
+      user.savedResumes.splice(existingIdx, 1);
+    }
+    
     user.savedResumes.unshift({
+      id: Date.now(),
       fileName,
-      resumeText: resumeText.substring(0, 500), // Store preview only
+      resumeText: resumeText.substring(0, 1000), // Store preview
       profile: profileData,
+      fileBase64: fileBase64, // Store full file
       savedAt: Date.now()
     });
-    user.savedResumes = user.savedResumes.slice(0, 5);
+    user.savedResumes = user.savedResumes.slice(0, 3); // Max 3 full resumes
     
     users[currentUser.email] = user;
     localStorage.setItem('jobmatch_users', JSON.stringify(users));
     currentUser = user;
     localStorage.setItem('jobmatch_user', JSON.stringify(user));
   }
+}
+
+// Convert file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Convert base64 back to File object
+function base64ToFile(base64, fileName) {
+  const arr = base64.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], fileName, { type: mime });
 }
 
 function saveCoverLetter(coverLetter, jobTitle, companyName) {
@@ -801,41 +964,44 @@ function showMyData() {
   
   if (!currentUser) {
     content.innerHTML = '<p style="color: #64748b;">Please log in to see your saved data.</p>';
-  } else if (!currentUser.savedProfile) {
+  } else if (!currentUser.savedResumes || currentUser.savedResumes.length === 0) {
     content.innerHTML = `
-      <p style="color: #64748b; margin-bottom: 16px;">No saved resume yet.</p>
-      <p style="color: #94a3b8; font-size: 0.9rem;">Upload a resume in the "Find Jobs" tab and your profile will be saved automatically.</p>
+      <p style="color: #64748b; margin-bottom: 16px;">No saved resumes yet.</p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Upload a resume in the "Analyze Resume" or "Find Jobs" tab and it will be saved automatically.</p>
     `;
   } else {
-    const p = currentUser.savedProfile;
+    const resumes = currentUser.savedResumes || [];
     content.innerHTML = `
       <div class="saved-indicator">
-        <div class="icon">✅</div>
-        <div class="text">Resume saved on ${new Date(currentUser.lastResumeDate).toLocaleDateString()}</div>
+        <div class="icon">📄</div>
+        <div class="text">${resumes.length} saved resume${resumes.length > 1 ? 's' : ''}</div>
       </div>
       
-      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 16px;">
-        <h4 style="margin-bottom: 12px;">${p.name || 'Your Name'}</h4>
-        <p style="color: #94a3b8; margin-bottom: 8px;">${p.currentTitle || 'Your Title'}</p>
-        <p style="font-size: 0.85rem; color: #64748b;">${p.yearsExperience || '?'} years • ${p.location || 'Location'}</p>
-      </div>
+      <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">Your Saved Resumes</h4>
       
-      <div style="margin-bottom: 16px;">
-        <h5 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Skills</h5>
-        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${(p.hardSkills || []).slice(0, 10).map(s => `<span class="tag tag-info">${s}</span>`).join('')}
+      ${resumes.map((r, idx) => `
+        <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <div>
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📎 ${r.fileName}</h4>
+              <p style="font-size: 0.8rem; color: #64748b;">Saved ${new Date(r.savedAt).toLocaleDateString()}</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="deleteSavedResume(${idx})" style="padding: 4px 8px;">🗑️</button>
+          </div>
+          ${r.profile ? `
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 8px;">${r.profile.name || ''} • ${r.profile.currentTitle || ''}</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px;">
+              ${(r.profile.hardSkills || []).slice(0, 5).map(s => `<span class="tag tag-info" style="font-size: 0.7rem; padding: 2px 6px;">${s}</span>`).join('')}
+            </div>
+          ` : ''}
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" onclick="useSavedResume(${idx}, 'analyze')">🔍 Analyze</button>
+            <button class="btn btn-secondary btn-sm" onclick="useSavedResume(${idx}, 'search')">💼 Find Jobs</button>
+          </div>
         </div>
-      </div>
+      `).join('')}
       
-      <div style="margin-bottom: 16px;">
-        <h5 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Target Roles</h5>
-        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${(p.targetTitles || []).slice(0, 5).map(t => `<span class="tag tag-success">${t}</span>`).join('')}
-        </div>
-      </div>
-      
-      <button class="btn btn-primary btn-full" onclick="useStoredProfile()">📄 Use This Profile for Job Search</button>
-      <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="clearSavedData()">🗑️ Clear Saved Data</button>
+      <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="clearSavedData()">🗑️ Clear All Data</button>
     `;
   }
   
@@ -878,6 +1044,7 @@ function clearSavedData() {
     user.lastResumeText = null;
     user.lastResumeFileName = null;
     user.savedResumes = [];
+    user.lastResumeBase64 = null;
     
     users[currentUser.email] = user;
     localStorage.setItem('jobmatch_users', JSON.stringify(users));
@@ -887,6 +1054,83 @@ function clearSavedData() {
   
   hideMyDataModal();
   showToast('Saved data cleared', 'success');
+}
+
+function deleteSavedResume(index) {
+  if (!currentUser) return;
+  if (!confirm('Delete this saved resume?')) return;
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+  
+  if (user && user.savedResumes) {
+    user.savedResumes.splice(index, 1);
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+    
+    showMyData(); // Refresh
+    showToast('Resume deleted', 'success');
+  }
+}
+
+async function useSavedResume(index, mode) {
+  if (!currentUser || !currentUser.savedResumes || !currentUser.savedResumes[index]) {
+    showToast('Resume not found', 'error');
+    return;
+  }
+  
+  const savedResume = currentUser.savedResumes[index];
+  
+  hideMyDataModal();
+  
+  if (mode === 'analyze') {
+    // Switch to Analyze tab
+    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-tab="analyze"]').classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-analyze').classList.add('active');
+    
+    if (savedResume.fileBase64) {
+      // Convert base64 back to file and set it
+      analyzeFile = base64ToFile(savedResume.fileBase64, savedResume.fileName);
+      document.getElementById('analyze-file-name').textContent = '✓ ' + savedResume.fileName + ' (saved)';
+      document.getElementById('analyze-upload-zone').classList.add('has-file');
+      checkAnalyzeReady();
+      showToast('Resume loaded! Paste a job description and click Analyze.', 'success');
+    } else {
+      showToast('Resume file not available. Please re-upload.', 'error');
+    }
+  } else if (mode === 'search') {
+    // Switch to Find Jobs tab
+    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-tab="search"]').classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-search').classList.add('active');
+    
+    if (savedResume.profile) {
+      // Use saved profile directly
+      profile = savedResume.profile;
+      sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
+      localStorage.setItem('jobmatch_session', sessionId);
+      
+      displayProfile();
+      document.getElementById('search-upload-card').style.display = 'none';
+      document.getElementById('profile-card').style.display = 'block';
+      
+      showToast('Profile loaded! Click "Search Jobs" to find matches.', 'success');
+    } else if (savedResume.fileBase64) {
+      // Re-extract profile from saved file
+      searchFile = base64ToFile(savedResume.fileBase64, savedResume.fileName);
+      document.getElementById('search-file-name').textContent = '✓ ' + savedResume.fileName + ' (saved)';
+      document.getElementById('search-upload-zone').classList.add('has-file');
+      document.getElementById('extract-btn').disabled = false;
+      showToast('Resume loaded! Click "Extract My Profile" to continue.', 'success');
+    } else {
+      showToast('Resume data not available. Please re-upload.', 'error');
+    }
+  }
 }
 
 function showMyCoverLetters() {
@@ -1014,6 +1258,18 @@ analyzeBtn.addEventListener('click', async () => {
     
     if (!data.success) throw new Error(data.error);
     lastAnalysisData = data.data; // Store for cover letter generation
+    
+    // Save resume for logged-in users
+    if (currentUser && analyzeFile) {
+      try {
+        const fileBase64 = await fileToBase64(analyzeFile);
+        const profile = data.data.profile || { name: 'User', currentTitle: 'Professional' };
+        saveUserResume(data.data.resumeText || '', analyzeFile.name, profile, fileBase64);
+      } catch (e) {
+        console.log('Could not save resume:', e);
+      }
+    }
+    
     displayAnalysisResults(data.data);
     
   } catch (err) {
@@ -1342,10 +1598,16 @@ extractBtn.addEventListener('click', async () => {
     profile = data.data.profile;
     localStorage.setItem('jobmatch_session', sessionId);
     
-    // Auto-save profile if user is logged in
+    // Auto-save profile and file if user is logged in
     if (currentUser) {
-      saveUserResume(data.data.resumeText || '', searchFile.name, profile);
-      showToast('Profile extracted and saved to your account!', 'success');
+      try {
+        const fileBase64 = await fileToBase64(searchFile);
+        saveUserResume(data.data.resumeText || '', searchFile.name, profile, fileBase64);
+        showToast('Profile extracted and saved to your account!', 'success');
+      } catch (e) {
+        saveUserResume(data.data.resumeText || '', searchFile.name, profile);
+        showToast('Profile extracted and saved!', 'success');
+      }
     } else {
       showToast('Profile extracted! Log in to save it.', 'success');
     }
