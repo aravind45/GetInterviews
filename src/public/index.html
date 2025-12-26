@@ -294,6 +294,7 @@
             <div class="dropdown-menu" id="user-dropdown">
               <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
               <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
+              <div class="dropdown-item" onclick="showMyInterviewPreps()">🎯 My Interview Preps</div>
               <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;" onclick="logout()">🚪 Log Out</div>
             </div>
           </div>
@@ -411,7 +412,21 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- My Interview Preps Modal -->
+  <div class="modal-overlay" id="interview-preps-modal">
+    <div class="modal" style="position: relative; max-width: 900px; max-height: 80vh; overflow-y: auto;">
+      <button class="modal-close" onclick="hideInterviewPrepsModal()">&times;</button>
+      <div class="modal-header">
+        <h2>🎯 My Interview Preps</h2>
+        <p>Your saved interview preparations</p>
+      </div>
+      <div id="interview-preps-content">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <!-- TAB 1: ANALYZE RESUME -->
     <section class="section active" id="tab-analyze">
@@ -423,7 +438,10 @@
         
         <div class="grid-2">
           <div>
-            <label style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 8px;">Your Resume</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 0.85rem; color: #94a3b8;">Your Resume</label>
+              <button class="btn btn-secondary btn-sm" id="load-saved-resume-btn" onclick="loadSavedResume()" style="display:none; font-size: 0.75rem; padding: 6px 12px;">📂 Load Saved</button>
+            </div>
             <div class="upload-zone" id="analyze-upload-zone">
               <input type="file" id="analyze-resume-input" accept=".pdf,.doc,.docx">
               <div class="upload-icon">📄</div>
@@ -985,11 +1003,46 @@ function saveCoverLetter(coverLetter, jobTitle, companyName) {
 
 function loadSavedUserData() {
   if (!currentUser || !currentUser.savedProfile) return;
-  
+
   // Auto-load profile into Find Jobs tab
   profile = currentUser.savedProfile;
   sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
   localStorage.setItem('jobmatch_session', sessionId);
+
+  // Show "Load Saved Resume" button if user has a saved resume
+  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
+    const loadBtn = document.getElementById('load-saved-resume-btn');
+    if (loadBtn) loadBtn.style.display = 'block';
+  }
+}
+
+function loadSavedResume() {
+  if (!currentUser || !currentUser.lastResumeBase64 || !currentUser.lastResumeFileName) {
+    showToast('No saved resume found', 'error');
+    return;
+  }
+
+  try {
+    // Convert base64 back to File object
+    const base64 = currentUser.lastResumeBase64;
+    const fileName = currentUser.lastResumeFileName;
+
+    // Extract the data from base64
+    fetch(base64)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], fileName, { type: blob.type });
+        handleAnalyzeFile(file);
+        showToast(`Loaded: ${fileName}`, 'success');
+      })
+      .catch(err => {
+        console.error('Error loading resume:', err);
+        showToast('Failed to load resume', 'error');
+      });
+  } catch (error) {
+    console.error('Error loading resume:', error);
+    showToast('Failed to load resume', 'error');
+  }
 }
 
 function showMyData() {
@@ -1216,19 +1269,105 @@ function copySavedCoverLetter(index) {
 function deleteCoverLetter(index) {
   if (!currentUser) return;
   if (!confirm('Delete this cover letter?')) return;
-  
+
   const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
   const user = users[currentUser.email];
-  
+
   if (user && user.savedCoverLetters) {
     user.savedCoverLetters.splice(index, 1);
     users[currentUser.email] = user;
     localStorage.setItem('jobmatch_users', JSON.stringify(users));
     currentUser = user;
     localStorage.setItem('jobmatch_user', JSON.stringify(user));
-    
+
     showMyCoverLetters(); // Refresh the modal
     showToast('Cover letter deleted', 'success');
+  }
+}
+
+// ========== MY INTERVIEW PREPS ==========
+function showMyInterviewPreps() {
+  document.getElementById('user-dropdown').classList.remove('show');
+
+  const content = document.getElementById('interview-preps-content');
+
+  if (!currentUser) {
+    content.innerHTML = '<p style="color: #64748b;">Please log in to see your interview preps.</p>';
+  } else if (!currentUser.savedInterviewPreps || currentUser.savedInterviewPreps.length === 0) {
+    content.innerHTML = `
+      <p style="color: #64748b; margin-bottom: 16px;">No saved interview preps yet.</p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Generate interview prep in the "Analyze Resume" tab and save it.</p>
+    `;
+  } else {
+    content.innerHTML = currentUser.savedInterviewPreps.map((prep, i) => `
+      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <h4 style="font-size: 0.95rem;">🎯 ${prep.jobTitle}</h4>
+            <p style="font-size: 0.85rem; color: #64748b;">${prep.companyName} • ${new Date(prep.savedAt).toLocaleDateString()}</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="viewInterviewPrep(${i})">👁️ View</button>
+            <button class="btn btn-secondary btn-sm" onclick="copySavedInterviewPrep(${i})">📋 Copy</button>
+            <button class="btn btn-secondary btn-sm" onclick="deleteInterviewPrep(${i})">🗑️</button>
+          </div>
+        </div>
+        <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8;">
+          ${prep.questions.length} interview questions with personalized answers
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('interview-preps-modal').classList.add('show');
+}
+
+function hideInterviewPrepsModal() {
+  document.getElementById('interview-preps-modal').classList.remove('show');
+}
+
+function viewInterviewPrep(index) {
+  if (currentUser && currentUser.savedInterviewPreps && currentUser.savedInterviewPreps[index]) {
+    const prep = currentUser.savedInterviewPreps[index];
+    // Display in interview prep modal
+    displayInterviewPrep(prep.questions, prep.companyName);
+    hideInterviewPrepsModal();
+    document.getElementById('interview-prep-modal').classList.add('open');
+  }
+}
+
+function copySavedInterviewPrep(index) {
+  if (currentUser && currentUser.savedInterviewPreps && currentUser.savedInterviewPreps[index]) {
+    const prep = currentUser.savedInterviewPreps[index];
+    let text = `Interview Preparation for ${prep.companyName}\n${prep.jobTitle}\n\n`;
+    prep.questions.forEach((q, i) => {
+      text += `Q${i + 1}. ${q.question}\n\n`;
+      text += `Answer: ${q.suggestedAnswer}\n`;
+      if (q.tips) text += `\nTip: ${q.tips}\n`;
+      text += '\n---\n\n';
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Interview prep copied!', 'success');
+    });
+  }
+}
+
+function deleteInterviewPrep(index) {
+  if (!currentUser) return;
+  if (!confirm('Delete this interview prep?')) return;
+
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+
+  if (user && user.savedInterviewPreps) {
+    user.savedInterviewPreps.splice(index, 1);
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+
+    showMyInterviewPreps(); // Refresh the modal
+    showToast('Interview prep deleted', 'success');
   }
 }
 
@@ -1328,29 +1467,29 @@ function displayAnalysisResults(d) {
   
   document.getElementById('analysis-results').style.display = 'block';
   document.getElementById('analysis-results').innerHTML = `
-    <div class="score-hero ${heroClass}">
-      <div class="score-ring ${scoreClass}">
-        <div class="score-number">${score}%</div>
-        <div class="score-label">Match</div>
+    <div class="score-hero ${heroClass}" style="padding: 20px 24px;">
+      <div class="score-ring ${scoreClass}" style="width: 80px; height: 80px; border-width: 4px; margin-bottom: 12px;">
+        <div class="score-number" style="font-size: 1.8rem;">${score}%</div>
+        <div class="score-label" style="font-size: 0.65rem;">Match</div>
       </div>
-      <div class="verdict-badge ${scoreClass}">${d.verdict || 'ANALYZED'}</div>
-      <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
+      <div class="verdict-badge ${scoreClass}" style="padding: 6px 16px; font-size: 0.8rem; margin-bottom: 8px;">${d.verdict || 'ANALYZED'}</div>
+      <p style="color:#94a3b8; max-width:500px; margin:0 auto; font-size: 0.9rem;">${d.summary || ''}</p>
     </div>
 
     <!-- Action Buttons: Cover Letter & Interview Prep -->
     <div class="grid-2" style="gap: 12px; margin-bottom: 20px;">
-      <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); padding: 20px;">
-        <h4 style="color: #a78bfa; margin-bottom: 8px; font-size: 1rem;">✉️ Cover Letter</h4>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">Generate personalized cover letter</p>
-        <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
+      <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); padding: 16px;">
+        <h4 style="color: #a78bfa; margin-bottom: 6px; font-size: 0.95rem;">✉️ Cover Letter</h4>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">Generate personalized cover letter</p>
+        <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); padding: 10px 20px; font-size: 0.9rem;">
           <span id="cover-letter-btn-text">✉️ Generate</span>
           <span class="loading" id="cover-letter-loading" style="display:none"></span>
         </button>
       </div>
-      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-color: rgba(16, 185, 129, 0.3); padding: 20px;">
-        <h4 style="color: #10b981; margin-bottom: 8px; font-size: 1rem;">🎯 Interview Prep</h4>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">20 questions with answers</p>
-        <button class="btn btn-primary btn-full" id="generate-interview-prep-btn" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-color: rgba(16, 185, 129, 0.3); padding: 16px;">
+        <h4 style="color: #10b981; margin-bottom: 6px; font-size: 0.95rem;">🎯 Interview Prep</h4>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">20 questions with answers</p>
+        <button class="btn btn-primary btn-full" id="generate-interview-prep-btn" style="background: linear-gradient(135deg, #10b981, #059669); padding: 10px 20px; font-size: 0.9rem;">
           <span id="interview-prep-btn-text">🎯 Prepare</span>
           <span class="loading" id="interview-prep-loading" style="display:none"></span>
         </button>
@@ -1664,11 +1803,17 @@ async function generateInterviewPrep() {
 }
 
 function displayInterviewPrep(questions, companyName) {
+  // Store for saving
+  window.currentInterviewPrep = { questions, companyName };
+
   const html = `
     <div style="margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px;">
       <h4 style="color: #10b981; margin-bottom: 8px;">🎯 Interview Preparation for ${companyName}</h4>
       <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px;">Personalized answers based on your resume and the job requirements</p>
-      <button class="btn btn-secondary btn-sm" onclick="copyAllInterviewPrep()">📋 Copy All</button>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" onclick="copyAllInterviewPrep()">📋 Copy All</button>
+        <button class="btn btn-primary btn-sm" onclick="saveCurrentInterviewPrep()">💾 Save</button>
+      </div>
     </div>
     ${questions.map((q, i) => `
       <div style="margin-bottom: 24px; padding: 20px; background: #1e1e2e; border-radius: 12px; border-left: 3px solid ${i % 3 === 0 ? '#6366f1' : i % 3 === 1 ? '#8b5cf6' : '#10b981'};">
@@ -1712,6 +1857,52 @@ function copyAllInterviewPrep() {
 
 function closeInterviewPrepModal() {
   document.getElementById('interview-prep-modal').classList.remove('open');
+}
+
+function saveCurrentInterviewPrep() {
+  if (!window.currentInterviewPrep) {
+    showToast('No interview prep to save', 'error');
+    return;
+  }
+
+  const { questions, companyName } = window.currentInterviewPrep;
+  const jobDesc = document.getElementById('job-description').value || '';
+  const titleMatch = jobDesc.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+                     jobDesc.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+  const jobTitle = titleMatch ? titleMatch[1].trim().substring(0, 50) : 'Job Role';
+
+  if (saveInterviewPrep(questions, jobTitle, companyName)) {
+    showToast('Interview prep saved! View in "My Interview Preps"', 'success');
+  }
+}
+
+function saveInterviewPrep(questions, jobTitle, companyName) {
+  if (!currentUser) {
+    showToast('Log in to save interview prep', 'error');
+    return false;
+  }
+
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+
+  if (user) {
+    if (!user.savedInterviewPreps) user.savedInterviewPreps = [];
+    user.savedInterviewPreps.unshift({
+      id: Date.now(),
+      questions,
+      jobTitle: jobTitle || 'Unknown Role',
+      companyName: companyName || 'Unknown Company',
+      savedAt: Date.now()
+    });
+    user.savedInterviewPreps = user.savedInterviewPreps.slice(0, 20); // Max 20
+
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+    return true;
+  }
+  return false;
 }
 
 function saveCurrentCoverLetter() {
