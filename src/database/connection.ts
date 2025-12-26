@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { logger } from '../utils/logger';
 
 let pool: Pool | null = null;
@@ -45,20 +45,20 @@ export const getPool = (): Pool => {
   return pool;
 };
 
-export const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+export const query = async <T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
   if (!pool) {
     throw new Error('Database pool not initialized');
   }
-  
+
   const start = Date.now();
   try {
     const result = await pool.query<T>(text, params);
     const duration = Date.now() - start;
-    
+
     if (duration > 1000) {
       logger.warn('Slow query detected', { duration, query: text.substring(0, 100) });
     }
-    
+
     return result;
   } catch (error) {
     logger.error('Query error', { query: text.substring(0, 100), error });
