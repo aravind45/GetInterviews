@@ -188,6 +188,41 @@
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
     .flex-wrap { flex-wrap: wrap; }
+    
+    /* Auth Styles */
+    .auth-buttons { display: flex; gap: 8px; align-items: center; }
+    .auth-buttons .btn { padding: 8px 16px; font-size: 0.85rem; }
+    .user-menu { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; }
+    .user-name { font-size: 0.9rem; color: #e2e8f0; }
+    .dropdown { position: relative; }
+    .dropdown-menu { position: absolute; top: 100%; right: 0; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 8px; padding: 8px 0; min-width: 180px; display: none; z-index: 200; margin-top: 8px; }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item { padding: 10px 16px; cursor: pointer; font-size: 0.9rem; color: #94a3b8; transition: all 0.2s; }
+    .dropdown-item:hover { background: #2e2e3e; color: #e2e8f0; }
+    
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #12121a; border: 1px solid #2e2e3e; border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; }
+    .modal-header { text-align: center; margin-bottom: 24px; }
+    .modal-header h2 { font-size: 1.4rem; margin-bottom: 8px; }
+    .modal-header p { color: #64748b; font-size: 0.9rem; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 12px 16px; background: #1e1e2e; border: 1px solid #2e2e3e; border-radius: 8px; color: #e2e8f0; font-size: 0.95rem; }
+    .form-group input:focus { outline: none; border-color: #6366f1; }
+    .form-error { color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: none; }
+    .form-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; color: #64748b; font-size: 0.85rem; }
+    .form-divider::before, .form-divider::after { content: ''; flex: 1; height: 1px; background: #2e2e3e; }
+    .auth-switch { text-align: center; margin-top: 16px; font-size: 0.9rem; color: #64748b; }
+    .auth-switch a { color: #6366f1; cursor: pointer; text-decoration: underline; }
+    
+    /* Saved Items indicator */
+    .saved-indicator { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .saved-indicator .icon { font-size: 1.2rem; }
+    .saved-indicator .text { font-size: 0.9rem; color: #10b981; }
   </style>
 </head>
 <body>
@@ -199,8 +234,124 @@
         <div class="main-tab" data-tab="search">💼 Find Jobs <span class="badge" id="jobs-badge" style="display:none">0</span></div>
         <div class="main-tab" data-tab="tracker">📋 Tracker <span class="badge" id="saved-badge" style="display:none">0</span></div>
       </nav>
+      
+      <!-- Auth Section -->
+      <div id="auth-section">
+        <!-- Shown when logged out -->
+        <div id="auth-buttons" class="auth-buttons">
+          <button class="btn btn-secondary" onclick="showAuthModal('login')">Log In</button>
+          <button class="btn btn-primary" onclick="showAuthModal('signup')">Sign Up</button>
+        </div>
+        
+        <!-- Shown when logged in -->
+        <div id="user-menu" class="user-menu" style="display: none;">
+          <div class="dropdown">
+            <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleUserDropdown()">
+              <div class="user-avatar" id="user-avatar">U</div>
+              <span class="user-name" id="user-display-name">User</span>
+              <span style="color: #64748b;">▼</span>
+            </div>
+            <div class="dropdown-menu" id="user-dropdown">
+              <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
+              <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
+              <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;" onclick="logout()">🚪 Log Out</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
+  
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal" style="position: relative;">
+      <button class="modal-close" onclick="hideAuthModal()">&times;</button>
+      
+      <!-- Login Form -->
+      <div id="login-form">
+        <div class="modal-header">
+          <h2>Welcome Back</h2>
+          <p>Log in to access your saved resumes and cover letters</p>
+        </div>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" required>
+          </div>
+          <div class="form-error" id="login-error"></div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+            <span id="login-btn-text">Log In</span>
+            <span class="loading" id="login-loading" style="display:none"></span>
+          </button>
+        </form>
+        <div class="auth-switch">
+          Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a>
+        </div>
+      </div>
+      
+      <!-- Signup Form -->
+      <div id="signup-form" style="display: none;">
+        <div class="modal-header">
+          <h2>Create Account</h2>
+          <p>Save your resumes and cover letters for easy access</p>
+        </div>
+        <form onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="signup-name" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="••••••••" minlength="6" required>
+          </div>
+          <div class="form-error" id="signup-error"></div>
+          <button type="submit" class="btn btn-primary btn-full" id="signup-btn">
+            <span id="signup-btn-text">Create Account</span>
+            <span class="loading" id="signup-loading" style="display:none"></span>
+          </button>
+        </form>
+        <div class="auth-switch">
+          Already have an account? <a onclick="switchAuthMode('login')">Log in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- My Data Modal -->
+  <div class="modal-overlay" id="my-data-modal">
+    <div class="modal" style="position: relative; max-width: 600px;">
+      <button class="modal-close" onclick="hideMyDataModal()">&times;</button>
+      <div class="modal-header">
+        <h2>📁 My Saved Data</h2>
+        <p>Your saved resumes and profile information</p>
+      </div>
+      <div id="my-data-content">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- My Cover Letters Modal -->
+  <div class="modal-overlay" id="cover-letters-modal">
+    <div class="modal" style="position: relative; max-width: 700px; max-height: 80vh; overflow-y: auto;">
+      <button class="modal-close" onclick="hideCoverLettersModal()">&times;</button>
+      <div class="modal-header">
+        <h2>✉️ My Cover Letters</h2>
+        <p>Your saved cover letters</p>
+      </div>
+      <div id="cover-letters-content">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
   
   <div class="container">
     <!-- TAB 1: ANALYZE RESUME -->
@@ -403,6 +554,355 @@
   <div class="toast" id="toast"></div>
 
 <script>
+// ========== AUTH & USER STATE ==========
+let currentUser = JSON.parse(localStorage.getItem('jobmatch_user') || 'null');
+
+// Initialize auth UI on page load
+function initAuth() {
+  if (currentUser) {
+    document.getElementById('auth-buttons').style.display = 'none';
+    document.getElementById('user-menu').style.display = 'flex';
+    document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    document.getElementById('user-display-name').textContent = currentUser.name.split(' ')[0];
+    
+    // Load saved resume if exists
+    loadSavedUserData();
+  }
+}
+
+function showAuthModal(mode) {
+  document.getElementById('auth-modal').classList.add('show');
+  switchAuthMode(mode);
+}
+
+function hideAuthModal() {
+  document.getElementById('auth-modal').classList.remove('show');
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('signup-error').style.display = 'none';
+}
+
+function switchAuthMode(mode) {
+  if (mode === 'login') {
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('signup-form').style.display = 'none';
+  } else {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'block';
+  }
+}
+
+function handleSignup(e) {
+  e.preventDefault();
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim().toLowerCase();
+  const password = document.getElementById('signup-password').value;
+  
+  // Check if user exists
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  if (users[email]) {
+    document.getElementById('signup-error').textContent = 'Email already registered. Please log in.';
+    document.getElementById('signup-error').style.display = 'block';
+    return;
+  }
+  
+  // Create user
+  const user = {
+    name,
+    email,
+    password: btoa(password), // Simple encoding (not secure, but ok for demo)
+    createdAt: Date.now(),
+    savedResumes: [],
+    savedCoverLetters: [],
+    savedProfile: null
+  };
+  
+  users[email] = user;
+  localStorage.setItem('jobmatch_users', JSON.stringify(users));
+  
+  // Log in the user
+  currentUser = user;
+  localStorage.setItem('jobmatch_user', JSON.stringify(user));
+  
+  hideAuthModal();
+  initAuth();
+  showToast(`Welcome, ${name.split(' ')[0]}! Your account has been created.`, 'success');
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[email];
+  
+  if (!user || user.password !== btoa(password)) {
+    document.getElementById('login-error').textContent = 'Invalid email or password.';
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  
+  // Log in
+  currentUser = user;
+  localStorage.setItem('jobmatch_user', JSON.stringify(user));
+  
+  hideAuthModal();
+  initAuth();
+  showToast(`Welcome back, ${user.name.split(' ')[0]}!`, 'success');
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('jobmatch_user');
+  document.getElementById('auth-buttons').style.display = 'flex';
+  document.getElementById('user-menu').style.display = 'none';
+  document.getElementById('user-dropdown').classList.remove('show');
+  showToast('Logged out successfully', 'success');
+}
+
+function toggleUserDropdown() {
+  document.getElementById('user-dropdown').classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dropdown')) {
+    document.getElementById('user-dropdown')?.classList.remove('show');
+  }
+});
+
+// ========== USER DATA PERSISTENCE ==========
+function saveUserResume(resumeText, fileName, profileData) {
+  if (!currentUser) return;
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+  
+  if (user) {
+    // Save latest resume
+    user.savedProfile = profileData;
+    user.lastResumeText = resumeText;
+    user.lastResumeFileName = fileName;
+    user.lastResumeDate = Date.now();
+    
+    // Keep history (max 5)
+    if (!user.savedResumes) user.savedResumes = [];
+    user.savedResumes.unshift({
+      fileName,
+      resumeText: resumeText.substring(0, 500), // Store preview only
+      profile: profileData,
+      savedAt: Date.now()
+    });
+    user.savedResumes = user.savedResumes.slice(0, 5);
+    
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+  }
+}
+
+function saveCoverLetter(coverLetter, jobTitle, companyName) {
+  if (!currentUser) {
+    showToast('Log in to save cover letters', 'error');
+    return false;
+  }
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+  
+  if (user) {
+    if (!user.savedCoverLetters) user.savedCoverLetters = [];
+    user.savedCoverLetters.unshift({
+      id: Date.now(),
+      coverLetter,
+      jobTitle: jobTitle || 'Unknown Role',
+      companyName: companyName || 'Unknown Company',
+      savedAt: Date.now()
+    });
+    user.savedCoverLetters = user.savedCoverLetters.slice(0, 20); // Max 20
+    
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+    return true;
+  }
+  return false;
+}
+
+function loadSavedUserData() {
+  if (!currentUser || !currentUser.savedProfile) return;
+  
+  // Auto-load profile into Find Jobs tab
+  profile = currentUser.savedProfile;
+  sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
+  localStorage.setItem('jobmatch_session', sessionId);
+}
+
+function showMyData() {
+  document.getElementById('user-dropdown').classList.remove('show');
+  
+  const content = document.getElementById('my-data-content');
+  
+  if (!currentUser) {
+    content.innerHTML = '<p style="color: #64748b;">Please log in to see your saved data.</p>';
+  } else if (!currentUser.savedProfile) {
+    content.innerHTML = `
+      <p style="color: #64748b; margin-bottom: 16px;">No saved resume yet.</p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Upload a resume in the "Find Jobs" tab and your profile will be saved automatically.</p>
+    `;
+  } else {
+    const p = currentUser.savedProfile;
+    content.innerHTML = `
+      <div class="saved-indicator">
+        <div class="icon">✅</div>
+        <div class="text">Resume saved on ${new Date(currentUser.lastResumeDate).toLocaleDateString()}</div>
+      </div>
+      
+      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+        <h4 style="margin-bottom: 12px;">${p.name || 'Your Name'}</h4>
+        <p style="color: #94a3b8; margin-bottom: 8px;">${p.currentTitle || 'Your Title'}</p>
+        <p style="font-size: 0.85rem; color: #64748b;">${p.yearsExperience || '?'} years • ${p.location || 'Location'}</p>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <h5 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Skills</h5>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${(p.hardSkills || []).slice(0, 10).map(s => `<span class="tag tag-info">${s}</span>`).join('')}
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <h5 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">Target Roles</h5>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${(p.targetTitles || []).slice(0, 5).map(t => `<span class="tag tag-success">${t}</span>`).join('')}
+        </div>
+      </div>
+      
+      <button class="btn btn-primary btn-full" onclick="useStoredProfile()">📄 Use This Profile for Job Search</button>
+      <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="clearSavedData()">🗑️ Clear Saved Data</button>
+    `;
+  }
+  
+  document.getElementById('my-data-modal').classList.add('show');
+}
+
+function hideMyDataModal() {
+  document.getElementById('my-data-modal').classList.remove('show');
+}
+
+function useStoredProfile() {
+  if (currentUser && currentUser.savedProfile) {
+    profile = currentUser.savedProfile;
+    
+    // Switch to Find Jobs tab and show profile
+    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-tab="search"]').classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-search').classList.add('active');
+    
+    // Display profile
+    displayProfile(profile);
+    document.getElementById('search-upload-card').style.display = 'none';
+    document.getElementById('profile-card').style.display = 'block';
+    
+    hideMyDataModal();
+    showToast('Profile loaded! Click "Search Jobs" to find matches.', 'success');
+  }
+}
+
+function clearSavedData() {
+  if (!currentUser) return;
+  if (!confirm('Are you sure you want to clear all saved data?')) return;
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+  
+  if (user) {
+    user.savedProfile = null;
+    user.lastResumeText = null;
+    user.lastResumeFileName = null;
+    user.savedResumes = [];
+    
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+  }
+  
+  hideMyDataModal();
+  showToast('Saved data cleared', 'success');
+}
+
+function showMyCoverLetters() {
+  document.getElementById('user-dropdown').classList.remove('show');
+  
+  const content = document.getElementById('cover-letters-content');
+  
+  if (!currentUser) {
+    content.innerHTML = '<p style="color: #64748b;">Please log in to see your cover letters.</p>';
+  } else if (!currentUser.savedCoverLetters || currentUser.savedCoverLetters.length === 0) {
+    content.innerHTML = `
+      <p style="color: #64748b; margin-bottom: 16px;">No saved cover letters yet.</p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Generate a cover letter in the "Analyze Resume" tab and save it.</p>
+    `;
+  } else {
+    content.innerHTML = currentUser.savedCoverLetters.map((cl, i) => `
+      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <h4 style="font-size: 0.95rem;">${cl.jobTitle}</h4>
+            <p style="font-size: 0.85rem; color: #64748b;">${cl.companyName} • ${new Date(cl.savedAt).toLocaleDateString()}</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="copySavedCoverLetter(${i})">📋 Copy</button>
+            <button class="btn btn-secondary btn-sm" onclick="deleteCoverLetter(${i})">🗑️</button>
+          </div>
+        </div>
+        <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: #94a3b8; white-space: pre-wrap;">${cl.coverLetter.substring(0, 400)}${cl.coverLetter.length > 400 ? '...' : ''}</div>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('cover-letters-modal').classList.add('show');
+}
+
+function hideCoverLettersModal() {
+  document.getElementById('cover-letters-modal').classList.remove('show');
+}
+
+function copySavedCoverLetter(index) {
+  if (currentUser && currentUser.savedCoverLetters && currentUser.savedCoverLetters[index]) {
+    navigator.clipboard.writeText(currentUser.savedCoverLetters[index].coverLetter).then(() => {
+      showToast('Cover letter copied!', 'success');
+    });
+  }
+}
+
+function deleteCoverLetter(index) {
+  if (!currentUser) return;
+  if (!confirm('Delete this cover letter?')) return;
+  
+  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
+  const user = users[currentUser.email];
+  
+  if (user && user.savedCoverLetters) {
+    user.savedCoverLetters.splice(index, 1);
+    users[currentUser.email] = user;
+    localStorage.setItem('jobmatch_users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('jobmatch_user', JSON.stringify(user));
+    
+    showMyCoverLetters(); // Refresh the modal
+    showToast('Cover letter deleted', 'success');
+  }
+}
+
+// Initialize auth on page load
+document.addEventListener('DOMContentLoaded', initAuth);
+
+// ========== EXISTING STATE ==========
 // State
 let sessionId = localStorage.getItem('jobmatch_session');
 let profile = null;
@@ -646,7 +1146,10 @@ function displayAnalysisResults(d) {
       <div class="card">
         <div class="flex justify-between items-center mb-4">
           <h3>✉️ Your Personalized Cover Letter</h3>
-          <button class="btn btn-secondary btn-sm" onclick="copyCoverLetter()">📋 Copy</button>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="copyCoverLetter()">📋 Copy</button>
+            <button class="btn btn-primary btn-sm" onclick="saveCurrentCoverLetter()">💾 Save</button>
+          </div>
         </div>
         <div id="cover-letter-content" style="background: #0a0a0f; padding: 20px; border-radius: 10px; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.8; color: #e2e8f0;"></div>
       </div>
@@ -671,7 +1174,7 @@ async function generateAnalysisCoverLetter() {
     return;
   }
   
-  const jobDesc = document.getElementById('job-desc').value.trim();
+  const jobDesc = document.getElementById('job-description').value.trim();
   if (!jobDesc) {
     showToast('Job description is required for cover letter', 'error');
     return;
@@ -723,6 +1226,32 @@ function copyCoverLetter() {
   });
 }
 
+function saveCurrentCoverLetter() {
+  const content = document.getElementById('cover-letter-content').textContent;
+  if (!content) {
+    showToast('No cover letter to save', 'error');
+    return;
+  }
+  
+  // Extract job info from the job description
+  const jobDesc = document.getElementById('job-description').value || '';
+  
+  // Try to extract company name
+  const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i) ||
+                       jobDesc.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+is\s+(?:seeking|hiring|looking)/i);
+  const companyName = companyMatch ? companyMatch[1].trim() : 'Company';
+  
+  // Try to extract job title
+  const titleMatch = jobDesc.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
+                     jobDesc.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i) ||
+                     jobDesc.match(/^([A-Z][a-zA-Z\s]+(?:Engineer|Manager|Director|Developer|Architect|Lead|Analyst))/m);
+  const jobTitle = titleMatch ? titleMatch[1].trim().substring(0, 50) : 'Job Role';
+  
+  if (saveCoverLetter(content, jobTitle, companyName)) {
+    showToast('Cover letter saved! View in "My Cover Letters"', 'success');
+  }
+}
+
 // ========== SEARCH TAB ==========
 const searchZone = document.getElementById('search-upload-zone');
 const searchInput = document.getElementById('search-resume-input');
@@ -759,8 +1288,15 @@ extractBtn.addEventListener('click', async () => {
     profile = data.data.profile;
     localStorage.setItem('jobmatch_session', sessionId);
     
+    // Auto-save profile if user is logged in
+    if (currentUser) {
+      saveUserResume(data.data.resumeText || '', searchFile.name, profile);
+      showToast('Profile extracted and saved to your account!', 'success');
+    } else {
+      showToast('Profile extracted! Log in to save it.', 'success');
+    }
+    
     displayProfile();
-    showToast('Profile extracted!', 'success');
     
   } catch (err) {
     showToast(err.message, 'error');
