@@ -293,6 +293,26 @@
     .btn-danger { background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: var(--error); padding: 10px 20px; }
     .btn-danger:hover { background: var(--error-bg); border-color: var(--error); }
 
+    /* ICA Table Styles */
+    .ica-table { width: 100%; border-collapse: collapse; }
+    .ica-table th { text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--border); color: var(--text-secondary); font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .ica-table td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .ica-table tbody tr:hover { background: var(--bg-secondary); }
+    .ica-category-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+    .ica-category-badge.high_potential { background: var(--success-bg); color: var(--success); }
+    .ica-category-badge.medium_potential { background: var(--warning-bg); color: var(--warning); }
+    .ica-category-badge.low_potential { background: var(--bg-secondary); color: var(--text-muted); }
+    .ica-category-badge.uncategorized { background: var(--bg-secondary); color: var(--text-secondary); border: 1px dashed var(--border); }
+    .ica-category-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; }
+    .ica-notes-input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; }
+    .ica-action-btn { padding: 6px 12px; border: none; border-radius: 6px; background: var(--accent); color: white; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .ica-action-btn:hover { background: var(--accent-light); }
+    .ica-action-btn.delete { background: transparent; color: var(--error); border: 1px solid var(--border); }
+    .ica-action-btn.delete:hover { background: var(--error-bg); border-color: var(--error); }
+    .stat-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px; text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 600; margin-bottom: 4px; }
+    .stat-label { font-size: 0.85rem; color: var(--text-secondary); }
+
     /* Footer */
     footer { text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 60px; }
     footer a { color: var(--text-secondary); text-decoration: none; }
@@ -327,6 +347,7 @@
         <nav>
           <a href="#upload">Analyze</a>
           <a href="#job-section">Jobs</a>
+          <a href="#networking-section">Networking</a>
           <a href="/api">API</a>
         </nav>
       </div>
@@ -595,6 +616,139 @@
                 <p>No applications tracked yet.<br>Start applying and track your progress!</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Networking Section - ICA (Ideal Contact Advocates) -->
+      <section class="job-section" id="networking-section" style="margin-top: 60px;">
+        <div class="job-header">
+          <div class="job-header-left">
+            <div class="job-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Networking - ICA Management</h2>
+              <p>Import and categorize your LinkedIn contacts</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CSV Upload Section -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">Import LinkedIn Contacts</h3>
+            <p class="card-subtitle">Upload your LinkedIn Connections.csv file</p>
+          </div>
+
+          <div class="drop-zone" id="ica-drop-zone">
+            <div class="drop-zone-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <h3>Drag & drop your LinkedIn CSV</h3>
+            <p>or <span class="browse">browse files</span></p>
+          </div>
+
+          <input type="file" id="ica-file-input" accept=".csv" style="display: none;">
+
+          <div class="file-preview" id="ica-file-preview" style="display: none;">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+              </svg>
+            </div>
+            <div class="file-info">
+              <div class="file-name" id="ica-file-name">Connections.csv</div>
+              <div class="file-size" id="ica-file-size">0 KB</div>
+            </div>
+            <button class="file-remove" id="ica-file-remove">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <button class="btn btn-primary" id="ica-upload-btn" style="margin-top: 16px;" disabled>
+            Upload & Analyze Contacts
+          </button>
+
+          <div class="status-message" id="ica-status-message">
+            <span id="ica-status-text"></span>
+          </div>
+        </div>
+
+        <!-- ICA Stats -->
+        <div class="card" id="ica-stats-card" style="margin-top: 24px; display: none;">
+          <div class="card-header">
+            <h3 class="card-title">Contact Statistics</h3>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px;">
+            <div class="stat-box">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">Total Contacts</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" style="color: var(--success);" id="stat-high">0</div>
+              <div class="stat-label">High Potential</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" style="color: var(--warning);" id="stat-medium">0</div>
+              <div class="stat-label">Medium Potential</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" style="color: var(--text-muted);" id="stat-low">0</div>
+              <div class="stat-label">Low Potential</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacts Table -->
+        <div class="card" id="ica-table-card" style="margin-top: 24px; display: none;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 class="card-title">Your Contacts</h3>
+              <p class="card-subtitle">Categorize contacts by interview opportunity potential</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <input type="text" id="ica-search" placeholder="Search contacts..." style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.9rem;">
+              <select id="ica-filter" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.9rem;">
+                <option value="all">All Categories</option>
+                <option value="high_potential">High Potential</option>
+                <option value="medium_potential">Medium Potential</option>
+                <option value="low_potential">Low Potential</option>
+                <option value="uncategorized">Uncategorized</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 20px;">
+            <table class="ica-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Company</th>
+                  <th>Position</th>
+                  <th>Category</th>
+                  <th>Connected On</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ica-contacts-tbody">
+                <!-- Contacts will be populated here -->
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -968,6 +1122,304 @@
         loadApplications();
       } catch (e) { console.error('Failed to delete:', e); }
     };
+
+    // ============================================
+    // ICA (Ideal Contact Advocates) Functionality
+    // ============================================
+
+    let icaSelectedFile = null;
+    let icaContacts = [];
+
+    const icaDropZone = document.getElementById('ica-drop-zone');
+    const icaFileInput = document.getElementById('ica-file-input');
+    const icaFilePreview = document.getElementById('ica-file-preview');
+    const icaFileName = document.getElementById('ica-file-name');
+    const icaFileSize = document.getElementById('ica-file-size');
+    const icaFileRemove = document.getElementById('ica-file-remove');
+    const icaUploadBtn = document.getElementById('ica-upload-btn');
+    const icaStatusMessage = document.getElementById('ica-status-message');
+    const icaStatusText = document.getElementById('ica-status-text');
+    const icaStatsCard = document.getElementById('ica-stats-card');
+    const icaTableCard = document.getElementById('ica-table-card');
+    const icaSearch = document.getElementById('ica-search');
+    const icaFilter = document.getElementById('ica-filter');
+    const icaContactsTbody = document.getElementById('ica-contacts-tbody');
+
+    const showIcaStatus = (message, type) => {
+      icaStatusMessage.className = `status-message visible ${type}`;
+      icaStatusText.textContent = message;
+    };
+
+    const hideIcaStatus = () => icaStatusMessage.className = 'status-message';
+
+    // File upload handlers
+    icaDropZone.addEventListener('click', () => icaFileInput.click());
+
+    icaDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      icaDropZone.classList.add('dragover');
+    });
+
+    icaDropZone.addEventListener('dragleave', () => {
+      icaDropZone.classList.remove('dragover');
+    });
+
+    icaDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      icaDropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleIcaFile(file);
+    });
+
+    icaFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleIcaFile(file);
+    });
+
+    icaFileRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      icaSelectedFile = null;
+      icaFileInput.value = '';
+      icaFilePreview.style.display = 'none';
+      icaDropZone.style.display = 'block';
+      icaUploadBtn.disabled = true;
+      hideIcaStatus();
+    });
+
+    function handleIcaFile(file) {
+      if (!file.name.endsWith('.csv')) {
+        showIcaStatus('Please upload a CSV file', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showIcaStatus('File too large. Maximum size is 5MB', 'error');
+        return;
+      }
+
+      icaSelectedFile = file;
+      icaFileName.textContent = file.name;
+      icaFileSize.textContent = formatBytes(file.size);
+      icaDropZone.style.display = 'none';
+      icaFilePreview.style.display = 'flex';
+      icaUploadBtn.disabled = false;
+      hideIcaStatus();
+    }
+
+    // Upload contacts
+    icaUploadBtn.addEventListener('click', async () => {
+      if (!icaSelectedFile || !currentSessionId) return;
+
+      icaUploadBtn.classList.add('loading');
+      icaUploadBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('file', icaSelectedFile);
+
+        const response = await fetch(`/api/ica/upload/${currentSessionId}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to upload contacts');
+        }
+
+        showIcaStatus(`Successfully imported ${result.stats.successfulImports} contacts!`, 'success');
+
+        // Reset file upload
+        icaSelectedFile = null;
+        icaFileInput.value = '';
+        icaFilePreview.style.display = 'none';
+        icaDropZone.style.display = 'block';
+
+        // Load contacts and stats
+        await loadIcaStats();
+        await loadIcaContacts();
+
+        // Show stats and table
+        icaStatsCard.style.display = 'block';
+        icaTableCard.style.display = 'block';
+
+      } catch (error) {
+        showIcaStatus(error.message || 'Failed to upload contacts', 'error');
+      } finally {
+        icaUploadBtn.classList.remove('loading');
+        icaUploadBtn.disabled = !icaSelectedFile;
+      }
+    });
+
+    // Load ICA stats
+    async function loadIcaStats() {
+      if (!currentSessionId) return;
+
+      try {
+        const response = await fetch(`/api/ica/stats/${currentSessionId}`);
+        const result = await response.json();
+
+        if (result.success && result.stats) {
+          document.getElementById('stat-total').textContent = result.stats.totalContacts || 0;
+          document.getElementById('stat-high').textContent = result.stats.highPotential || 0;
+          document.getElementById('stat-medium').textContent = result.stats.mediumPotential || 0;
+          document.getElementById('stat-low').textContent = result.stats.lowPotential || 0;
+        }
+      } catch (error) {
+        console.error('Failed to load ICA stats:', error);
+      }
+    }
+
+    // Load ICA contacts
+    async function loadIcaContacts() {
+      if (!currentSessionId) return;
+
+      try {
+        const category = icaFilter.value;
+        const search = icaSearch.value;
+
+        let url = `/api/ica/contacts/${currentSessionId}?category=${category}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+          icaContacts = result.contacts;
+          renderIcaContacts();
+        }
+      } catch (error) {
+        console.error('Failed to load contacts:', error);
+      }
+    }
+
+    // Render contacts table
+    function renderIcaContacts() {
+      if (icaContacts.length === 0) {
+        icaContactsTbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              No contacts found. Upload your LinkedIn Connections CSV to get started.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      icaContactsTbody.innerHTML = icaContacts.map(contact => `
+        <tr data-contact-id="${contact.id}">
+          <td>${contact.first_name || ''} ${contact.last_name || ''}</td>
+          <td>${contact.company || '-'}</td>
+          <td>${contact.position || '-'}</td>
+          <td>
+            <select class="ica-category-select" onchange="updateIcaCategory('${contact.id}', this.value)">
+              <option value="high_potential" ${contact.ica_category === 'high_potential' ? 'selected' : ''}>High Potential</option>
+              <option value="medium_potential" ${contact.ica_category === 'medium_potential' ? 'selected' : ''}>Medium Potential</option>
+              <option value="low_potential" ${contact.ica_category === 'low_potential' ? 'selected' : ''}>Low Potential</option>
+              <option value="uncategorized" ${contact.ica_category === 'uncategorized' ? 'selected' : ''}>Uncategorized</option>
+            </select>
+          </td>
+          <td>${contact.connected_on ? new Date(contact.connected_on).toLocaleDateString() : '-'}</td>
+          <td>
+            <input type="text" class="ica-notes-input" placeholder="Add notes..."
+              value="${contact.notes || ''}"
+              onchange="updateIcaNotes('${contact.id}', this.value)">
+          </td>
+          <td>
+            <button class="ica-action-btn delete" onclick="deleteIcaContact('${contact.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Update contact category
+    window.updateIcaCategory = async (contactId, category) => {
+      if (!currentSessionId) return;
+
+      try {
+        const response = await fetch(`/api/ica/contacts/${currentSessionId}/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ icaCategory: category })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await loadIcaStats();
+          showIcaStatus('Category updated successfully', 'success');
+          setTimeout(hideIcaStatus, 2000);
+        }
+      } catch (error) {
+        console.error('Failed to update category:', error);
+        showIcaStatus('Failed to update category', 'error');
+      }
+    };
+
+    // Update contact notes
+    window.updateIcaNotes = async (contactId, notes) => {
+      if (!currentSessionId) return;
+
+      try {
+        await fetch(`/api/ica/contacts/${currentSessionId}/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes })
+        });
+      } catch (error) {
+        console.error('Failed to update notes:', error);
+      }
+    };
+
+    // Delete contact
+    window.deleteIcaContact = async (contactId) => {
+      if (!currentSessionId || !confirm('Delete this contact?')) return;
+
+      try {
+        const response = await fetch(`/api/ica/contacts/${currentSessionId}/${contactId}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await loadIcaStats();
+          await loadIcaContacts();
+          showIcaStatus('Contact deleted successfully', 'success');
+          setTimeout(hideIcaStatus, 2000);
+        }
+      } catch (error) {
+        console.error('Failed to delete contact:', error);
+        showIcaStatus('Failed to delete contact', 'error');
+      }
+    };
+
+    // Filter and search handlers
+    icaFilter.addEventListener('change', loadIcaContacts);
+    icaSearch.addEventListener('input', debounce(() => loadIcaContacts(), 300));
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Load ICA data if session exists
+    if (currentSessionId) {
+      loadIcaStats().then(() => {
+        loadIcaContacts().then(() => {
+          if (icaContacts.length > 0) {
+            icaStatsCard.style.display = 'block';
+            icaTableCard.style.display = 'block';
+          }
+        });
+      });
+    }
   </script>
 </body>
 </html>

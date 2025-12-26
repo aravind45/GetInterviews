@@ -7,6 +7,7 @@ import Groq from 'groq-sdk';
 // @ts-ignore
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import icaRoutes from './routes/ica';
 
 const app = express();
 
@@ -776,6 +777,9 @@ Return ONLY the cover letter text, no additional commentary.`;
     res.status(500).json({ success: false, error: error.message || 'Generation failed' });
   }
 });
+
+// ICA Routes
+app.use('/api/ica', icaRoutes);
 
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));

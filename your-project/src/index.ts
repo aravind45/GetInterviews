@@ -75,11 +75,13 @@ app.get('/health', (req, res) => {
 import apiRoutes from './routes/api';
 import adminRoutes from './routes/admin';
 import jobRoutes from './routes/jobs';
+import icaRoutes from './routes/ica';
 
 // API routes
 app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/ica', icaRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
