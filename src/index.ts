@@ -574,6 +574,125 @@ app.post('/api/update-job-status', async (req, res) => {
   }
 });
 
+// ============================================================
+// SPECIFIC COVER LETTER GENERATOR (for Analyze Resume page)
+// ============================================================
+app.post('/api/generate-specific-cover-letter', async (req, res) => {
+  try {
+    const { sessionId, jobDescription, analysisData } = req.body;
+    const session = sessions[sessionId];
+    
+    if (!session) {
+      return res.status(400).json({ success: false, error: 'Session not found' });
+    }
+    
+    if (!jobDescription) {
+      return res.status(400).json({ success: false, error: 'Job description required' });
+    }
+
+    // Extract company name and role from job description
+    const companyMatch = jobDescription.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
+    const titleMatch = jobDescription.match(/(?:title|position|role)[:\s]+([^\n]+)/i) || 
+                       jobDescription.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
+
+    const resumeText = session.resumeText || '';
+    const profile = session.profile || {};
+    
+    // Extract specific achievements from resume
+    const achievementPatterns = [
+      /(?:led|managed|built|developed|created|launched|designed|implemented|reduced|increased|improved|saved|generated|grew|scaled)[^.]+\d+[^.]+\./gi,
+      /\d+%[^.]+\./gi,
+      /\$[\d,]+[^.]+\./gi
+    ];
+    
+    let achievements: string[] = [];
+    achievementPatterns.forEach(pattern => {
+      const matches = resumeText.match(pattern);
+      if (matches) achievements.push(...matches);
+    });
+    achievements = [...new Set(achievements)].slice(0, 5);
+
+    const prompt = `You are a cover letter expert. Write an EXTREMELY SPECIFIC, IMPRESSIVE cover letter.
+
+CANDIDATE PROFILE:
+Name: ${profile.name || 'Candidate'}
+Current Role: ${profile.currentTitle || 'Technology Leader'}
+Experience: ${profile.yearsExperience || 10}+ years
+Key Skills: ${(profile.hardSkills || []).join(', ')}
+Key Achievements from Resume:
+${achievements.map((a, i) => `${i+1}. ${a}`).join('\n')}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 3000)}
+
+ANALYSIS INSIGHTS:
+- Match Score: ${analysisData?.overallScore || 'N/A'}%
+- Strengths: ${(analysisData?.strengths || []).map((s: any) => s.skill).join(', ')}
+- Key Gaps: ${(analysisData?.dealbreakers || []).map((d: any) => d.requirement).join(', ')}
+
+WRITE A COVER LETTER WITH THESE EXACT SECTIONS (but make it flow naturally, not with headers):
+
+1. OPENING HOOK (1-2 sentences)
+- Start with something specific about the company's recent news, product, or AI initiative
+- NOT generic like "I'm excited to apply"
+- Example: "When I saw [Company]'s recent announcement about [specific AI feature], I knew my experience building [specific thing] could directly accelerate your roadmap."
+
+2. WHY THIS COMPANY (2-3 sentences)
+- Reference something SPECIFIC about the company
+- Their AI/tech products, recent funding, mission, tech stack
+- Show you've done research
+
+3. WHY THIS AI ROLE (2-3 sentences)
+- Connect the specific job requirements to your experience
+- Mention specific technologies from the job description
+- Show you understand what they're trying to build
+
+4. YOUR IMPACT WITH PROOF (3-4 sentences)
+- Use SPECIFIC numbers and achievements from the candidate's resume
+- Show SWE → AI leadership transition if applicable
+- Examples like: "At [Company], I led [specific project] that [specific measurable result]"
+- Include metrics: revenue, users, efficiency gains, team size
+
+5. WHAT YOU'LL CONTRIBUTE (2-3 sentences)
+- Be specific about what you'll do in first 90 days
+- Reference specific challenges from the job description
+- Show strategic thinking
+
+6. CLOSING (1-2 sentences)
+- Confident but not arrogant
+- Specific call to action
+
+CRITICAL RULES:
+- NO generic phrases like "I'm excited to apply" or "I believe I would be a great fit"
+- EVERY paragraph must have specific details
+- Use actual achievements and numbers from the resume
+- Keep it under 400 words
+- Sound confident and accomplished, not desperate
+- Write in first person, conversational but professional tone
+- Make it sound human, not AI-generated
+
+Return ONLY the cover letter text, no additional commentary.`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1500
+    });
+
+    const coverLetter = completion.choices[0]?.message?.content || '';
+
+    res.json({ 
+      success: true, 
+      data: { coverLetter: coverLetter.trim() }
+    });
+
+  } catch (error: any) {
+    console.error('Cover letter error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Generation failed' });
+  }
+});
+
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

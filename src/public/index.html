@@ -459,6 +459,7 @@ analyzeBtn.addEventListener('click', async () => {
     const data = await res.json();
     
     if (!data.success) throw new Error(data.error);
+    lastAnalysisData = data.data; // Store for cover letter generation
     displayAnalysisResults(data.data);
     
   } catch (err) {
@@ -629,9 +630,97 @@ function displayAnalysisResults(d) {
       </div>
       <p class="encouragement">${d.bottomLine?.encouragement || ''}</p>
     </div>
+    
+    <!-- COVER LETTER GENERATOR -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
+      <h3 style="color: #a78bfa; margin-bottom: 8px;">✉️ Generate Killer Cover Letter</h3>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Create a highly specific cover letter that shows exactly why YOU are perfect for THIS role</p>
+      <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
+        <span id="cover-letter-btn-text">✉️ Generate Cover Letter</span>
+        <span class="loading" id="cover-letter-loading" style="display:none"></span>
+      </button>
+    </div>
+    
+    <!-- Cover Letter Output -->
+    <div id="cover-letter-output" style="display:none">
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <h3>✉️ Your Personalized Cover Letter</h3>
+          <button class="btn btn-secondary btn-sm" onclick="copyCoverLetter()">📋 Copy</button>
+        </div>
+        <div id="cover-letter-content" style="background: #0a0a0f; padding: 20px; border-radius: 10px; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.8; color: #e2e8f0;"></div>
+      </div>
+    </div>
   `;
   
+  // Attach cover letter button listener
+  setTimeout(() => {
+    const clBtn = document.getElementById('generate-cover-letter-btn');
+    if (clBtn) clBtn.addEventListener('click', generateAnalysisCoverLetter);
+  }, 100);
+  
   document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ========== COVER LETTER GENERATOR (ANALYZE PAGE) ==========
+let lastAnalysisData = null; // Store the analysis data for cover letter
+
+async function generateAnalysisCoverLetter() {
+  if (!sessionId) {
+    showToast('Please analyze your resume first', 'error');
+    return;
+  }
+  
+  const jobDesc = document.getElementById('job-desc').value.trim();
+  if (!jobDesc) {
+    showToast('Job description is required for cover letter', 'error');
+    return;
+  }
+  
+  // Show loading
+  document.getElementById('cover-letter-btn-text').textContent = 'Generating...';
+  document.getElementById('cover-letter-loading').style.display = 'inline-block';
+  document.getElementById('generate-cover-letter-btn').disabled = true;
+  
+  try {
+    const res = await fetch('/api/generate-specific-cover-letter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        sessionId, 
+        jobDescription: jobDesc,
+        analysisData: lastAnalysisData
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) throw new Error(data.error || 'Generation failed');
+    
+    // Display the cover letter
+    document.getElementById('cover-letter-content').textContent = data.data.coverLetter;
+    document.getElementById('cover-letter-output').style.display = 'block';
+    document.getElementById('cover-letter-output').scrollIntoView({ behavior: 'smooth' });
+    
+    showToast('Cover letter generated!', 'success');
+    
+  } catch (err) {
+    console.error('Cover letter error:', err);
+    showToast(String(err.message || 'Generation failed'), 'error');
+  } finally {
+    document.getElementById('cover-letter-btn-text').textContent = '✉️ Generate Cover Letter';
+    document.getElementById('cover-letter-loading').style.display = 'none';
+    document.getElementById('generate-cover-letter-btn').disabled = false;
+  }
+}
+
+function copyCoverLetter() {
+  const content = document.getElementById('cover-letter-content').textContent;
+  navigator.clipboard.writeText(content).then(() => {
+    showToast('Cover letter copied!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
 }
 
 // ========== SEARCH TAB ==========
@@ -784,37 +873,52 @@ function generateSearchLinksClientSide() {
     };
   });
   
+  // Build smart search queries for job boards
+  // LinkedIn/Indeed support Boolean OR in search
+  const seniorityTerms = seniorityQuery.join(' OR ');  // "Director" OR "Head of" OR "VP"
+  const domainTerms = domainQuery.join(' OR ');        // "AI" OR "Engineering" OR "Technology"
+  const topSkills = skillsQuery.slice(0, 3).join(' OR '); // "AWS" OR "Python" OR "MLOps"
+  
+  // Smart query for LinkedIn (supports OR)
+  const linkedInQuery = `(${seniorityTerms}) (${domainTerms})`;
+  
+  // Smart query for Indeed (supports Boolean)
+  const indeedQuery = `(${seniorityTerms}) (${domainTerms})`;
+  
+  // Smart query for Google Jobs
+  const googleJobsQuery = `(${seniorityTerms}) (${domainTerms}) (${topSkills}) ${loc || 'remote'}`;
+  
   return {
     primary: [
-      { name: 'LinkedIn', icon: '💼', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}` },
-      { name: 'Indeed', icon: '🔍', url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}` },
-      { name: 'Glassdoor', icon: '⭐', url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locKeyword=${encode(location)}` },
-      { name: 'Google Jobs', icon: '🔎', url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs` }
+      { name: 'LinkedIn', icon: '💼', url: `https://www.linkedin.com/jobs/search/?keywords=${encode(linkedInQuery)}&location=${encode(location)}` },
+      { name: 'Indeed', icon: '🔍', url: `https://www.indeed.com/jobs?q=${encode(indeedQuery)}&l=${encode(location)}` },
+      { name: 'Glassdoor', icon: '⭐', url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(linkedInQuery)}&locKeyword=${encode(location)}` },
+      { name: 'Google Jobs', icon: '🔎', url: `https://www.google.com/search?q=${encode(googleJobsQuery + ' jobs')}&ibp=htl;jobs` }
     ],
     secondary: [
-      { name: 'ZipRecruiter', icon: '⚡', url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}` },
-      { name: 'Monster', icon: '👾', url: `https://www.monster.com/jobs/search?q=${encode(title)}&where=${encode(location)}` },
-      { name: 'CareerBuilder', icon: '🏗️', url: `https://www.careerbuilder.com/jobs?keywords=${encode(title)}&location=${encode(location)}` },
-      { name: 'SimplyHired', icon: '✨', url: `https://www.simplyhired.com/search?q=${encode(title)}&l=${encode(location)}` }
+      { name: 'ZipRecruiter', icon: '⚡', url: `https://www.ziprecruiter.com/jobs-search?search=${encode(linkedInQuery)}&location=${encode(location)}` },
+      { name: 'Monster', icon: '👾', url: `https://www.monster.com/jobs/search?q=${encode(linkedInQuery)}&where=${encode(location)}` },
+      { name: 'CareerBuilder', icon: '🏗️', url: `https://www.careerbuilder.com/jobs?keywords=${encode(linkedInQuery)}&location=${encode(location)}` },
+      { name: 'SimplyHired', icon: '✨', url: `https://www.simplyhired.com/search?q=${encode(indeedQuery)}&l=${encode(location)}` }
     ],
     tech: [
-      { name: 'Dice', icon: '🎲', url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}` },
-      { name: 'Built In', icon: '🏢', url: `https://builtin.com/jobs?search=${encode(title)}&location=${encode(location)}` },
-      { name: 'Wellfound', icon: '🚀', url: `https://wellfound.com/jobs?query=${encode(title)}` },
-      { name: 'Levels.fyi', icon: '📊', url: `https://www.levels.fyi/jobs?searchText=${encode(title)}&location=${encode(location)}` }
+      { name: 'Dice', icon: '🎲', url: `https://www.dice.com/jobs?q=${encode(linkedInQuery)}&location=${encode(location)}` },
+      { name: 'Built In', icon: '🏢', url: `https://builtin.com/jobs?search=${encode(domainTerms)}&location=${encode(location)}` },
+      { name: 'Wellfound', icon: '🚀', url: `https://wellfound.com/jobs?query=${encode(domainTerms)}` },
+      { name: 'Levels.fyi', icon: '📊', url: `https://www.levels.fyi/jobs?searchText=${encode(linkedInQuery)}&location=${encode(location)}` }
     ],
     remote: [
-      { name: 'We Work Remotely', icon: '🌍', url: `https://weworkremotely.com/remote-jobs/search?term=${encode(title)}` },
-      { name: 'Remote OK', icon: '🏠', url: `https://remoteok.com/remote-${encode(title.replace(/\s+/g, '-'))}-jobs` },
-      { name: 'FlexJobs', icon: '🧘', url: `https://www.flexjobs.com/search?search=${encode(title)}&location=${encode(location)}` },
-      { name: 'Remote.co', icon: '💻', url: `https://remote.co/remote-jobs/search/?search_keywords=${encode(title)}` }
+      { name: 'We Work Remotely', icon: '🌍', url: `https://weworkremotely.com/remote-jobs/search?term=${encode(domainTerms)}` },
+      { name: 'Remote OK', icon: '🏠', url: `https://remoteok.com/remote-${encode(domainQuery[0] || 'tech').toLowerCase().replace(/\s+/g, '-')}-jobs` },
+      { name: 'FlexJobs', icon: '🧘', url: `https://www.flexjobs.com/search?search=${encode(linkedInQuery)}` },
+      { name: 'Remote.co', icon: '💻', url: `https://remote.co/remote-jobs/search/?search_keywords=${encode(domainTerms)}` }
     ],
     freshJobs: freshJobsIndividual,
     freshJobsAll: freshJobsAllUrl,
     freshJobs24h: freshJobs24hUrl,
     bySkill: (profile.hardSkills || []).slice(0, 5).map(skill => ({
       skill,
-      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill)}&location=${encode(location)}`
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill + ' ' + seniorityQuery[0])}&location=${encode(location)}`
     })),
     byTitle: (profile.targetTitles || []).slice(0, 4).map(t => ({
       title: t,
