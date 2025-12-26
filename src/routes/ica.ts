@@ -157,13 +157,11 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
       errors: importErrors.length > 0 ? importErrors : undefined,
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError(
-      `Failed to process LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    console.error('ICA upload error:', error);
+    return res.status(500).json({
+      success: false,
+      error: `Failed to process LinkedIn CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -218,10 +216,10 @@ router.get('/contacts/:sessionId', async (req: Request, res: Response) => {
       total: result.rows.length,
     });
   } catch (error) {
-    throw new AppError(
-      `Failed to fetch contacts: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to fetch contacts: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -305,13 +303,10 @@ router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Respon
       contact: result.rows[0],
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError(
-      `Failed to update contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to update contact: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -338,13 +333,10 @@ router.delete('/contacts/:sessionId/:contactId', async (req: Request, res: Respo
       message: 'Contact deleted successfully',
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError(
-      `Failed to delete contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to delete contact: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -395,10 +387,10 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    throw new AppError(
-      `Failed to fetch ICA stats: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to fetch ICA stats: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -442,13 +434,10 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
       interaction: result.rows[0],
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError(
-      `Failed to log interaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to log interaction: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 
@@ -483,13 +472,10 @@ router.get('/interactions/:sessionId/:contactId', async (req: Request, res: Resp
       interactions: result.rows,
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError(
-      `Failed to fetch interactions: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      500
-    );
+    return res.status(500).json({
+      success: false,
+      error: `Failed to fetch interactions: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
   }
 });
 

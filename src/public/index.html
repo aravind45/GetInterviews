@@ -2284,6 +2284,11 @@ icaUploadBtn.addEventListener('click', async () => {
       body: formData
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `Upload failed with status ${response.status}`);
+    }
+
     const result = await response.json();
 
     if (!result.success) {
