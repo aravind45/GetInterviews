@@ -14,7 +14,6 @@ import {
   ParsedContact,
 } from '../services/linkedinParser';
 import { getPool } from '../database/connection';
-import { AppError } from '../middleware/errorHandler';
 
 const router = Router();
 
@@ -41,7 +40,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
   const { sessionId } = req.params;
 
   if (!req.file) {
-    throw new AppError('No file uploaded', 400);
+    return res.status(400).json({ success: false, error: 'No file uploaded' });
   }
 
   try {
@@ -53,7 +52,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
     );
 
     if (sessionResult.rows.length === 0) {
-      throw new AppError('Invalid or expired session', 401);
+      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
     }
 
     // Validate CSV format
@@ -63,7 +62,7 @@ router.post('/upload/:sessionId', upload.single('file'), async (req: Request, re
     const parseResult = parseLinkedInCSV(req.file.buffer);
 
     if (parseResult.contacts.length === 0) {
-      throw new AppError('No valid contacts found in CSV file', 400);
+      return res.status(400).json({ success: false, error: 'No valid contacts found in CSV file' });
     }
 
     // Create import batch record
@@ -243,7 +242,7 @@ router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Respon
     );
 
     if (contactResult.rows.length === 0) {
-      throw new AppError('Contact not found', 404);
+      return res.status(404).json({ success: false, error: 'Contact not found' });
     }
 
     // Build update query
@@ -288,7 +287,7 @@ router.patch('/contacts/:sessionId/:contactId', async (req: Request, res: Respon
     }
 
     if (updates.length === 0) {
-      throw new AppError('No fields to update', 400);
+      return res.status(400).json({ success: false, error: 'No fields to update' });
     }
 
     params.push(contactId);
@@ -331,7 +330,7 @@ router.delete('/contacts/:sessionId/:contactId', async (req: Request, res: Respo
     );
 
     if (result.rows.length === 0) {
-      throw new AppError('Contact not found', 404);
+      return res.status(404).json({ success: false, error: 'Contact not found' });
     }
 
     res.json({
@@ -420,7 +419,7 @@ router.post('/interactions/:sessionId/:contactId', async (req: Request, res: Res
     );
 
     if (contactResult.rows.length === 0) {
-      throw new AppError('Contact not found', 404);
+      return res.status(404).json({ success: false, error: 'Contact not found' });
     }
 
     // Create interaction record
@@ -469,7 +468,7 @@ router.get('/interactions/:sessionId/:contactId', async (req: Request, res: Resp
     );
 
     if (contactResult.rows.length === 0) {
-      throw new AppError('Contact not found', 404);
+      return res.status(404).json({ success: false, error: 'Contact not found' });
     }
 
     const result = await pool.query(

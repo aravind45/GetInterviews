@@ -4,7 +4,10 @@
       "Bash(find:*)",
       "Bash(cat:*)",
       "Bash(npm install:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd ICA (Ideal Contact Advocates) Networking Feature\n\nImplemented a comprehensive LinkedIn contact management system to help users\ncategorize and track their professional network by interview opportunity potential.\n\nFeatures:\n- LinkedIn Connections CSV import with drag & drop\n- Automatic contact categorization (High/Medium/Low Potential)\n- Interactive contact management table with search and filtering\n- Statistics dashboard showing contact distribution\n- Inline editing for categories and notes\n- Contact interaction tracking (optional)\n\nBackend:\n- New API routes: /api/ica/* for contact management\n- LinkedIn CSV parser service with validation\n- Database schema with 3 tables + statistics view\n- Session-based contact isolation\n\nFrontend:\n- New \"Networking\" tab in main navigation\n- Responsive UI matching JobMatch AI design\n- Real-time category updates and statistics\n- Search/filter functionality with debouncing\n\nDatabase:\n- linkedin_contacts table for contact storage\n- contact_import_batches for upload tracking\n- contact_interactions for networking history\n- ica_stats view for aggregated statistics\n\nDependencies:\n- csv-parse for CSV file parsing\n- uuid, zod, pg for data handling\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
