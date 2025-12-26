@@ -273,6 +273,7 @@
         <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
         <div class="main-tab" data-tab="search">💼 Find Jobs <span class="badge" id="jobs-badge" style="display:none">0</span></div>
         <div class="main-tab" data-tab="tracker">📋 Tracker <span class="badge" id="saved-badge" style="display:none">0</span></div>
+        <div class="main-tab" data-tab="coach">🎓 Interview Coach</div>
       </nav>
       
       <!-- Auth Section -->
@@ -603,6 +604,277 @@
           <div class="icon">📋</div>
           <h3>No Saved Jobs Yet</h3>
           <p>Save jobs from search results to track them here</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: INTERVIEW COACH -->
+    <section class="section" id="tab-coach">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🎓 Career Interview Coach</h2>
+          <p class="card-subtitle">Master every stage of the interview process with expert guidance</p>
+        </div>
+
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.6;">
+          There is no magic formula for success, but with the right preparation and approach, you can crack any job interview and land that offer you've been waiting for. This guide is divided into three critical stages to help you prepare thoroughly.
+        </p>
+
+        <!-- Stage Navigation -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          <button class="btn btn-secondary btn-full coach-stage-btn active" data-stage="pre" onclick="showCoachStage('pre')">
+            <div style="font-size: 1.2rem; margin-bottom: 4px;">📚</div>
+            <div style="font-size: 0.85rem;">Stage 1: Pre-Interview</div>
+          </button>
+          <button class="btn btn-secondary btn-full coach-stage-btn" data-stage="during" onclick="showCoachStage('during')">
+            <div style="font-size: 1.2rem; margin-bottom: 4px;">💼</div>
+            <div style="font-size: 0.85rem;">Stage 2: During Interview</div>
+          </button>
+          <button class="btn btn-secondary btn-full coach-stage-btn" data-stage="post" onclick="showCoachStage('post')">
+            <div style="font-size: 1.2rem; margin-bottom: 4px;">📧</div>
+            <div style="font-size: 0.85rem;">Stage 3: Post-Interview</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 1: Pre-Interview Preparation -->
+      <div class="coach-stage active" id="stage-pre">
+        <div class="card">
+          <h3 style="color: #10b981; margin-bottom: 16px; font-size: 1.3rem;">📚 Stage 1: Pre-Interview Preparation</h3>
+          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
+            Before your interview, you should have a solid understanding of the company and the role. This shows that you are serious about the position and genuinely interested in the company.
+          </p>
+
+          <!-- Tip 1 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #1: Thoroughly Research the Company and Role</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Before your interview, you should have a solid understanding of the company you are interviewing with and the role you are applying for. This shows that you are serious about the position and genuinely interested in the company.
+            </p>
+            <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px;">
+              <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📌 ACTION ITEMS</div>
+              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+                <li>Visit the company's official website and read their "About Us" page</li>
+                <li>Review their products, services, and recent news</li>
+                <li>Check their social media profiles (LinkedIn, Twitter, etc.)</li>
+                <li>Read the job description carefully and understand key requirements</li>
+                <li>Research the interviewer on LinkedIn if their name is provided</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tip 2 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #2: Practice Common Interview Questions Aloud</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Don't just think about your answers - practice them aloud! This helps you articulate your thoughts clearly and builds confidence.
+            </p>
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+              <div style="color: #60a5fa; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📝 COMMON QUESTIONS TO PRACTICE</div>
+              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+                <li><strong>Tell me about yourself</strong> - Prepare a 2-minute professional summary</li>
+                <li><strong>What are your strengths/weaknesses?</strong> - Be honest but strategic</li>
+                <li><strong>Why do you want to work here?</strong> - Show you've done your research</li>
+                <li><strong>Where do you see yourself in 5 years?</strong> - Align with company growth</li>
+                <li><strong>Why should we hire you?</strong> - Connect your skills to their needs</li>
+              </ul>
+            </div>
+            <div style="background: rgba(139, 92, 246, 0.1); padding: 10px; border-radius: 6px;">
+              <div style="color: #a78bfa; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">💡 PRO TIP</div>
+              <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">Use the STAR method (Situation, Task, Action, Result) when answering behavioral questions to structure your responses effectively.</p>
+            </div>
+          </div>
+
+          <!-- Tip 3 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+            <h4 style="color: #fbbf24; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #3: Prepare Your Key Selling Points</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Be ready to talk about specific examples where you have made an impact. Numbers and metrics leave a lasting impression!
+            </p>
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 8px;">
+              <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">🎯 WHAT TO PREPARE</div>
+              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+                <li>3-5 key achievements with quantifiable results (e.g., "Increased sales by 25%")</li>
+                <li>2-3 examples of problem-solving or leadership</li>
+                <li>Specific technical skills relevant to the role</li>
+                <li>Examples of how you've overcome challenges</li>
+                <li>Your unique value proposition - what makes you different?</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Additional Tips -->
+          <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">
+            <h4 style="color: #a78bfa; margin-bottom: 12px;">📋 Quick Checklist - Day Before Interview</h4>
+            <div style="display: grid; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Reviewed company website and recent news
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Practiced answers to common questions aloud
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Prepared 3-5 questions to ask the interviewer
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Selected professional outfit and tested tech (for virtual interviews)
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Printed extra copies of resume
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
+                <input type="checkbox" style="width: 18px; height: 18px;"> Planned route/confirmed meeting link and time
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 2: During Interview -->
+      <div class="coach-stage" id="stage-during" style="display: none;">
+        <div class="card">
+          <h3 style="color: #3b82f6; margin-bottom: 16px; font-size: 1.3rem;">💼 Stage 2: During the Interview</h3>
+          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
+            This is your moment to shine! Follow these tips to present yourself confidently and professionally during the interview.
+          </p>
+
+          <!-- Tip 1 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Make a Strong First Impression</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              You have about 7 seconds to make a first impression. Make it count!
+            </p>
+            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+              <li>Arrive 10-15 minutes early (or join virtual meeting 5 minutes early)</li>
+              <li>Greet everyone with a firm handshake and smile</li>
+              <li>Maintain good posture and eye contact</li>
+              <li>Be polite to everyone - receptionist, security, etc.</li>
+            </ul>
+          </div>
+
+          <!-- Tip 2 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Listen Actively and Answer Thoughtfully</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Don't rush your answers. Take a moment to think before responding.
+            </p>
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px;">
+              <div style="color: #60a5fa; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">💡 BEST PRACTICES</div>
+              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+                <li>Listen carefully to the complete question before answering</li>
+                <li>It's okay to pause for 2-3 seconds to gather your thoughts</li>
+                <li>Use specific examples from your experience (STAR method)</li>
+                <li>If you don't understand a question, ask for clarification</li>
+                <li>Be concise - aim for 1-2 minute answers unless asked for more detail</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tip 3 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; margin-bottom: 20px;">
+            <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 1.1rem;">✅ Show Enthusiasm and Cultural Fit</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Companies hire people they like and who will fit well with their team. Show genuine interest!
+            </p>
+            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+              <li>Smile and maintain positive body language</li>
+              <li>Use the interviewer's name occasionally</li>
+              <li>Reference specific things you learned about the company in your research</li>
+              <li>Ask thoughtful questions about the role and company</li>
+              <li>Show how your values align with the company's mission</li>
+            </ul>
+          </div>
+
+          <!-- What to Avoid -->
+          <div style="background: rgba(239, 68, 68, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <h4 style="color: #ef4444; margin-bottom: 12px;">❌ Common Mistakes to Avoid</h4>
+            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+              <li>Speaking negatively about previous employers or colleagues</li>
+              <li>Checking your phone or appearing distracted</li>
+              <li>Interrupting the interviewer</li>
+              <li>Being too casual or overly familiar</li>
+              <li>Lying or exaggerating your experience</li>
+              <li>Asking about salary/benefits too early in the process</li>
+              <li>Not having any questions prepared for the interviewer</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 3: Post-Interview -->
+      <div class="coach-stage" id="stage-post" style="display: none;">
+        <div class="card">
+          <h3 style="color: #f59e0b; margin-bottom: 16px; font-size: 1.3rem;">📧 Stage 3: Post-Interview Follow-Up</h3>
+          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
+            The interview doesn't end when you leave the room. Your follow-up can make the difference in getting that offer letter!
+          </p>
+
+          <!-- Tip 1 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Send a Thank-You Email Within 24 Hours</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              A thoughtful thank-you email shows professionalism and reinforces your interest in the role.
+            </p>
+            <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+              <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📧 WHAT TO INCLUDE</div>
+              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+                <li>Thank them for their time and the opportunity</li>
+                <li>Reference something specific discussed in the interview</li>
+                <li>Reiterate your interest in the role and company</li>
+                <li>Briefly mention how your skills align with their needs</li>
+                <li>Keep it concise (3-4 short paragraphs)</li>
+              </ul>
+            </div>
+            <div style="background: #0a0a0f; padding: 14px; border-radius: 8px; font-family: monospace; font-size: 0.85rem;">
+              <div style="color: #10b981; margin-bottom: 8px; font-weight: 600;">Sample Thank-You Email:</div>
+              <div style="color: #cbd5e1; line-height: 1.7;">
+                <p>Subject: Thank You - [Position Title] Interview</p>
+                <p>Dear [Interviewer's Name],</p>
+                <p>Thank you for taking the time to meet with me today regarding the [Position] role at [Company]. I enjoyed learning about [specific topic discussed] and the exciting projects your team is working on.</p>
+                <p>Our conversation reinforced my enthusiasm for this opportunity. I believe my experience in [relevant skill/experience] would allow me to contribute meaningfully to [specific company goal or project discussed].</p>
+                <p>Please feel free to reach out if you need any additional information. I look forward to hearing about the next steps.</p>
+                <p>Best regards,<br>[Your Name]</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tip 2 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Follow Up Strategically</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              If you haven't heard back within the expected timeframe, it's appropriate to follow up professionally.
+            </p>
+            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+              <li>Wait for the timeline they mentioned (usually 1-2 weeks)</li>
+              <li>Send a brief, polite follow-up email reaffirming your interest</li>
+              <li>Don't be pushy or demanding</li>
+              <li>If no response after 2nd follow-up, it's time to move on</li>
+            </ul>
+          </div>
+
+          <!-- Tip 3 -->
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; margin-bottom: 20px;">
+            <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 1.1rem;">✅ Continue Your Job Search</h4>
+            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
+              Don't put all your eggs in one basket! Keep applying and interviewing until you have a signed offer.
+            </p>
+            <div style="background: rgba(139, 92, 246, 0.1); padding: 10px; border-radius: 6px;">
+              <div style="color: #a78bfa; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">💡 PRO TIP</div>
+              <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">Having multiple opportunities gives you negotiating power and reduces the stress of waiting for one company's decision.</p>
+            </div>
+          </div>
+
+          <!-- Handling Rejection -->
+          <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+            <h4 style="color: #60a5fa; margin-bottom: 12px;">📝 If You Receive a Rejection</h4>
+            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
+              <li>Thank them for the opportunity and ask for feedback</li>
+              <li>Stay professional - you may cross paths with them again</li>
+              <li>Request to be considered for future openings</li>
+              <li>Reflect on the experience and improve for next time</li>
+              <li>Don't take it personally - many factors influence hiring decisions</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -2453,6 +2725,25 @@ function showToast(msg, type = 'info') {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCoverLetterModal(); });
+
+// ========== INTERVIEW COACH STAGE SWITCHING ==========
+function showCoachStage(stageName) {
+  // Hide all stages
+  document.querySelectorAll('.coach-stage').forEach(stage => {
+    stage.style.display = 'none';
+  });
+
+  // Remove active class from all buttons
+  document.querySelectorAll('.coach-stage-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Show selected stage
+  document.getElementById(`stage-${stageName}`).style.display = 'block';
+
+  // Add active class to selected button
+  document.querySelector(`.coach-stage-btn[data-stage="${stageName}"]`).classList.add('active');
+}
 
 // Load saved on init
 async function loadSaved() {
