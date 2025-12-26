@@ -293,9 +293,22 @@
       
       <!-- Job Results -->
       <div id="job-results" style="display:none">
+        <!-- FRESH JOBS AT TOP -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.05)); border-color: rgba(245, 158, 11, 0.3);">
+          <h3 style="color: #f59e0b; margin-bottom: 8px;">🔥 Fresh Jobs from Company Career Pages</h3>
+          <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Search directly from ATS systems (Workday, Greenhouse, Lever, etc.) - Real job postings!</p>
+          
+          <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <div class="flex gap-2 flex-wrap">
+            <div id="fresh-jobs-all"></div>
+            <div id="fresh-jobs-24h"></div>
+          </div>
+        </div>
+        
         <!-- Smart Search Links -->
         <div class="card" id="search-links-card">
-          <h3 class="mb-4">🔗 Search Real Jobs</h3>
+          <h3 class="mb-4">🔗 Job Board Search Links</h3>
           <p class="text-muted mb-4">Click to search major job boards with your profile:</p>
           
           <div id="primary-links" class="flex gap-4 flex-wrap mb-4"></div>
@@ -323,13 +336,6 @@
           
           <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🏠 Remote Jobs</h4>
           <div id="remote-links" class="flex gap-2 flex-wrap"></div>
-          
-          <div class="divider"></div>
-          
-          <h4 style="font-size: 0.9rem; color: #f59e0b; margin-bottom: 8px;">🔥 Fresh Jobs - Last 24 Hours</h4>
-          <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">Search directly from company ATS systems (Workday, Greenhouse, Lever, etc.)</p>
-          <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-4"></div>
-          <div id="fresh-jobs-all" style="margin-top: 8px;"></div>
         </div>
         
         <!-- AI Suggestions -->
@@ -727,31 +733,49 @@ function generateSearchLinksClientSide() {
     'successfactors.com'
   ];
   
-  // Build proper Google Boolean query - EXACT format
-  const jobTitle = title.replace(/"/g, '');
-  const loc = location.replace(/"/g, '');
+  // Simplify job title - extract key job words only
+  const rawTitle = title.replace(/"/g, '').replace(/,/g, '');
+  // Remove common filler words and clean up
+  const stopWords = ['and', 'the', 'for', 'with', 'level', 'senior', 'junior', 'lead', 'staff', 'principal', 'or', 'of', 'in', 'a', 'an'];
+  const titleWords = rawTitle
+    .replace(/-level/gi, '')  // Remove "-level" suffix
+    .replace(/[-\/]/g, ' ')   // Replace dashes/slashes with spaces
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.includes(w.toLowerCase()));
+  const jobTitle = titleWords.slice(0, 3).join(' '); // Max 3 words like "Director Technology AI"
   
-  // Individual ATS site searches (last 24h)
-  const topSites = ['myworkdayjobs.com', 'greenhouse.io', 'lever.co', 'icims.com', 'smartrecruiters.com', 'taleo.net'];
-  const freshJobsIndividual = topSites.map(site => {
-    const siteName = site.split('.')[0].replace('myworkday', 'Workday');
-    const displayName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
+  // Simplify location - just city name
+  const loc = location.replace(/"/g, '').split(',')[0].trim();
+  
+  // Individual ATS site searches (last 7 days - more results)
+  const topSites = [
+    { site: 'myworkdayjobs.com', name: 'Workday' },
+    { site: 'greenhouse.io', name: 'Greenhouse' },
+    { site: 'lever.co', name: 'Lever' },
+    { site: 'icims.com', name: 'iCIMS' },
+    { site: 'smartrecruiters.com', name: 'SmartRecruiters' },
+    { site: 'taleo.net', name: 'Taleo' }
+  ];
+  
+  const freshJobsIndividual = topSites.map(ats => {
+    // Simpler query - just site + job keywords + location OR remote
     const query = loc 
-      ? `site:${site} ("${jobTitle}") ("${loc}" OR "remote")`
-      : `site:${site} ("${jobTitle}") ("remote" OR "worldwide" OR "work from anywhere")`;
+      ? `site:${ats.site} ${jobTitle} (${loc} OR remote)`
+      : `site:${ats.site} ${jobTitle} remote`;
     return {
-      name: displayName,
-      url: `https://www.google.com/search?q=${encodeURIComponent(query)}&tbs=qdr:d`
+      name: ats.name,
+      url: `https://www.google.com/search?q=${encodeURIComponent(query)}&tbs=qdr:w` // w = past week
     };
   });
   
-  // Combined ALL ATS sites search (last 24h) - EXACT Boolean format
+  // Combined ALL ATS sites search (last week)
   const allSitesQuery = atsSites.map(s => `site:${s}`).join(' OR ');
-  const locationPart = loc 
-    ? `("${loc}" OR "remote" OR "worldwide" OR "work from anywhere")`
-    : `("remote" OR "worldwide" OR "work from anywhere")`;
-  const fullQuery = `(${allSitesQuery}) ("${jobTitle}") ${locationPart}`;
-  const freshJobsAllUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:d`;
+  const locationPart = loc ? `(${loc} OR remote)` : 'remote';
+  const fullQuery = `(${allSitesQuery}) ${jobTitle} ${locationPart}`;
+  const freshJobsAllUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:w`;
+  
+  // Also provide 24h option for truly fresh jobs
+  const freshJobs24hUrl = `https://www.google.com/search?q=${encodeURIComponent(fullQuery)}&tbs=qdr:d`;
   
   return {
     primary: [
@@ -780,6 +804,7 @@ function generateSearchLinksClientSide() {
     ],
     freshJobs: freshJobsIndividual,
     freshJobsAll: freshJobsAllUrl,
+    freshJobs24h: freshJobs24hUrl,
     bySkill: (profile.hardSkills || []).slice(0, 5).map(skill => ({
       skill,
       url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill)}&location=${encode(location)}`
@@ -828,10 +853,17 @@ function displaySearchLinks(links) {
     </a>
   `).join('');
   
-  // Fresh Jobs - All ATS combined
+  // Fresh Jobs - All ATS combined (Past Week - more results)
   document.getElementById('fresh-jobs-all').innerHTML = `
     <a href="${links.freshJobsAll}" target="_blank" class="btn btn-primary" style="text-decoration: none; background: linear-gradient(135deg, #f59e0b, #ef4444);">
-      🔥 Search ALL ATS Sites (Last 24h)
+      🔥 ALL ATS Sites (Past Week)
+    </a>
+  `;
+  
+  // Fresh Jobs - Last 24h option
+  document.getElementById('fresh-jobs-24h').innerHTML = `
+    <a href="${links.freshJobs24h}" target="_blank" class="btn btn-secondary" style="text-decoration: none; border-color: #f59e0b; color: #f59e0b;">
+      ⚡ Last 24 Hours Only
     </a>
   `;
   
