@@ -492,14 +492,16 @@ function quickMatchScore(profile: any, job: any) {
       matchingSkills.push(skill);
     }
   });
-  
-  const score = Math.min(95, Math.round((matched / Math.max(profileSkills.length, 1)) * 100) + 30);
-  
+
+  // Realistic scoring: actual percentage without artificial bonus
+  const rawScore = Math.round((matched / Math.max(profileSkills.length, 1)) * 100);
+  const score = Math.min(95, rawScore);
+
   return {
     matchScore: score,
     matchingSkills,
-    recommendation: score >= 80 ? 'APPLY_NOW' : score >= 60 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
-    quickTake: score >= 80 ? 'Strong match for your skills!' : score >= 60 ? 'Good potential - worth applying' : 'Consider customizing your resume'
+    recommendation: score >= 70 ? 'APPLY_NOW' : score >= 50 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
+    quickTake: score >= 70 ? 'Strong match for your skills!' : score >= 50 ? 'Good potential - worth applying' : 'Consider customizing your resume'
   };
 }
 
