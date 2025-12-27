@@ -7,8 +7,14 @@ import Groq from 'groq-sdk';
 // @ts-ignore
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import { connectDatabase } from './database/connection';
 
 const app = express();
+
+// Initialize database connection
+connectDatabase().catch(err => {
+  console.error('Failed to connect to database:', err);
+});
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -928,6 +934,9 @@ Return ONLY the JSON array, no additional text.`;
     res.status(500).json({ success: false, error: error.message || 'Generation failed' });
   }
 });
+
+// ICA Routes
+app.use('/api/ica', require('./routes/ica').default);
 
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
