@@ -285,15 +285,24 @@ Return ONLY this JSON:
     const matchingSkills: string[] = [];
 
     profileSkills.forEach((skill: string) => {
-      if (jobText.includes(skill.toLowerCase())) {
+      const skillLower = skill.toLowerCase();
+      // Match if skill appears in job description OR if skill is partial match
+      if (jobText.includes(skillLower) ||
+          jobText.includes(skillLower.replace(/\.js$/, '')) || // Match "React.js" to "React"
+          jobText.split(/\W+/).some(word => word === skillLower)) { // Match whole words
         matchedSkills++;
         matchingSkills.push(skill);
       }
     });
 
-    const realisticScore = profileSkills.length > 0
+    // Calculate score with more reasonable baseline
+    // If NO skills match, use AI's assessment but cap at 40%
+    // If skills match, use skill-based scoring
+    const realisticScore = profileSkills.length > 0 && matchedSkills > 0
       ? Math.min(95, Math.round((matchedSkills / profileSkills.length) * 100))
-      : 30;
+      : profileSkills.length > 0 && matchedSkills === 0
+        ? Math.min(40, analysis.overallScore || 20) // Use AI's score but cap at 40%
+        : 30;
 
     // Override AI's inflated overallScore with realistic skill-based score
     analysis.overallScore = realisticScore;

@@ -1709,10 +1709,8 @@ async function generateAnalysisCoverLetter() {
     }
   }
 
-  // Show loading
-  document.getElementById('cover-letter-btn-text').textContent = 'Generating...';
-  document.getElementById('cover-letter-loading').style.display = 'inline-block';
-  document.getElementById('generate-cover-letter-btn').disabled = true;
+  // Show loading toast
+  showToast('Generating cover letter...', 'success');
 
   try {
     const res = await fetch('/api/generate-specific-cover-letter', {
@@ -1739,10 +1737,6 @@ async function generateAnalysisCoverLetter() {
   } catch (err) {
     console.error('Cover letter error:', err);
     showToast(String(err.message || 'Generation failed'), 'error');
-  } finally {
-    document.getElementById('cover-letter-btn-text').textContent = '✉️ Generate Cover Letter';
-    document.getElementById('cover-letter-loading').style.display = 'none';
-    document.getElementById('generate-cover-letter-btn').disabled = false;
   }
 }
 
