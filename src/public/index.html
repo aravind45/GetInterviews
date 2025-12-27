@@ -654,15 +654,12 @@
                 <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Name</th>
                 <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Company</th>
                 <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Position</th>
-                <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Category</th>
                 <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Connected</th>
-                <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Notes</th>
-                <th style="padding: 12px; text-align: left; color: #94a3b8; font-weight: 500;">Actions</th>
               </tr>
             </thead>
             <tbody id="ica-contacts-tbody">
               <tr>
-                <td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">
+                <td colspan="4" style="padding: 40px; text-align: center; color: #64748b;">
                   Upload your LinkedIn Connections CSV to get started
                 </td>
               </tr>
@@ -2375,7 +2372,7 @@ function renderIcaContacts() {
   }
 
   if (icaContacts.length === 0) {
-    icaContactsTbody.innerHTML = `<tr><td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">No contacts found</td></tr>`;
+    icaContactsTbody.innerHTML = `<tr><td colspan="4" style="padding: 40px; text-align: center; color: #64748b;">No contacts found</td></tr>`;
     icaContactsCard.style.display = 'block'; // Show card even with no contacts
     return;
   }
@@ -2390,21 +2387,7 @@ function renderIcaContacts() {
       </td>
       <td style="padding: 12px;">${contact.company || '-'}</td>
       <td style="padding: 12px;">${contact.position || '-'}</td>
-      <td style="padding: 12px;">
-        <select onchange="updateIcaCategory('${contact.id}', this.value)" style="padding: 6px 10px; border: 1px solid #2e2e3e; border-radius: 6px; background: #1e1e2e; color: #e2e8f0; font-size: 0.85rem;">
-          <option value="high_potential" ${contact.ica_category === 'high_potential' ? 'selected' : ''}>High Potential</option>
-          <option value="medium_potential" ${contact.ica_category === 'medium_potential' ? 'selected' : ''}>Medium Potential</option>
-          <option value="low_potential" ${contact.ica_category === 'low_potential' ? 'selected' : ''}>Low Potential</option>
-          <option value="uncategorized" ${contact.ica_category === 'uncategorized' ? 'selected' : ''}>Uncategorized</option>
-        </select>
-      </td>
       <td style="padding: 12px;">${contact.connected_on ? new Date(contact.connected_on).toLocaleDateString() : '-'}</td>
-      <td style="padding: 12px;">
-        <input type="text" value="${contact.notes || ''}" onchange="updateIcaNotes('${contact.id}', this.value)" placeholder="Add notes..." style="width: 100%; padding: 6px 10px; border: 1px solid #2e2e3e; border-radius: 6px; background: #1e1e2e; color: #e2e8f0; font-size: 0.85rem;">
-      </td>
-      <td style="padding: 12px;">
-        <button onclick="deleteIcaContact('${contact.id}')" class="btn btn-sm" style="padding: 6px 12px; background: transparent; border: 1px solid #2e2e3e; color: #ef4444;">Delete</button>
-      </td>
     </tr>
   `).join('');
 
