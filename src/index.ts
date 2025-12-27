@@ -300,6 +300,11 @@ Return ONLY this JSON:
     analysis.matchingSkills = matchingSkills;
     analysis.skillMatchPercentage = realisticScore;
 
+    // Also override interview probability to match realistic score
+    if (analysis.interviewProbability) {
+      analysis.interviewProbability.percentage = realisticScore;
+    }
+
     // Save resume to database
     const encryptedContent = Buffer.from(resumeText); // In production, encrypt this
     const resumeAnalysis = await pool.query(
