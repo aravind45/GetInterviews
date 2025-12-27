@@ -1048,15 +1048,49 @@ function saveCoverLetter(coverLetter, jobTitle, companyName) {
 }
 
 function loadSavedUserData() {
-  if (!currentUser || !currentUser.savedProfile) return;
+  if (!currentUser) return;
 
   // Auto-load profile into Find Jobs tab
-  profile = currentUser.savedProfile;
+  if (currentUser.savedProfile) {
+    profile = currentUser.savedProfile;
+  }
 
   // Ensure stable sessionId based on email
   if (!sessionId && currentUser.email) {
     sessionId = 'sess_' + btoa(currentUser.email).replace(/[=\/\+]/g, '').toLowerCase().substring(0, 15);
     localStorage.setItem('jobmatch_session', sessionId);
+  }
+
+  // Auto-load the most recent resume file into Analyze Resume tab
+  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
+    try {
+      analyzeFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
+      document.getElementById('analyze-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (auto-loaded)';
+      document.getElementById('analyze-upload-zone').classList.add('has-file');
+      checkAnalyzeReady();
+      console.log('✓ Resume auto-loaded:', currentUser.lastResumeFileName);
+    } catch (e) {
+      console.error('Failed to auto-load resume:', e);
+    }
+  }
+
+  // Auto-load the most recent resume file into Find Jobs tab as well
+  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName && !searchFile) {
+    try {
+      searchFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
+      document.getElementById('search-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (auto-loaded)';
+      document.getElementById('search-upload-zone').classList.add('has-file');
+      document.getElementById('extract-btn').disabled = false;
+    } catch (e) {
+      console.error('Failed to auto-load resume for search:', e);
+    }
+  }
+
+  // If we have a saved profile, display it directly in Find Jobs tab
+  if (currentUser.savedProfile) {
+    displayProfile();
+    document.getElementById('search-upload-card').style.display = 'none';
+    document.getElementById('profile-card').style.display = 'block';
   }
 }
 
@@ -1397,7 +1431,14 @@ function displayAnalysisResults(d) {
   const score = d.overallScore || 0;
   const scoreClass = score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
   const heroClass = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
-  
+
+  // Calculate accurate verdict based on actual score (not AI's inflated verdict)
+  let accurateVerdict = 'NOT A FIT';
+  if (score >= 80) accurateVerdict = 'STRONG MATCH';
+  else if (score >= 60) accurateVerdict = 'MODERATE MATCH';
+  else if (score >= 40) accurateVerdict = 'WEAK MATCH';
+  else if (score >= 20) accurateVerdict = 'LONG SHOT';
+
   document.getElementById('analysis-results').style.display = 'block';
   document.getElementById('analysis-results').innerHTML = `
     <div class="score-hero ${heroClass}">
@@ -1405,7 +1446,7 @@ function displayAnalysisResults(d) {
         <div class="score-number">${score}%</div>
         <div class="score-label">Match</div>
       </div>
-      <div class="verdict-badge ${scoreClass}">${d.verdict || 'ANALYZED'}</div>
+      <div class="verdict-badge ${scoreClass}">${accurateVerdict}</div>
       <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
     </div>
     
