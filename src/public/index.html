@@ -1016,6 +1016,13 @@
 // ========== AUTH & USER STATE ==========
 let currentUser = JSON.parse(localStorage.getItem('jobmatch_user') || 'null');
 
+// Helper: Create stable session ID from email (no timestamp)
+function createStableSessionId(email) {
+  // Remove special chars and create consistent session ID
+  const cleanEmail = btoa(email).replace(/[=\/\+]/g, '').toLowerCase();
+  return 'sess_' + cleanEmail.substring(0, 15);
+}
+
 // Initialize auth UI on page load
 function initAuth() {
   if (currentUser) {
@@ -1023,7 +1030,13 @@ function initAuth() {
     document.getElementById('user-menu').style.display = 'flex';
     document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
     document.getElementById('user-display-name').textContent = currentUser.name.split(' ')[0];
-    
+
+    // Restore stable session ID based on user email
+    if (!sessionId || sessionId.includes('temp')) {
+      sessionId = createStableSessionId(currentUser.email);
+      localStorage.setItem('jobmatch_session', sessionId);
+    }
+
     // Load saved resume if exists
     loadSavedUserData();
   }
@@ -1094,7 +1107,7 @@ function handleSignup(e) {
 
   // Ensure sessionId is created for new user
   if (!sessionId) {
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    sessionId = createStableSessionId(email);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1123,7 +1136,7 @@ function handleLogin(e) {
 
   // Ensure sessionId is created/restored after login
   if (!sessionId) {
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    sessionId = createStableSessionId(email);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1236,7 +1249,7 @@ function completeGoogleAuth(email, name, picture, googleId) {
   // CRITICAL FIX: Ensure sessionId is created/restored after Google login
   if (!sessionId) {
     // Create a new session tied to the user's email
-    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
+    sessionId = createStableSessionId(email);
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1372,7 +1385,7 @@ function loadSavedUserData() {
 
   // Auto-load profile into Find Jobs tab
   profile = currentUser.savedProfile;
-  sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
+  sessionId = localStorage.getItem('jobmatch_session') || 'sess_temp_' + Math.random().toString(36).substring(7);
   localStorage.setItem('jobmatch_session', sessionId);
 
   // Show "Load Saved Resume" button if user has a saved resume
@@ -1566,7 +1579,7 @@ async function useSavedResume(index, mode) {
     if (savedResume.profile) {
       // Use saved profile directly
       profile = savedResume.profile;
-      sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
+      sessionId = localStorage.getItem('jobmatch_session') || 'sess_temp_' + Math.random().toString(36).substring(7);
       localStorage.setItem('jobmatch_session', sessionId);
       
       displayProfile();
@@ -2057,10 +2070,10 @@ async function generateAnalysisCoverLetter() {
   // Ensure sessionId exists before generating cover letter
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      sessionId = createStableSessionId(currentUser.email);
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'temp_' + Date.now();
+      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
       localStorage.setItem('jobmatch_session', sessionId);
     }
   }
@@ -2127,10 +2140,10 @@ async function generateInterviewPrep() {
   // Ensure sessionId exists
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      sessionId = createStableSessionId(currentUser.email);
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'temp_' + Date.now();
+      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
       localStorage.setItem('jobmatch_session', sessionId);
     }
   }
@@ -2678,10 +2691,10 @@ async function generateCoverLetter(jobId) {
   // Ensure sessionId exists before generating cover letter
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
+      sessionId = createStableSessionId(currentUser.email);
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'temp_' + Date.now();
+      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
       localStorage.setItem('jobmatch_session', sessionId);
     }
   }
