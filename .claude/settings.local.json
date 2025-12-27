@@ -12,7 +12,11 @@
       "Bash(git pull:*)",
       "Bash(git merge:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD='npg_U1ZDnWkKoIj9' psql -h ep-quiet-heart-ahc56mo8-pooler.c-3.us-east-1.aws.neon.tech -U neondb_owner -d neondb -f setup-vercel-db.sql)",
+      "Bash(PGPASSWORD='npg_U1ZDnWkKoIj9' psql:*)",
+      "Bash(PGPASSWORD='npg_U1ZDnWkKoIj9' psql -h ep-quiet-heart-ahc56mo8-pooler.c-3.us-east-1.aws.neon.tech -U neondb_owner -d neondb -c \"SELECT * FROM ica_stats;\")"
     ]
   }
 }

@@ -426,14 +426,14 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
       success: true,
       stats: {
         totalContacts: result.rows[0].total_contacts,
-        highPotential: result.rows[0].high_potential,
-        mediumPotential: result.rows[0].medium_potential,
-        lowPotential: result.rows[0].low_potential,
-        uncategorized: result.rows[0].uncategorized,
-        uniqueCompanies: result.rows[0].unique_companies,
-        contacted: result.rows[0].contacted,
-        contactedLast30Days: result.rows[0].contacted_last_30_days,
-        avgRelationshipStrength: result.rows[0].avg_relationship_strength,
+        highPotential: result.rows[0].high_potential_count,
+        mediumPotential: result.rows[0].medium_potential_count,
+        lowPotential: result.rows[0].low_potential_count,
+        uncategorized: result.rows[0].uncategorized_count,
+        uniqueCompanies: result.rows[0].total_companies,
+        contacted: 0, // Not yet implemented
+        contactedLast30Days: 0, // Not yet implemented
+        avgRelationshipStrength: 0, // Not yet implemented
       },
     });
   } catch (error) {
