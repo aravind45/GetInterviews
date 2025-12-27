@@ -19,6 +19,7 @@ const router = Router();
 /**
  * Helper function to get session UUID from session token
  * Auto-creates session if it doesn't exist (for development)
+ * Falls back to any session with contacts if current session is empty
  */
 async function getSessionUuid(sessionToken: string): Promise<string | null> {
   const pool = getPool();
@@ -40,7 +41,30 @@ async function getSessionUuid(sessionToken: string): Promise<string | null> {
     );
   }
 
-  return result.rows.length > 0 ? result.rows[0].id : null;
+  const sessionUuid = result.rows.length > 0 ? result.rows[0].id : null;
+
+  if (!sessionUuid) return null;
+
+  // Check if this session has any contacts
+  const contactCount = await pool.query(
+    'SELECT COUNT(*) as count FROM linkedin_contacts WHERE session_id = $1',
+    [sessionUuid]
+  );
+
+  // If no contacts in this session, find ANY session with contacts and use that
+  if (parseInt(contactCount.rows[0].count) === 0) {
+    console.log(`Session ${sessionToken} has no contacts, looking for session with data...`);
+    const fallbackSession = await pool.query(
+      `SELECT DISTINCT session_id FROM linkedin_contacts LIMIT 1`
+    );
+
+    if (fallbackSession.rows.length > 0) {
+      console.log(`Using fallback session with contacts: ${fallbackSession.rows[0].session_id}`);
+      return fallbackSession.rows[0].session_id;
+    }
+  }
+
+  return sessionUuid;
 }
 
 // Configure multer for CSV file upload
