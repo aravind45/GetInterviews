@@ -469,6 +469,59 @@ router.get('/stats/:sessionId', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/ica/referrals/:sessionId
+ * Find contacts at a specific company for referral opportunities
+ * Query params: company (required)
+ */
+router.get('/referrals/:sessionId', async (req: Request, res: Response) => {
+  const { sessionId } = req.params;
+  const { company } = req.query;
+
+  if (!company || typeof company !== 'string') {
+    return res.status(400).json({ success: false, error: 'Company name required' });
+  }
+
+  try {
+    const sessionUuid = await getSessionUuid(sessionId);
+    if (!sessionUuid) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+    }
+
+    const pool = getPool();
+
+    // Find contacts at the specified company (case-insensitive partial match)
+    const result = await pool.query(
+      `SELECT id, first_name, last_name, email_address, company, position,
+              linkedin_profile_url, ica_category, connected_on, notes
+       FROM linkedin_contacts
+       WHERE session_id = $1
+         AND LOWER(company) LIKE LOWER($2)
+       ORDER BY
+         CASE ica_category
+           WHEN 'high_potential' THEN 1
+           WHEN 'medium_potential' THEN 2
+           WHEN 'low_potential' THEN 3
+           ELSE 4
+         END,
+         first_name ASC`,
+      [sessionUuid, `%${company}%`]
+    );
+
+    res.json({
+      success: true,
+      contacts: result.rows,
+      count: result.rows.length,
+      company: company
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: `Failed to find referral contacts: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
  * POST /api/ica/interactions/:sessionId/:contactId
  * Log an interaction with a contact
  */

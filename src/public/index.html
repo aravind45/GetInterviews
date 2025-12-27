@@ -2786,11 +2786,92 @@ function updateTracker() {
           <option value="OFFER" ${job.status === 'OFFER' ? 'selected' : ''}>Offer</option>
           <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
         </select>
+        <button class="btn btn-secondary btn-sm" onclick="showReferralContacts('${job.id}', '${job.company.replace(/'/g, "\\'")}')">🤝 Find Referrals</button>
         <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
         <a href="${applyUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;">${job.applyUrl ? '🔗 Apply' : '🔗 Find Job'}</a>
       </div>
+      <div id="referrals-${job.id}" style="margin-top: 16px; display: none;"></div>
     </div>
   `;}).join('');
+}
+
+// ========== REFERRAL FINDER ==========
+async function showReferralContacts(jobId, company) {
+  const container = document.getElementById(`referrals-${jobId}`);
+
+  // Toggle visibility
+  if (container.style.display === 'block') {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = '<div style="padding: 12px; color: #94a3b8;">🔍 Finding contacts at ' + company + '...</div>';
+  container.style.display = 'block';
+
+  try {
+    const response = await fetch(`/api/ica/referrals/${sessionId}?company=${encodeURIComponent(company)}`);
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to find contacts');
+    }
+
+    if (result.count === 0) {
+      container.innerHTML = `
+        <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border: 1px solid #2e2e3e;">
+          <div style="color: #94a3b8; margin-bottom: 8px;">No contacts found at ${company}</div>
+          <div style="font-size: 0.85rem; color: #64748b;">Upload your LinkedIn Connections to find referral opportunities</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border: 1px solid #2e2e3e;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-weight: 600; color: #e2e8f0;">🤝 ${result.count} Referral Contact${result.count > 1 ? 's' : ''} at ${company}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${result.contacts.map(contact => `
+            <div style="padding: 12px; background: #0f0f1a; border-radius: 6px; border: 1px solid #2e2e3e;">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                  <div style="font-weight: 500; color: #e2e8f0; margin-bottom: 4px;">
+                    ${contact.first_name} ${contact.last_name}
+                    ${contact.ica_category === 'high_potential' ? '<span style="background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">HIGH</span>' : ''}
+                    ${contact.ica_category === 'medium_potential' ? '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">MED</span>' : ''}
+                  </div>
+                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">${contact.position || 'No position listed'}</div>
+                  ${contact.email_address ? `<div style="font-size: 0.8rem; color: #64748b;">📧 ${contact.email_address}</div>` : ''}
+                  ${contact.connected_on ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Connected: ${new Date(contact.connected_on).toLocaleDateString()}</div>` : ''}
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-sm" style="padding: 6px 12px; background: #0a66c2; border: none; color: white; text-decoration: none; font-size: 0.8rem;">LinkedIn</a>` : ''}
+                  <button class="btn btn-sm" onclick="requestReferral('${contact.id}', '${contact.first_name}', '${jobId}')" style="padding: 6px 12px; background: #6366f1; border: none; color: white; font-size: 0.8rem;">Request Referral</button>
+                </div>
+              </div>
+              ${contact.notes ? `<div style="margin-top: 8px; padding: 8px; background: #1e1e2e; border-radius: 4px; font-size: 0.8rem; color: #94a3b8;">📝 ${contact.notes}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    container.innerHTML = `<div style="padding: 12px; color: #ef4444;">Error: ${error.message}</div>`;
+  }
+}
+
+async function requestReferral(contactId, contactName, jobId) {
+  const job = savedJobs.find(j => j.id === jobId);
+  if (!job) return;
+
+  // TODO: Implement referral request tracking
+  showToast(`Opening referral request for ${contactName}...`, 'info');
+
+  // For now, just show a template message
+  const message = `Hi ${contactName},\n\nI hope you're doing well! I'm reaching out because I noticed you work at ${job.company}, and I recently applied for the ${job.title} position.\n\nWould you be open to providing a referral or sharing insights about the role and team? I'd really appreciate any help you can offer.\n\nThanks so much!\nBest regards`;
+
+  alert('Referral Request Template:\n\n' + message + '\n\n(Copy this and send via LinkedIn/Email)');
 }
 
 // ========== UTILITIES ==========
