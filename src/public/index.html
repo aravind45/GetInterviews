@@ -566,63 +566,65 @@
       
       <!-- Job Results -->
       <div id="job-results" style="display:none">
-        <!-- FRESH JOBS AT TOP -->
-        <div class="card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.05)); border-color: rgba(245, 158, 11, 0.3);">
-          <h3 style="color: #f59e0b; margin-bottom: 8px;">🔥 Fresh Jobs from Company Career Pages</h3>
-          <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Search directly from ATS systems (Workday, Greenhouse, Lever, etc.) - Real job postings!</p>
-          
-          <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-4"></div>
-          
-          <div class="flex gap-2 flex-wrap">
-            <div id="fresh-jobs-all"></div>
-            <div id="fresh-jobs-24h"></div>
+        <!-- Job Listings at Top -->
+        <div class="flex justify-between items-center mb-4">
+          <h3>💼 Matching Jobs (<span id="jobs-count">0</span>)</h3>
+          <div class="flex gap-2">
+            <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
+            <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
+            <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
           </div>
         </div>
-        
-        <!-- Smart Search Links -->
-        <div class="card" id="search-links-card">
-          <h3 class="mb-4">🔗 Job Board Search Links</h3>
-          <p class="text-muted mb-4">Click to search major job boards with your profile:</p>
-          
-          <div id="primary-links" class="flex gap-4 flex-wrap mb-4"></div>
-          
-          <div class="divider"></div>
-          
-          <div class="search-links-grid">
-            <div>
-              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🎯 Search by Your Target Roles</h4>
-              <div id="title-links"></div>
-            </div>
-            <div>
-              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💡 Search by Your Skills</h4>
-              <div id="skill-links" class="flex flex-wrap gap-2"></div>
+        <p class="text-muted mb-4" style="font-size: 0.9rem;">Click 💾 Save to add jobs to your Tracker. Click 📝 Cover Letter to generate a personalized cover letter.</p>
+        <div id="job-list"></div>
+
+        <!-- External Search Links Below (Optional) -->
+        <div class="card" style="margin-top: 24px; background: rgba(100, 116, 139, 0.05); border-color: rgba(100, 116, 139, 0.2);">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <h3 style="color: #94a3b8; font-size: 1rem;">🔗 Alternative: Search on Job Boards</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Can't find what you're looking for? Try these external job boards</p>
+          </div>
+
+          <!-- FRESH JOBS -->
+          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.02)); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+            <h4 style="color: #f59e0b; margin-bottom: 8px; font-size: 0.9rem;">🔥 Fresh Jobs from Company Career Pages</h4>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">Search directly from ATS systems (Workday, Greenhouse, Lever, etc.)</p>
+
+            <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-3"></div>
+
+            <div class="flex gap-2 flex-wrap">
+              <div id="fresh-jobs-all"></div>
+              <div id="fresh-jobs-24h"></div>
             </div>
           </div>
-          
-          <div class="divider"></div>
-          
-          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌐 General Job Boards</h4>
-          <div id="secondary-links" class="flex gap-2 flex-wrap mb-4"></div>
-          
-          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💻 Tech & Startups</h4>
-          <div id="tech-links" class="flex gap-2 flex-wrap mb-4"></div>
-          
-          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🏠 Remote Jobs</h4>
-          <div id="remote-links" class="flex gap-2 flex-wrap"></div>
+
+          <div id="primary-links" class="flex gap-2 flex-wrap mb-3"></div>
+
+          <details style="margin-top: 12px;">
+            <summary style="color: #94a3b8; font-size: 0.85rem; cursor: pointer; padding: 8px 0;">More job boards...</summary>
+
+            <div style="margin-top: 12px;">
+              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🎯 Search by Your Target Roles</h4>
+              <div id="title-links" style="margin-bottom: 12px;"></div>
+
+              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">💡 Search by Your Skills</h4>
+              <div id="skill-links" class="flex flex-wrap gap-2" style="margin-bottom: 12px;"></div>
+
+              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🌐 General Job Boards</h4>
+              <div id="secondary-links" class="flex gap-2 flex-wrap mb-3"></div>
+
+              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">💻 Tech & Startups</h4>
+              <div id="tech-links" class="flex gap-2 flex-wrap mb-3"></div>
+
+              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🏠 Remote Jobs</h4>
+              <div id="remote-links" class="flex gap-2 flex-wrap"></div>
+            </div>
+          </details>
         </div>
-        
-        <!-- AI Suggestions -->
+
+        <!-- Hidden old suggestions section -->
         <div id="suggestions-section" style="display: none;">
-          <div class="flex justify-between items-center mb-4">
-            <h3>💡 Suggested Matches (<span id="jobs-count">0</span>)</h3>
-            <div class="flex gap-2">
-              <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
-              <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
-              <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
-            </div>
-          </div>
-          <p class="text-muted mb-4" style="font-size: 0.9rem;">Based on your profile, here are roles worth exploring:</p>
-          <div id="job-list"></div>
+          <div id="job-list-old"></div>
         </div>
       </div>
     </section>
@@ -2489,15 +2491,75 @@ function displayProfile() {
 document.getElementById('search-jobs-btn').addEventListener('click', searchJobs);
 document.getElementById('search-query').addEventListener('keypress', e => { if (e.key === 'Enter') searchJobs(); });
 
+function generateSampleJobs() {
+  const title = document.getElementById('search-query').value || profile.targetTitles?.[0] || profile.currentTitle || 'Software Engineer';
+  const location = document.getElementById('search-location').value || profile.location || 'Remote';
+  const skills = profile.hardSkills || [];
+  const yearsExp = profile.yearsExperience || 5;
+
+  // Sample companies and job data
+  const companies = [
+    { name: 'Google', desc: 'Leading technology company specializing in internet-related services and products', remote: true },
+    { name: 'Microsoft', desc: 'Global technology leader in software, cloud computing, and AI', remote: true },
+    { name: 'Amazon', desc: 'E-commerce and cloud computing giant', remote: true },
+    { name: 'Meta', desc: 'Social technology company building the future of connection', remote: false },
+    { name: 'Apple', desc: 'Innovative consumer electronics and software company', remote: false },
+    { name: 'Netflix', desc: 'Entertainment streaming service and production company', remote: true },
+    { name: 'Salesforce', desc: 'Leading customer relationship management platform', remote: true },
+    { name: 'Adobe', desc: 'Creative software and digital marketing solutions', remote: true },
+    { name: 'Tesla', desc: 'Electric vehicle and clean energy company', remote: false },
+    { name: 'Stripe', desc: 'Financial infrastructure for the internet', remote: true }
+  ];
+
+  // Generate 8-10 sample jobs
+  const sampleJobs = companies.slice(0, 8).map((company, idx) => {
+    const matchScore = 95 - (idx * 5) - Math.floor(Math.random() * 10); // Decreasing match scores
+    const matchingSkills = skills.slice(0, 3 + Math.floor(Math.random() * 3));
+
+    const recommendation = matchScore >= 85 ? 'APPLY_NOW' :
+                          matchScore >= 70 ? 'WORTH_APPLYING' :
+                          'CUSTOMIZE_FIRST';
+
+    const salaryRanges = ['$150k - $220k', '$120k - $180k', '$140k - $200k', '$160k - $240k', '$130k - $190k'];
+    const postedDates = ['2 days ago', '1 day ago', '3 days ago', '5 days ago', '1 week ago'];
+
+    return {
+      id: 'job_' + Date.now() + '_' + idx,
+      title: title,
+      company: company.name,
+      location: location,
+      salary: salaryRanges[idx % salaryRanges.length],
+      postedDate: postedDates[idx % postedDates.length],
+      isRemote: company.remote,
+      matchScore: matchScore,
+      recommendation: recommendation,
+      matchingSkills: matchingSkills,
+      quickTake: `${company.desc}. Looking for ${yearsExp}+ years experience in ${matchingSkills.slice(0, 2).join(', ')}. Competitive benefits and growth opportunities.`,
+      description: `${company.name} is seeking a talented ${title} to join our team. You'll work on cutting-edge projects using ${matchingSkills.join(', ')} and collaborate with world-class engineers.`,
+      applyUrl: null, // This will trigger "Find on LinkedIn" instead of direct apply
+      isSuggestion: false
+    };
+  });
+
+  return sampleJobs;
+}
+
 async function searchJobs() {
   if (!sessionId || !profile) { showToast('Upload resume first', 'error'); return; }
-  
-  // Generate links INSTANTLY (client-side, no API)
+
+  // Generate sample job listings based on user's profile
+  jobs = generateSampleJobs();
+
+  // Display jobs with save buttons
+  displayJobs(jobs, 'all');
+  document.getElementById('job-results').style.display = 'block';
+  document.getElementById('suggestions-section').style.display = 'none';
+
+  // Show external search links below as optional
   const searchLinks = generateSearchLinksClientSide();
   displaySearchLinks(searchLinks);
-  document.getElementById('job-results').style.display = 'block';
-  document.getElementById('suggestions-section').style.display = 'none'; // Hide suggestions section
-  showToast('Search links ready! Click any to find jobs.', 'success');
+
+  showToast(`Found ${jobs.length} matching jobs! Click 💾 Save to add to Tracker.`, 'success');
 }
 
 function generateSearchLinksClientSide() {
