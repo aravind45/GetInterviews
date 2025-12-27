@@ -297,7 +297,8 @@
               <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
               <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
               <div class="dropdown-item" onclick="showMyInterviewPreps()">🎯 My Interview Preps</div>
-              <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;" onclick="logout()">🚪 Log Out</div>
+              <div class="dropdown-item" onclick="showUpcomingFeatures()" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;">🚀 Upcoming Features</div>
+              <div class="dropdown-item" onclick="logout()">🚪 Log Out</div>
             </div>
           </div>
         </div>
@@ -425,6 +426,48 @@
       </div>
       <div id="interview-preps-content">
         <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Features Modal -->
+  <div class="modal-overlay" id="upcoming-features-modal">
+    <div class="modal" style="position: relative; max-width: 700px;">
+      <button class="modal-close" onclick="hideUpcomingFeaturesModal()">&times;</button>
+      <div class="modal-header">
+        <h2>🚀 Upcoming Features</h2>
+        <p>Features we're working on to make your job search easier</p>
+      </div>
+      <div style="padding: 20px;">
+        <div style="margin-bottom: 24px;">
+          <h3 style="color: #22c55e; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>🎯</span> Smart Networking Features
+          </h3>
+          <ul style="color: #94a3b8; line-height: 1.8; padding-left: 20px;">
+            <li><strong>Job Referral Tracker</strong> - Automatically show LinkedIn contacts at companies you're applying to</li>
+            <li><strong>Active Hiring Intelligence</strong> - Identify recruiters and hiring managers at your target companies</li>
+            <li><strong>Outreach Campaign Manager</strong> - Templates and tracking for referral requests</li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <h3 style="color: #6366f1; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>⚡</span> AI-Powered Enhancements
+          </h3>
+          <ul style="color: #94a3b8; line-height: 1.8; padding-left: 20px;">
+            <li><strong>Smart Job Matching</strong> - AI analyzes your resume and suggests best-fit roles</li>
+            <li><strong>Application Tracking</strong> - Track applications, interviews, and follow-ups in one place</li>
+            <li><strong>Personalized Outreach Messages</strong> - AI-generated messages for networking</li>
+          </ul>
+        </div>
+
+        <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border-left: 3px solid #f59e0b;">
+          <p style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 8px;"><strong>📋 Note</strong></p>
+          <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">
+            We're focusing on making core features stable and reliable before adding new ones.
+            Your feedback helps us prioritize what to build next!
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -1703,6 +1746,15 @@ function showMyInterviewPreps() {
 
 function hideInterviewPrepsModal() {
   document.getElementById('interview-preps-modal').classList.remove('show');
+}
+
+function showUpcomingFeatures() {
+  document.getElementById('upcoming-features-modal').classList.add('show');
+  document.getElementById('user-dropdown').classList.remove('show');
+}
+
+function hideUpcomingFeaturesModal() {
+  document.getElementById('upcoming-features-modal').classList.remove('show');
 }
 
 function viewInterviewPrep(index) {
