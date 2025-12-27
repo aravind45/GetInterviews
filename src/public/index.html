@@ -273,7 +273,6 @@
         <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
         <div class="main-tab" data-tab="search">💼 Find Jobs <span class="badge" id="jobs-badge" style="display:none">0</span></div>
         <div class="main-tab" data-tab="tracker">📋 Tracker <span class="badge" id="saved-badge" style="display:none">0</span></div>
-        <div class="main-tab" data-tab="coach">🎓 Interview Coach</div>
         <div class="main-tab" data-tab="networking">👥 Networking</div>
       </nav>
       
@@ -296,9 +295,7 @@
             <div class="dropdown-menu" id="user-dropdown">
               <div class="dropdown-item" onclick="showMyData()">📁 My Saved Data</div>
               <div class="dropdown-item" onclick="showMyCoverLetters()">✉️ My Cover Letters</div>
-              <div class="dropdown-item" onclick="showMyInterviewPreps()">🎯 My Interview Preps</div>
-              <div class="dropdown-item" onclick="showUpcomingFeatures()" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;">🚀 Upcoming Features</div>
-              <div class="dropdown-item" onclick="logout()">🚪 Log Out</div>
+              <div class="dropdown-item" style="border-top: 1px solid #2e2e3e; margin-top: 8px; padding-top: 12px;" onclick="logout()">🚪 Log Out</div>
             </div>
           </div>
         </div>
@@ -415,63 +412,7 @@
       </div>
     </div>
   </div>
-
-  <!-- My Interview Preps Modal -->
-  <div class="modal-overlay" id="interview-preps-modal">
-    <div class="modal" style="position: relative; max-width: 900px; max-height: 80vh; overflow-y: auto;">
-      <button class="modal-close" onclick="hideInterviewPrepsModal()">&times;</button>
-      <div class="modal-header">
-        <h2>🎯 My Interview Preps</h2>
-        <p>Your saved interview preparations</p>
-      </div>
-      <div id="interview-preps-content">
-        <!-- Filled by JS -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Upcoming Features Modal -->
-  <div class="modal-overlay" id="upcoming-features-modal">
-    <div class="modal" style="position: relative; max-width: 700px;">
-      <button class="modal-close" onclick="hideUpcomingFeaturesModal()">&times;</button>
-      <div class="modal-header">
-        <h2>🚀 Upcoming Features</h2>
-        <p>Features we're working on to make your job search easier</p>
-      </div>
-      <div style="padding: 20px;">
-        <div style="margin-bottom: 24px;">
-          <h3 style="color: #22c55e; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span>🎯</span> Smart Networking Features
-          </h3>
-          <ul style="color: #94a3b8; line-height: 1.8; padding-left: 20px;">
-            <li><strong>Job Referral Tracker</strong> - Automatically show LinkedIn contacts at companies you're applying to</li>
-            <li><strong>Active Hiring Intelligence</strong> - Identify recruiters and hiring managers at your target companies</li>
-            <li><strong>Outreach Campaign Manager</strong> - Templates and tracking for referral requests</li>
-          </ul>
-        </div>
-
-        <div style="margin-bottom: 24px;">
-          <h3 style="color: #6366f1; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span>⚡</span> AI-Powered Enhancements
-          </h3>
-          <ul style="color: #94a3b8; line-height: 1.8; padding-left: 20px;">
-            <li><strong>Smart Job Matching</strong> - AI analyzes your resume and suggests best-fit roles</li>
-            <li><strong>Application Tracking</strong> - Track applications, interviews, and follow-ups in one place</li>
-            <li><strong>Personalized Outreach Messages</strong> - AI-generated messages for networking</li>
-          </ul>
-        </div>
-
-        <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border-left: 3px solid #f59e0b;">
-          <p style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 8px;"><strong>📋 Note</strong></p>
-          <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">
-            We're focusing on making core features stable and reliable before adding new ones.
-            Your feedback helps us prioritize what to build next!
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  
   <div class="container">
     <!-- TAB 1: ANALYZE RESUME -->
     <section class="section active" id="tab-analyze">
@@ -483,10 +424,7 @@
         
         <div class="grid-2">
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label style="font-size: 0.85rem; color: #94a3b8;">Your Resume</label>
-              <button class="btn btn-secondary btn-sm" id="load-saved-resume-btn" onclick="loadSavedResume()" style="display:none; font-size: 0.75rem; padding: 6px 12px;">📂 Load Saved</button>
-            </div>
+            <label style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 8px;">Your Resume</label>
             <div class="upload-zone" id="analyze-upload-zone">
               <input type="file" id="analyze-resume-input" accept=".pdf,.doc,.docx">
               <div class="upload-icon">📄</div>
@@ -566,65 +504,63 @@
       
       <!-- Job Results -->
       <div id="job-results" style="display:none">
-        <!-- Job Listings at Top -->
-        <div class="flex justify-between items-center mb-4">
-          <h3>💼 Matching Jobs (<span id="jobs-count">0</span>)</h3>
-          <div class="flex gap-2">
-            <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
-            <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
-            <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
+        <!-- FRESH JOBS AT TOP -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.05)); border-color: rgba(245, 158, 11, 0.3);">
+          <h3 style="color: #f59e0b; margin-bottom: 8px;">🔥 Fresh Jobs from Company Career Pages</h3>
+          <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Search directly from ATS systems (Workday, Greenhouse, Lever, etc.) - Real job postings!</p>
+          
+          <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <div class="flex gap-2 flex-wrap">
+            <div id="fresh-jobs-all"></div>
+            <div id="fresh-jobs-24h"></div>
           </div>
         </div>
-        <p class="text-muted mb-4" style="font-size: 0.9rem;">Click 💾 Save to add jobs to your Tracker. Click 📝 Cover Letter to generate a personalized cover letter.</p>
-        <div id="job-list"></div>
-
-        <!-- External Search Links Below (Optional) -->
-        <div class="card" style="margin-top: 24px; background: rgba(100, 116, 139, 0.05); border-color: rgba(100, 116, 139, 0.2);">
-          <div style="text-align: center; margin-bottom: 16px;">
-            <h3 style="color: #94a3b8; font-size: 1rem;">🔗 Alternative: Search on Job Boards</h3>
-            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Can't find what you're looking for? Try these external job boards</p>
-          </div>
-
-          <!-- FRESH JOBS -->
-          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.02)); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-            <h4 style="color: #f59e0b; margin-bottom: 8px; font-size: 0.9rem;">🔥 Fresh Jobs from Company Career Pages</h4>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">Search directly from ATS systems (Workday, Greenhouse, Lever, etc.)</p>
-
-            <div id="fresh-jobs-links" class="flex gap-2 flex-wrap mb-3"></div>
-
-            <div class="flex gap-2 flex-wrap">
-              <div id="fresh-jobs-all"></div>
-              <div id="fresh-jobs-24h"></div>
+        
+        <!-- Smart Search Links -->
+        <div class="card" id="search-links-card">
+          <h3 class="mb-4">🔗 Job Board Search Links</h3>
+          <p class="text-muted mb-4">Click to search major job boards with your profile:</p>
+          
+          <div id="primary-links" class="flex gap-4 flex-wrap mb-4"></div>
+          
+          <div class="divider"></div>
+          
+          <div class="search-links-grid">
+            <div>
+              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🎯 Search by Your Target Roles</h4>
+              <div id="title-links"></div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💡 Search by Your Skills</h4>
+              <div id="skill-links" class="flex flex-wrap gap-2"></div>
             </div>
           </div>
-
-          <div id="primary-links" class="flex gap-2 flex-wrap mb-3"></div>
-
-          <details style="margin-top: 12px;">
-            <summary style="color: #94a3b8; font-size: 0.85rem; cursor: pointer; padding: 8px 0;">More job boards...</summary>
-
-            <div style="margin-top: 12px;">
-              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🎯 Search by Your Target Roles</h4>
-              <div id="title-links" style="margin-bottom: 12px;"></div>
-
-              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">💡 Search by Your Skills</h4>
-              <div id="skill-links" class="flex flex-wrap gap-2" style="margin-bottom: 12px;"></div>
-
-              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🌐 General Job Boards</h4>
-              <div id="secondary-links" class="flex gap-2 flex-wrap mb-3"></div>
-
-              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">💻 Tech & Startups</h4>
-              <div id="tech-links" class="flex gap-2 flex-wrap mb-3"></div>
-
-              <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">🏠 Remote Jobs</h4>
-              <div id="remote-links" class="flex gap-2 flex-wrap"></div>
-            </div>
-          </details>
+          
+          <div class="divider"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🌐 General Job Boards</h4>
+          <div id="secondary-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">💻 Tech & Startups</h4>
+          <div id="tech-links" class="flex gap-2 flex-wrap mb-4"></div>
+          
+          <h4 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">🏠 Remote Jobs</h4>
+          <div id="remote-links" class="flex gap-2 flex-wrap"></div>
         </div>
-
-        <!-- Hidden old suggestions section -->
+        
+        <!-- AI Suggestions -->
         <div id="suggestions-section" style="display: none;">
-          <div id="job-list-old"></div>
+          <div class="flex justify-between items-center mb-4">
+            <h3>💡 Suggested Matches (<span id="jobs-count">0</span>)</h3>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">All</button>
+              <button class="btn btn-sm btn-secondary filter-btn" data-filter="excellent">🟢 Best</button>
+              <button class="btn btn-sm btn-secondary filter-btn" data-filter="good">🔵 Good</button>
+            </div>
+          </div>
+          <p class="text-muted mb-4" style="font-size: 0.9rem;">Based on your profile, here are roles worth exploring:</p>
+          <div id="job-list"></div>
         </div>
       </div>
     </section>
@@ -650,277 +586,6 @@
           <div class="icon">📋</div>
           <h3>No Saved Jobs Yet</h3>
           <p>Save jobs from search results to track them here</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4: INTERVIEW COACH -->
-    <section class="section" id="tab-coach">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🎓 Career Interview Coach</h2>
-          <p class="card-subtitle">Master every stage of the interview process with expert guidance</p>
-        </div>
-
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.6;">
-          There is no magic formula for success, but with the right preparation and approach, you can crack any job interview and land that offer you've been waiting for. This guide is divided into three critical stages to help you prepare thoroughly.
-        </p>
-
-        <!-- Stage Navigation -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-          <button class="btn btn-secondary btn-full coach-stage-btn active" data-stage="pre" onclick="showCoachStage('pre')">
-            <div style="font-size: 1.2rem; margin-bottom: 4px;">📚</div>
-            <div style="font-size: 0.85rem;">Stage 1: Pre-Interview</div>
-          </button>
-          <button class="btn btn-secondary btn-full coach-stage-btn" data-stage="during" onclick="showCoachStage('during')">
-            <div style="font-size: 1.2rem; margin-bottom: 4px;">💼</div>
-            <div style="font-size: 0.85rem;">Stage 2: During Interview</div>
-          </button>
-          <button class="btn btn-secondary btn-full coach-stage-btn" data-stage="post" onclick="showCoachStage('post')">
-            <div style="font-size: 1.2rem; margin-bottom: 4px;">📧</div>
-            <div style="font-size: 0.85rem;">Stage 3: Post-Interview</div>
-          </button>
-        </div>
-      </div>
-
-      <!-- Stage 1: Pre-Interview Preparation -->
-      <div class="coach-stage active" id="stage-pre">
-        <div class="card">
-          <h3 style="color: #10b981; margin-bottom: 16px; font-size: 1.3rem;">📚 Stage 1: Pre-Interview Preparation</h3>
-          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
-            Before your interview, you should have a solid understanding of the company and the role. This shows that you are serious about the position and genuinely interested in the company.
-          </p>
-
-          <!-- Tip 1 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
-            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #1: Thoroughly Research the Company and Role</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Before your interview, you should have a solid understanding of the company you are interviewing with and the role you are applying for. This shows that you are serious about the position and genuinely interested in the company.
-            </p>
-            <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px;">
-              <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📌 ACTION ITEMS</div>
-              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-                <li>Visit the company's official website and read their "About Us" page</li>
-                <li>Review their products, services, and recent news</li>
-                <li>Check their social media profiles (LinkedIn, Twitter, etc.)</li>
-                <li>Read the job description carefully and understand key requirements</li>
-                <li>Research the interviewer on LinkedIn if their name is provided</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Tip 2 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
-            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #2: Practice Common Interview Questions Aloud</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Don't just think about your answers - practice them aloud! This helps you articulate your thoughts clearly and builds confidence.
-            </p>
-            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-              <div style="color: #60a5fa; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📝 COMMON QUESTIONS TO PRACTICE</div>
-              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-                <li><strong>Tell me about yourself</strong> - Prepare a 2-minute professional summary</li>
-                <li><strong>What are your strengths/weaknesses?</strong> - Be honest but strategic</li>
-                <li><strong>Why do you want to work here?</strong> - Show you've done your research</li>
-                <li><strong>Where do you see yourself in 5 years?</strong> - Align with company growth</li>
-                <li><strong>Why should we hire you?</strong> - Connect your skills to their needs</li>
-              </ul>
-            </div>
-            <div style="background: rgba(139, 92, 246, 0.1); padding: 10px; border-radius: 6px;">
-              <div style="color: #a78bfa; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">💡 PRO TIP</div>
-              <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">Use the STAR method (Situation, Task, Action, Result) when answering behavioral questions to structure your responses effectively.</p>
-            </div>
-          </div>
-
-          <!-- Tip 3 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
-            <h4 style="color: #fbbf24; margin-bottom: 12px; font-size: 1.1rem;">✅ Tip #3: Prepare Your Key Selling Points</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Be ready to talk about specific examples where you have made an impact. Numbers and metrics leave a lasting impression!
-            </p>
-            <div style="background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 8px;">
-              <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">🎯 WHAT TO PREPARE</div>
-              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-                <li>3-5 key achievements with quantifiable results (e.g., "Increased sales by 25%")</li>
-                <li>2-3 examples of problem-solving or leadership</li>
-                <li>Specific technical skills relevant to the role</li>
-                <li>Examples of how you've overcome challenges</li>
-                <li>Your unique value proposition - what makes you different?</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Additional Tips -->
-          <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">
-            <h4 style="color: #a78bfa; margin-bottom: 12px;">📋 Quick Checklist - Day Before Interview</h4>
-            <div style="display: grid; gap: 8px;">
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Reviewed company website and recent news
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Practiced answers to common questions aloud
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Prepared 3-5 questions to ask the interviewer
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Selected professional outfit and tested tech (for virtual interviews)
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Printed extra copies of resume
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem;">
-                <input type="checkbox" style="width: 18px; height: 18px;"> Planned route/confirmed meeting link and time
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stage 2: During Interview -->
-      <div class="coach-stage" id="stage-during" style="display: none;">
-        <div class="card">
-          <h3 style="color: #3b82f6; margin-bottom: 16px; font-size: 1.3rem;">💼 Stage 2: During the Interview</h3>
-          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
-            This is your moment to shine! Follow these tips to present yourself confidently and professionally during the interview.
-          </p>
-
-          <!-- Tip 1 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
-            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Make a Strong First Impression</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              You have about 7 seconds to make a first impression. Make it count!
-            </p>
-            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-              <li>Arrive 10-15 minutes early (or join virtual meeting 5 minutes early)</li>
-              <li>Greet everyone with a firm handshake and smile</li>
-              <li>Maintain good posture and eye contact</li>
-              <li>Be polite to everyone - receptionist, security, etc.</li>
-            </ul>
-          </div>
-
-          <!-- Tip 2 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
-            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Listen Actively and Answer Thoughtfully</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Don't rush your answers. Take a moment to think before responding.
-            </p>
-            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px;">
-              <div style="color: #60a5fa; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">💡 BEST PRACTICES</div>
-              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-                <li>Listen carefully to the complete question before answering</li>
-                <li>It's okay to pause for 2-3 seconds to gather your thoughts</li>
-                <li>Use specific examples from your experience (STAR method)</li>
-                <li>If you don't understand a question, ask for clarification</li>
-                <li>Be concise - aim for 1-2 minute answers unless asked for more detail</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Tip 3 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; margin-bottom: 20px;">
-            <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 1.1rem;">✅ Show Enthusiasm and Cultural Fit</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Companies hire people they like and who will fit well with their team. Show genuine interest!
-            </p>
-            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-              <li>Smile and maintain positive body language</li>
-              <li>Use the interviewer's name occasionally</li>
-              <li>Reference specific things you learned about the company in your research</li>
-              <li>Ask thoughtful questions about the role and company</li>
-              <li>Show how your values align with the company's mission</li>
-            </ul>
-          </div>
-
-          <!-- What to Avoid -->
-          <div style="background: rgba(239, 68, 68, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
-            <h4 style="color: #ef4444; margin-bottom: 12px;">❌ Common Mistakes to Avoid</h4>
-            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-              <li>Speaking negatively about previous employers or colleagues</li>
-              <li>Checking your phone or appearing distracted</li>
-              <li>Interrupting the interviewer</li>
-              <li>Being too casual or overly familiar</li>
-              <li>Lying or exaggerating your experience</li>
-              <li>Asking about salary/benefits too early in the process</li>
-              <li>Not having any questions prepared for the interviewer</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stage 3: Post-Interview -->
-      <div class="coach-stage" id="stage-post" style="display: none;">
-        <div class="card">
-          <h3 style="color: #f59e0b; margin-bottom: 16px; font-size: 1.3rem;">📧 Stage 3: Post-Interview Follow-Up</h3>
-          <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.7;">
-            The interview doesn't end when you leave the room. Your follow-up can make the difference in getting that offer letter!
-          </p>
-
-          <!-- Tip 1 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; margin-bottom: 20px;">
-            <h4 style="color: #10b981; margin-bottom: 12px; font-size: 1.1rem;">✅ Send a Thank-You Email Within 24 Hours</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              A thoughtful thank-you email shows professionalism and reinforces your interest in the role.
-            </p>
-            <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-              <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">📧 WHAT TO INCLUDE</div>
-              <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-                <li>Thank them for their time and the opportunity</li>
-                <li>Reference something specific discussed in the interview</li>
-                <li>Reiterate your interest in the role and company</li>
-                <li>Briefly mention how your skills align with their needs</li>
-                <li>Keep it concise (3-4 short paragraphs)</li>
-              </ul>
-            </div>
-            <div style="background: #0a0a0f; padding: 14px; border-radius: 8px; font-family: monospace; font-size: 0.85rem;">
-              <div style="color: #10b981; margin-bottom: 8px; font-weight: 600;">Sample Thank-You Email:</div>
-              <div style="color: #cbd5e1; line-height: 1.7;">
-                <p>Subject: Thank You - [Position Title] Interview</p>
-                <p>Dear [Interviewer's Name],</p>
-                <p>Thank you for taking the time to meet with me today regarding the [Position] role at [Company]. I enjoyed learning about [specific topic discussed] and the exciting projects your team is working on.</p>
-                <p>Our conversation reinforced my enthusiasm for this opportunity. I believe my experience in [relevant skill/experience] would allow me to contribute meaningfully to [specific company goal or project discussed].</p>
-                <p>Please feel free to reach out if you need any additional information. I look forward to hearing about the next steps.</p>
-                <p>Best regards,<br>[Your Name]</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tip 2 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
-            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.1rem;">✅ Follow Up Strategically</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              If you haven't heard back within the expected timeframe, it's appropriate to follow up professionally.
-            </p>
-            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-              <li>Wait for the timeline they mentioned (usually 1-2 weeks)</li>
-              <li>Send a brief, polite follow-up email reaffirming your interest</li>
-              <li>Don't be pushy or demanding</li>
-              <li>If no response after 2nd follow-up, it's time to move on</li>
-            </ul>
-          </div>
-
-          <!-- Tip 3 -->
-          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; margin-bottom: 20px;">
-            <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 1.1rem;">✅ Continue Your Job Search</h4>
-            <p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 12px;">
-              Don't put all your eggs in one basket! Keep applying and interviewing until you have a signed offer.
-            </p>
-            <div style="background: rgba(139, 92, 246, 0.1); padding: 10px; border-radius: 6px;">
-              <div style="color: #a78bfa; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">💡 PRO TIP</div>
-              <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">Having multiple opportunities gives you negotiating power and reduces the stress of waiting for one company's decision.</p>
-            </div>
-          </div>
-
-          <!-- Handling Rejection -->
-          <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
-            <h4 style="color: #60a5fa; margin-bottom: 12px;">📝 If You Receive a Rejection</h4>
-            <ul style="color: #94a3b8; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-              <li>Thank them for the opportunity and ask for feedback</li>
-              <li>Stay professional - you may cross paths with them again</li>
-              <li>Request to be considered for future openings</li>
-              <li>Reflect on the experience and improve for next time</li>
-              <li>Don't take it personally - many factors influence hiring decisions</li>
-            </ul>
-          </div>
         </div>
       </div>
     </section>
@@ -960,43 +625,6 @@
           <div class="stat-card"><div class="stat-number" style="color: #22c55e;" id="ica-stat-high">0</div><div class="stat-label">High Potential</div></div>
           <div class="stat-card"><div class="stat-number" style="color: #f59e0b;" id="ica-stat-medium">0</div><div class="stat-label">Medium Potential</div></div>
           <div class="stat-card"><div class="stat-number" style="color: #64748b;" id="ica-stat-low">0</div><div class="stat-label">Low Potential</div></div>
-        </div>
-      </div>
-
-      <!-- Companies Hiring Now -->
-      <div class="card" id="companies-hiring-card" style="display: none; margin-top: 20px;">
-        <div class="card-header">
-          <h3 class="card-title">🏢 Companies Hiring Now</h3>
-          <p class="card-subtitle">Companies where you have connections + they're currently hiring</p>
-        </div>
-        <div id="companies-hiring-content">
-          <div style="padding: 20px; text-align: center; color: #64748b;">
-            Save jobs in Tracker to see which companies are hiring!
-          </div>
-        </div>
-      </div>
-
-      <!-- Contacts Who Can Help -->
-      <div class="card" id="helpful-contacts-card" style="display: none; margin-top: 20px;">
-        <div class="card-header">
-          <h3 class="card-title">👥 Contacts Who Can Help You</h3>
-          <p class="card-subtitle">People at companies you're targeting - reach out for referrals!</p>
-        </div>
-        <div id="helpful-contacts-content">
-          <div style="padding: 20px; text-align: center; color: #64748b;">
-            Save jobs in Tracker to see your connections at those companies!
-          </div>
-        </div>
-      </div>
-
-      <!-- Hot Leads Card (Legacy - keeping for now) -->
-      <div class="card" id="ica-hot-leads-card" style="display: none; margin-top: 20px;">
-        <div class="card-header">
-          <h3 class="card-title">🔥 Active Hiring Intelligence</h3>
-          <p class="card-subtitle">Prioritized contacts for immediate outreach</p>
-        </div>
-        <div id="ica-hot-leads-content">
-          <div style="padding: 20px; text-align: center; color: #64748b;">No hiring intelligence available yet</div>
         </div>
       </div>
 
@@ -1064,35 +692,12 @@
       </div>
     </div>
   </div>
-
-  <!-- Interview Prep Modal -->
-  <div class="cl-modal" id="interview-prep-modal">
-    <div class="cl-modal-content" style="max-width: 900px;">
-      <div class="cl-modal-header">
-        <div>
-          <h3>🎯 Interview Preparation</h3>
-          <p class="text-muted" id="interview-prep-info">20 questions with personalized answers</p>
-        </div>
-        <button class="cl-modal-close" onclick="closeInterviewPrepModal()">×</button>
-      </div>
-      <div class="cl-modal-body">
-        <div id="interview-prep-content">Generating your personalized interview preparation...</div>
-      </div>
-    </div>
-  </div>
-
+  
   <div class="toast" id="toast"></div>
 
 <script>
 // ========== AUTH & USER STATE ==========
 let currentUser = JSON.parse(localStorage.getItem('jobmatch_user') || 'null');
-
-// Helper: Create stable session ID from email (no timestamp)
-function createStableSessionId(email) {
-  // Remove special chars and create consistent session ID
-  const cleanEmail = btoa(email).replace(/[=\/\+]/g, '').toLowerCase();
-  return 'sess_' + cleanEmail.substring(0, 15);
-}
 
 // Initialize auth UI on page load
 function initAuth() {
@@ -1101,13 +706,7 @@ function initAuth() {
     document.getElementById('user-menu').style.display = 'flex';
     document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
     document.getElementById('user-display-name').textContent = currentUser.name.split(' ')[0];
-
-    // Restore stable session ID based on user email
-    if (!sessionId || sessionId.includes('temp')) {
-      sessionId = createStableSessionId(currentUser.email);
-      localStorage.setItem('jobmatch_session', sessionId);
-    }
-
+    
     // Load saved resume if exists
     loadSavedUserData();
   }
@@ -1178,7 +777,7 @@ function handleSignup(e) {
 
   // Ensure sessionId is created for new user
   if (!sessionId) {
-    sessionId = createStableSessionId(email);
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1207,7 +806,7 @@ function handleLogin(e) {
 
   // Ensure sessionId is created/restored after login
   if (!sessionId) {
-    sessionId = createStableSessionId(email);
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1320,7 +919,7 @@ function completeGoogleAuth(email, name, picture, googleId) {
   // CRITICAL FIX: Ensure sessionId is created/restored after Google login
   if (!sessionId) {
     // Create a new session tied to the user's email
-    sessionId = createStableSessionId(email);
+    sessionId = 'user_' + btoa(email).replace(/=/g, '') + '_' + Date.now();
     localStorage.setItem('jobmatch_session', sessionId);
   }
 
@@ -1451,89 +1050,13 @@ function saveCoverLetter(coverLetter, jobTitle, companyName) {
   return false;
 }
 
-async function loadSavedUserData() {
+function loadSavedUserData() {
   if (!currentUser || !currentUser.savedProfile) return;
-
+  
   // Auto-load profile into Find Jobs tab
   profile = currentUser.savedProfile;
-
-  // Session already handled by initAuth
-  if (!sessionId) {
-    sessionId = createStableSessionId(currentUser.email);
-    localStorage.setItem('jobmatch_session', sessionId);
-  }
-
-  // Initialize backend session with saved profile data
-  try {
-    await fetch('/api/init-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: currentUser.email,
-        profile: currentUser.savedProfile,
-        resumeText: currentUser.lastResumeText || ''
-      })
-    });
-    console.log('✅ Backend session initialized:', sessionId);
-  } catch (error) {
-    console.warn('Failed to initialize backend session:', error);
-  }
-
-  // Display profile in Find Jobs tab
-  displayProfile();
-  document.getElementById('search-upload-card').style.display = 'none';
-  document.getElementById('profile-card').style.display = 'block';
-
-  // Show "Load Saved Resume" button if user has a saved resume file
-  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
-    const loadBtn = document.getElementById('load-saved-resume-btn');
-    if (loadBtn) {
-      loadBtn.style.display = 'block';
-      loadBtn.onclick = () => {
-        searchFile = base64ToFile(currentUser.lastResumeBase64, currentUser.lastResumeFileName);
-        document.getElementById('search-file-name').textContent = '✓ ' + currentUser.lastResumeFileName + ' (saved)';
-        document.getElementById('search-upload-zone').classList.add('has-file');
-        showToast('Saved resume loaded!', 'success');
-      };
-    }
-  }
-
-  // Also make resume available in Analyze tab
-  if (currentUser.lastResumeBase64 && currentUser.lastResumeFileName) {
-    const analyzeLoadBtn = document.getElementById('load-saved-resume-btn');
-    if (analyzeLoadBtn) analyzeLoadBtn.style.display = 'block';
-  }
-
-  console.log('✅ Saved resume auto-loaded:', currentUser.lastResumeFileName || 'profile only');
-}
-
-function loadSavedResume() {
-  if (!currentUser || !currentUser.lastResumeBase64 || !currentUser.lastResumeFileName) {
-    showToast('No saved resume found', 'error');
-    return;
-  }
-
-  try {
-    // Convert base64 back to File object
-    const base64 = currentUser.lastResumeBase64;
-    const fileName = currentUser.lastResumeFileName;
-
-    // Extract the data from base64
-    fetch(base64)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], fileName, { type: blob.type });
-        handleAnalyzeFile(file);
-        showToast(`Loaded: ${fileName}`, 'success');
-      })
-      .catch(err => {
-        console.error('Error loading resume:', err);
-        showToast('Failed to load resume', 'error');
-      });
-  } catch (error) {
-    console.error('Error loading resume:', error);
-    showToast('Failed to load resume', 'error');
-  }
+  sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
+  localStorage.setItem('jobmatch_session', sessionId);
 }
 
 function showMyData() {
@@ -1691,7 +1214,7 @@ async function useSavedResume(index, mode) {
     if (savedResume.profile) {
       // Use saved profile directly
       profile = savedResume.profile;
-      sessionId = localStorage.getItem('jobmatch_session') || 'sess_temp_' + Math.random().toString(36).substring(7);
+      sessionId = localStorage.getItem('jobmatch_session') || 'user_' + Date.now();
       localStorage.setItem('jobmatch_session', sessionId);
       
       displayProfile();
@@ -1760,114 +1283,19 @@ function copySavedCoverLetter(index) {
 function deleteCoverLetter(index) {
   if (!currentUser) return;
   if (!confirm('Delete this cover letter?')) return;
-
+  
   const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
   const user = users[currentUser.email];
-
+  
   if (user && user.savedCoverLetters) {
     user.savedCoverLetters.splice(index, 1);
     users[currentUser.email] = user;
     localStorage.setItem('jobmatch_users', JSON.stringify(users));
     currentUser = user;
     localStorage.setItem('jobmatch_user', JSON.stringify(user));
-
+    
     showMyCoverLetters(); // Refresh the modal
     showToast('Cover letter deleted', 'success');
-  }
-}
-
-// ========== MY INTERVIEW PREPS ==========
-function showMyInterviewPreps() {
-  document.getElementById('user-dropdown').classList.remove('show');
-
-  const content = document.getElementById('interview-preps-content');
-
-  if (!currentUser) {
-    content.innerHTML = '<p style="color: #64748b;">Please log in to see your interview preps.</p>';
-  } else if (!currentUser.savedInterviewPreps || currentUser.savedInterviewPreps.length === 0) {
-    content.innerHTML = `
-      <p style="color: #64748b; margin-bottom: 16px;">No saved interview preps yet.</p>
-      <p style="color: #94a3b8; font-size: 0.9rem;">Generate interview prep in the "Analyze Resume" tab and save it.</p>
-    `;
-  } else {
-    content.innerHTML = currentUser.savedInterviewPreps.map((prep, i) => `
-      <div style="background: #1e1e2e; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <h4 style="font-size: 0.95rem;">🎯 ${prep.jobTitle}</h4>
-            <p style="font-size: 0.85rem; color: #64748b;">${prep.companyName} • ${new Date(prep.savedAt).toLocaleDateString()}</p>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary btn-sm" onclick="viewInterviewPrep(${i})">👁️ View</button>
-            <button class="btn btn-secondary btn-sm" onclick="copySavedInterviewPrep(${i})">📋 Copy</button>
-            <button class="btn btn-secondary btn-sm" onclick="deleteInterviewPrep(${i})">🗑️</button>
-          </div>
-        </div>
-        <div style="background: #0a0a0f; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #94a3b8;">
-          ${prep.questions.length} interview questions with personalized answers
-        </div>
-      </div>
-    `).join('');
-  }
-
-  document.getElementById('interview-preps-modal').classList.add('show');
-}
-
-function hideInterviewPrepsModal() {
-  document.getElementById('interview-preps-modal').classList.remove('show');
-}
-
-function showUpcomingFeatures() {
-  document.getElementById('upcoming-features-modal').classList.add('show');
-  document.getElementById('user-dropdown').classList.remove('show');
-}
-
-function hideUpcomingFeaturesModal() {
-  document.getElementById('upcoming-features-modal').classList.remove('show');
-}
-
-function viewInterviewPrep(index) {
-  if (currentUser && currentUser.savedInterviewPreps && currentUser.savedInterviewPreps[index]) {
-    const prep = currentUser.savedInterviewPreps[index];
-    // Display in interview prep modal
-    displayInterviewPrep(prep.questions, prep.questionsToAsk || [], prep.companyName);
-    hideInterviewPrepsModal();
-    document.getElementById('interview-prep-modal').classList.add('open');
-  }
-}
-
-function copySavedInterviewPrep(index) {
-  if (currentUser && currentUser.savedInterviewPreps && currentUser.savedInterviewPreps[index]) {
-    const prep = currentUser.savedInterviewPreps[index];
-    let text = `Interview Preparation for ${prep.companyName}\n${prep.jobTitle}\n\n`;
-    prep.questions.forEach((q, i) => {
-      text += `Q${i + 1}. ${q.question}\n\n`;
-      text += `Answer: ${q.suggestedAnswer}\n`;
-      if (q.tips) text += `\nTip: ${q.tips}\n`;
-      text += '\n---\n\n';
-    });
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Interview prep copied!', 'success');
-    });
-  }
-}
-
-function deleteInterviewPrep(index) {
-  if (!currentUser) return;
-  if (!confirm('Delete this interview prep?')) return;
-
-  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
-  const user = users[currentUser.email];
-
-  if (user && user.savedInterviewPreps) {
-    user.savedInterviewPreps.splice(index, 1);
-    users[currentUser.email] = user;
-    localStorage.setItem('jobmatch_users', JSON.stringify(users));
-    currentUser = user;
-    localStorage.setItem('jobmatch_user', JSON.stringify(user));
-
-    showMyInterviewPreps(); // Refresh the modal
-    showToast('Interview prep deleted', 'success');
   }
 }
 
@@ -1964,57 +1392,18 @@ function displayAnalysisResults(d) {
   const score = d.overallScore || 0;
   const scoreClass = score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
   const heroClass = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
-
-  // Extract company name from job description
-  const jobDesc = document.getElementById('job-description').value || '';
-  const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i);
-  const companyName = companyMatch ? companyMatch[1].trim() : '';
-
+  
   document.getElementById('analysis-results').style.display = 'block';
   document.getElementById('analysis-results').innerHTML = `
-    <!-- Single Row with 4 Columns: Score, Cover Letter, Interview Prep, Referrals -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-      <!-- Column 1: Score Card -->
-      <div class="card score-hero ${heroClass}" style="padding: 12px; text-align: center;">
-        <div class="score-ring ${scoreClass}" style="width: 70px; height: 70px; border-width: 3px; margin: 0 auto 8px;">
-          <div class="score-number" style="font-size: 1.5rem;">${score}%</div>
-          <div class="score-label" style="font-size: 0.6rem;">Match</div>
-        </div>
-        <div class="verdict-badge ${scoreClass}" style="padding: 4px 12px; font-size: 0.75rem; display: inline-block;">${d.verdict || 'ANALYZED'}</div>
+    <div class="score-hero ${heroClass}">
+      <div class="score-ring ${scoreClass}">
+        <div class="score-number">${score}%</div>
+        <div class="score-label">Match</div>
       </div>
-
-      <!-- Column 2: Cover Letter -->
-      <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3); padding: 12px;">
-        <h4 style="color: #a78bfa; margin-bottom: 4px; font-size: 0.85rem;">✉️ Cover Letter</h4>
-        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Generate personalized</p>
-        <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); padding: 8px 16px; font-size: 0.85rem;">
-          <span id="cover-letter-btn-text">✉️ Generate</span>
-          <span class="loading" id="cover-letter-loading" style="display:none"></span>
-        </button>
-      </div>
-
-      <!-- Column 3: Interview Prep -->
-      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-color: rgba(16, 185, 129, 0.3); padding: 12px;">
-        <h4 style="color: #10b981; margin-bottom: 4px; font-size: 0.85rem;">🎯 Interview Prep</h4>
-        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">20 Q&A + questions</p>
-        <button class="btn btn-primary btn-full" id="generate-interview-prep-btn" style="background: linear-gradient(135deg, #10b981, #059669); padding: 8px 16px; font-size: 0.85rem;">
-          <span id="interview-prep-btn-text">🎯 Prepare</span>
-          <span class="loading" id="interview-prep-loading" style="display:none"></span>
-        </button>
-      </div>
-
-      <!-- Column 4: Referrals -->
-      ${companyName ? `
-      <div class="card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.05)); border-color: rgba(236, 72, 153, 0.3); padding: 12px;">
-        <h4 style="color: #ec4899; margin-bottom: 4px; font-size: 0.85rem;">👥 Referrals</h4>
-        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Find connections</p>
-        <button class="btn btn-primary btn-full" onclick="findReferrals('${companyName.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #ec4899, #db2777); padding: 8px 16px; font-size: 0.85rem;">
-          <span>👥 Find</span>
-        </button>
-      </div>
-      ` : ''}
+      <div class="verdict-badge ${scoreClass}">${d.verdict || 'ANALYZED'}</div>
+      <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
     </div>
-
+    
     <div class="card">
       <div class="flex justify-between items-center mb-4">
         <span>Interview Probability</span>
@@ -2160,7 +1549,17 @@ function displayAnalysisResults(d) {
       </div>
       <p class="encouragement">${d.bottomLine?.encouragement || ''}</p>
     </div>
-
+    
+    <!-- COVER LETTER GENERATOR -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
+      <h3 style="color: #a78bfa; margin-bottom: 8px;">✉️ Generate Killer Cover Letter</h3>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Create a highly specific cover letter that shows exactly why YOU are perfect for THIS role</p>
+      <button class="btn btn-primary btn-full" id="generate-cover-letter-btn" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
+        <span id="cover-letter-btn-text">✉️ Generate Cover Letter</span>
+        <span class="loading" id="cover-letter-loading" style="display:none"></span>
+      </button>
+    </div>
+    
     <!-- Cover Letter Output -->
     <div id="cover-letter-output" style="display:none">
       <div class="card">
@@ -2176,13 +1575,10 @@ function displayAnalysisResults(d) {
     </div>
   `;
   
-  // Attach button listeners
+  // Attach cover letter button listener
   setTimeout(() => {
     const clBtn = document.getElementById('generate-cover-letter-btn');
     if (clBtn) clBtn.addEventListener('click', generateAnalysisCoverLetter);
-
-    const ipBtn = document.getElementById('generate-interview-prep-btn');
-    if (ipBtn) ipBtn.addEventListener('click', generateInterviewPrep);
   }, 100);
   
   document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
@@ -2206,10 +1602,10 @@ async function generateAnalysisCoverLetter() {
   // Ensure sessionId exists before generating cover letter
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = createStableSessionId(currentUser.email);
+      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
+      sessionId = 'temp_' + Date.now();
       localStorage.setItem('jobmatch_session', sessionId);
     }
   }
@@ -2260,201 +1656,16 @@ function copyCoverLetter() {
   });
 }
 
-// ========== INTERVIEW PREP GENERATOR ==========
-async function generateInterviewPrep() {
-  const jobDesc = document.getElementById('job-description').value.trim();
-  if (!jobDesc) {
-    showToast('Job description is required for interview prep', 'error');
-    return;
-  }
-
-  if (!lastAnalysisData) {
-    showToast('Please analyze your resume first', 'error');
-    return;
-  }
-
-  // Ensure sessionId exists
-  if (!sessionId) {
-    if (currentUser && currentUser.email) {
-      sessionId = createStableSessionId(currentUser.email);
-      localStorage.setItem('jobmatch_session', sessionId);
-    } else {
-      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
-      localStorage.setItem('jobmatch_session', sessionId);
-    }
-  }
-
-  // Show modal and loading state
-  document.getElementById('interview-prep-modal').classList.add('open');
-  document.getElementById('interview-prep-content').innerHTML = '<div class="loading" style="margin: 40px auto;"></div><p style="text-align: center; color: #94a3b8;">Generating personalized interview questions and answers...</p>';
-  document.getElementById('interview-prep-btn-text').textContent = 'Generating...';
-  document.getElementById('interview-prep-loading').style.display = 'inline-block';
-  document.getElementById('generate-interview-prep-btn').disabled = true;
-
-  try {
-    const res = await fetch('/api/generate-interview-prep', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: sessionId,
-        jobDescription: jobDesc,
-        analysisData: lastAnalysisData
-      })
-    });
-
-    const data = await res.json();
-
-    if (!data.success) throw new Error(data.error || 'Generation failed');
-
-    // Display the interview prep
-    displayInterviewPrep(data.data.questions, data.data.questionsToAsk, data.data.companyName);
-    showToast('Interview prep generated!', 'success');
-
-  } catch (err) {
-    console.error('Interview prep error:', err);
-    document.getElementById('interview-prep-content').innerHTML = `<p style="color: #ef4444; text-align: center;">Failed to generate. Please try again.</p>`;
-    showToast(String(err.message || 'Generation failed'), 'error');
-  } finally {
-    document.getElementById('interview-prep-btn-text').textContent = '🎯 Prepare';
-    document.getElementById('interview-prep-loading').style.display = 'none';
-    document.getElementById('generate-interview-prep-btn').disabled = false;
-  }
-}
-
-function displayInterviewPrep(questions, questionsToAsk, companyName) {
-  // Store for saving
-  window.currentInterviewPrep = { questions, questionsToAsk, companyName };
-
-  const html = `
-    <div style="margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px;">
-      <h4 style="color: #10b981; margin-bottom: 8px;">🎯 Interview Preparation for ${companyName}</h4>
-      <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px;">Personalized answers based on your resume and the job requirements</p>
-      <div class="flex gap-2">
-        <button class="btn btn-secondary btn-sm" onclick="copyAllInterviewPrep()">📋 Copy All</button>
-        <button class="btn btn-primary btn-sm" onclick="saveCurrentInterviewPrep()">💾 Save</button>
-      </div>
-    </div>
-
-    <h3 style="color: #e2e8f0; margin-bottom: 16px; font-size: 1.2rem;">📝 Common Interview Questions & Answers</h3>
-    ${questions.map((q, i) => `
-      <div style="margin-bottom: 24px; padding: 20px; background: #1e1e2e; border-radius: 12px; border-left: 3px solid ${i % 3 === 0 ? '#6366f1' : i % 3 === 1 ? '#8b5cf6' : '#10b981'};">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-          <h4 style="color: #e2e8f0; margin: 0; flex: 1;">
-            <span style="color: #64748b; font-size: 0.85rem; font-weight: 500;">Q${i + 1}.</span> ${q.question}
-          </h4>
-          <button class="btn btn-secondary btn-sm" onclick="copyAnswer(${i})" style="margin-left: 12px;">📋</button>
-        </div>
-        <div style="background: #0a0a0f; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
-          <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">💡 Suggested Answer</div>
-          <p style="color: #cbd5e1; line-height: 1.7; margin: 0; white-space: pre-wrap;" id="answer-${i}">${q.suggestedAnswer}</p>
-        </div>
-        ${q.tips ? `<div style="padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 6px;">
-          <div style="color: #818cf8; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">📌 TIP</div>
-          <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">${q.tips}</p>
-        </div>` : ''}
-      </div>
-    `).join('')}
-
-    <div style="margin-top: 32px; padding: 20px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 12px;">
-      <h3 style="color: #60a5fa; margin-bottom: 12px; font-size: 1.2rem;">❓ Questions You Should Ask the Interviewer</h3>
-      <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">Asking thoughtful questions shows your genuine interest in the role and helps you evaluate if this is the right opportunity for you.</p>
-      <div style="display: grid; gap: 12px;">
-        ${questionsToAsk.map((q, i) => `
-          <div style="padding: 14px; background: #1e1e2e; border-radius: 8px; border-left: 3px solid #3b82f6;">
-            <div style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.6;">
-              <span style="color: #60a5fa; font-weight: 600;">${i + 1}.</span> ${q}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      <div style="margin-top: 16px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-        <div style="color: #10b981; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">💡 PRO TIP</div>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">Always have 2-3 questions ready for the interviewer. It demonstrates your preparation and genuine interest in the role and company.</p>
-      </div>
-    </div>
-  `;
-  document.getElementById('interview-prep-content').innerHTML = html;
-}
-
-function copyAnswer(index) {
-  const answer = document.getElementById(`answer-${index}`).textContent;
-  navigator.clipboard.writeText(answer).then(() => {
-    showToast('Answer copied!', 'success');
-  }).catch(() => {
-    showToast('Failed to copy', 'error');
-  });
-}
-
-function copyAllInterviewPrep() {
-  const content = document.getElementById('interview-prep-content').innerText;
-  navigator.clipboard.writeText(content).then(() => {
-    showToast('All interview prep copied!', 'success');
-  }).catch(() => {
-    showToast('Failed to copy', 'error');
-  });
-}
-
-function closeInterviewPrepModal() {
-  document.getElementById('interview-prep-modal').classList.remove('open');
-}
-
-function saveCurrentInterviewPrep() {
-  if (!window.currentInterviewPrep) {
-    showToast('No interview prep to save', 'error');
-    return;
-  }
-
-  const { questions, questionsToAsk, companyName } = window.currentInterviewPrep;
-  const jobDesc = document.getElementById('job-description').value || '';
-  const titleMatch = jobDesc.match(/(?:title|position|role)[:\s]+([^\n]+)/i) ||
-                     jobDesc.match(/(?:seeking|hiring|looking for)[:\s]+(?:an?\s+)?([^\n.]+)/i);
-  const jobTitle = titleMatch ? titleMatch[1].trim().substring(0, 50) : 'Job Role';
-
-  if (saveInterviewPrep(questions, questionsToAsk, jobTitle, companyName)) {
-    showToast('Interview prep saved! View in "My Interview Preps"', 'success');
-  }
-}
-
-function saveInterviewPrep(questions, questionsToAsk, jobTitle, companyName) {
-  if (!currentUser) {
-    showToast('Log in to save interview prep', 'error');
-    return false;
-  }
-
-  const users = JSON.parse(localStorage.getItem('jobmatch_users') || '{}');
-  const user = users[currentUser.email];
-
-  if (user) {
-    if (!user.savedInterviewPreps) user.savedInterviewPreps = [];
-    user.savedInterviewPreps.unshift({
-      id: Date.now(),
-      questions,
-      questionsToAsk,
-      jobTitle: jobTitle || 'Unknown Role',
-      companyName: companyName || 'Unknown Company',
-      savedAt: Date.now()
-    });
-    user.savedInterviewPreps = user.savedInterviewPreps.slice(0, 20); // Max 20
-
-    users[currentUser.email] = user;
-    localStorage.setItem('jobmatch_users', JSON.stringify(users));
-    currentUser = user;
-    localStorage.setItem('jobmatch_user', JSON.stringify(user));
-    return true;
-  }
-  return false;
-}
-
 function saveCurrentCoverLetter() {
   const content = document.getElementById('cover-letter-content').textContent;
   if (!content) {
     showToast('No cover letter to save', 'error');
     return;
   }
-
+  
   // Extract job info from the job description
   const jobDesc = document.getElementById('job-description').value || '';
-
+  
   // Try to extract company name
   const companyMatch = jobDesc.match(/(?:at|@|company[:\s]+|about[:\s]+)([A-Z][a-zA-Z0-9\s&]+?)(?:\.|,|\n|is|we|has)/i) ||
                        jobDesc.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+is\s+(?:seeking|hiring|looking)/i);
@@ -2548,87 +1759,15 @@ function displayProfile() {
 document.getElementById('search-jobs-btn').addEventListener('click', searchJobs);
 document.getElementById('search-query').addEventListener('keypress', e => { if (e.key === 'Enter') searchJobs(); });
 
-function generateSampleJobs() {
-  const title = document.getElementById('search-query').value || profile.targetTitles?.[0] || profile.currentTitle || 'Software Engineer';
-  const location = document.getElementById('search-location').value || profile.location || 'Remote';
-  const skills = profile.hardSkills || [];
-  const yearsExp = profile.yearsExperience || 5;
-
-  // Sample companies and job data
-  const companies = [
-    { name: 'Google', desc: 'Leading technology company specializing in internet-related services and products', remote: true },
-    { name: 'Microsoft', desc: 'Global technology leader in software, cloud computing, and AI', remote: true },
-    { name: 'Amazon', desc: 'E-commerce and cloud computing giant', remote: true },
-    { name: 'Meta', desc: 'Social technology company building the future of connection', remote: false },
-    { name: 'Apple', desc: 'Innovative consumer electronics and software company', remote: false },
-    { name: 'Netflix', desc: 'Entertainment streaming service and production company', remote: true },
-    { name: 'Salesforce', desc: 'Leading customer relationship management platform', remote: true },
-    { name: 'Adobe', desc: 'Creative software and digital marketing solutions', remote: true },
-    { name: 'Tesla', desc: 'Electric vehicle and clean energy company', remote: false },
-    { name: 'Stripe', desc: 'Financial infrastructure for the internet', remote: true }
-  ];
-
-  // Generate 8-10 sample jobs
-  const sampleJobs = companies.slice(0, 8).map((company, idx) => {
-    const matchScore = 95 - (idx * 5) - Math.floor(Math.random() * 10); // Decreasing match scores
-    const matchingSkills = skills.slice(0, 3 + Math.floor(Math.random() * 3));
-
-    const recommendation = matchScore >= 85 ? 'APPLY_NOW' :
-                          matchScore >= 70 ? 'WORTH_APPLYING' :
-                          'CUSTOMIZE_FIRST';
-
-    const salaryRanges = ['$150k - $220k', '$120k - $180k', '$140k - $200k', '$160k - $240k', '$130k - $190k'];
-    const postedDates = ['2 days ago', '1 day ago', '3 days ago', '5 days ago', '1 week ago'];
-
-    return {
-      id: 'job_' + Date.now() + '_' + idx,
-      title: title,
-      company: company.name,
-      location: location,
-      salary: salaryRanges[idx % salaryRanges.length],
-      postedDate: postedDates[idx % postedDates.length],
-      isRemote: company.remote,
-      matchScore: matchScore,
-      recommendation: recommendation,
-      matchingSkills: matchingSkills,
-      quickTake: `${company.desc}. Looking for ${yearsExp}+ years experience in ${matchingSkills.slice(0, 2).join(', ')}. Competitive benefits and growth opportunities.`,
-      description: `${company.name} is seeking a talented ${title} to join our team. You'll work on cutting-edge projects using ${matchingSkills.join(', ')} and collaborate with world-class engineers.`,
-      applyUrl: null, // This will trigger "Find on LinkedIn" instead of direct apply
-      isSuggestion: false
-    };
-  });
-
-  return sampleJobs;
-}
-
 async function searchJobs() {
-  if (!profile) { showToast('Upload resume first', 'error'); return; }
-
-  // Ensure session exists before generating jobs
-  if (!sessionId) {
-    if (currentUser && currentUser.email) {
-      sessionId = createStableSessionId(currentUser.email);
-      localStorage.setItem('jobmatch_session', sessionId);
-      console.log('✅ Created stable session:', sessionId);
-    } else {
-      showToast('Please log in to save jobs', 'error');
-      return;
-    }
-  }
-
-  // Generate sample job listings based on user's profile
-  jobs = generateSampleJobs();
-
-  // Display jobs with save buttons
-  displayJobs(jobs, 'all');
-  document.getElementById('job-results').style.display = 'block';
-  document.getElementById('suggestions-section').style.display = 'none';
-
-  // Show external search links below as optional
+  if (!sessionId || !profile) { showToast('Upload resume first', 'error'); return; }
+  
+  // Generate links INSTANTLY (client-side, no API)
   const searchLinks = generateSearchLinksClientSide();
   displaySearchLinks(searchLinks);
-
-  showToast(`Found ${jobs.length} matching jobs! Click 💾 Save to add to Tracker.`, 'success');
+  document.getElementById('job-results').style.display = 'block';
+  document.getElementById('suggestions-section').style.display = 'none'; // Hide suggestions section
+  showToast('Search links ready! Click any to find jobs.', 'success');
 }
 
 function generateSearchLinksClientSide() {
@@ -2848,21 +1987,35 @@ function displayJobs(list, filter = 'all') {
       const indeedUrl = `https://www.indeed.com/jobs?q=${searchQuery}`;
       
       return `
-        <div class="job-card ${cardClass}" style="padding: 16px;">
+        <div class="job-card ${cardClass}">
           <div class="job-header">
             <div>
-              <div class="job-title" style="font-size: 1rem; margin-bottom: 4px;">${job.title}</div>
-              <div class="job-company" style="font-size: 0.9rem;">${job.company} • ${job.location || 'Remote'}</div>
+              <div class="job-title">${job.title}</div>
+              <div class="job-company">${job.company}${job.isSuggestion ? ' <span style="font-size:0.75rem; color:#64748b;">(suggested)</span>' : ''}</div>
+              ${job.location ? `<div class="job-meta">
+                <span>📍 ${job.location}</span>
+                ${job.salary ? `<span>💰 ${job.salary}</span>` : ''}
+                ${job.postedDate ? `<span>🕐 ${job.postedDate}</span>` : ''}
+                ${job.isRemote ? '<span>🏠 Remote</span>' : ''}
+              </div>` : ''}
             </div>
             <div style="text-align:right;">
               <div class="match-percent ${scoreClass}">${job.matchScore}%</div>
+              <div style="font-size:0.7rem; color:#64748b;">MATCH</div>
             </div>
           </div>
-          <div class="flex gap-2 flex-wrap mt-3">
-            <button class="btn btn-primary btn-sm" onclick="saveJob('${job.id}')" style="padding: 6px 12px;">💾 Save</button>
-            <button class="btn btn-secondary btn-sm" onclick="findReferrals('${job.company}')" style="padding: 6px 12px;">👥 Referrals</button>
-            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">LinkedIn</a>
-            <a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; padding: 6px 12px;">Indeed</a>
+          <div class="flex gap-2 items-center mt-4">
+            <span class="recommendation ${recClass}">${(job.recommendation || 'WORTH_APPLYING').replace(/_/g, ' ')}</span>
+            ${(job.matchingSkills || []).slice(0, 3).map(s => `<span class="tag tag-success" style="font-size:0.75rem;">${s}</span>`).join('')}
+          </div>
+          <p style="color:#94a3b8; font-size:0.9rem; margin-top:12px;">${job.quickTake || job.description || ''}</p>
+          <div class="flex gap-2 flex-wrap mt-4">
+            <button class="btn btn-primary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveJob('${job.id}')">💾 Save</button>
+            <a href="${linkedInUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+              ${job.applyUrl ? '🔗 Apply Now' : '🔗 Find on LinkedIn'}
+            </a>
+            ${!job.applyUrl ? `<a href="${indeedUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">🔗 Indeed</a>` : ''}
           </div>
         </div>
       `;
@@ -2877,64 +2030,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// ========== REFERRALS ==========
-async function findReferrals(companyName) {
-  if (!sessionId) {
-    showToast('Please upload LinkedIn connections first', 'error');
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/ica/referrals/${sessionId}?company=${encodeURIComponent(companyName)}`);
-    const data = await res.json();
-
-    if (!data.success) throw new Error(data.error);
-
-    if (data.contacts.length === 0) {
-      showToast(`No contacts found at ${companyName}`, 'info');
-      return;
-    }
-
-    // Show referral modal
-    showReferralModal(companyName, data.contacts);
-  } catch (error) {
-    showToast('Upload your LinkedIn connections in Networking tab', 'info');
-  }
-}
-
-function showReferralModal(company, contacts) {
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal" style="max-width: 600px;">
-      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-      <div class="modal-header">
-        <h2>👥 Referral Contacts at ${company}</h2>
-        <p>${contacts.length} connection${contacts.length > 1 ? 's' : ''} found</p>
-      </div>
-      <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
-        ${contacts.map(c => `
-          <div style="padding: 12px; margin-bottom: 12px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-              <div>
-                <div style="font-weight: 600; color: #e2e8f0;">${c.first_name} ${c.last_name}</div>
-                <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 2px;">${c.position || 'Position not listed'}</div>
-                ${c.email_address ? `<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">✉️ ${c.email_address}</div>` : ''}
-              </div>
-              <a href="${c.linkedin_profile_url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; font-size: 0.75rem;">LinkedIn</a>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); text-align: right;">
-        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
 // ========== COVER LETTER ==========
 async function generateCoverLetter(jobId) {
   const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
@@ -2943,10 +2038,10 @@ async function generateCoverLetter(jobId) {
   // Ensure sessionId exists before generating cover letter
   if (!sessionId) {
     if (currentUser && currentUser.email) {
-      sessionId = createStableSessionId(currentUser.email);
+      sessionId = 'user_' + btoa(currentUser.email).replace(/=/g, '') + '_' + Date.now();
       localStorage.setItem('jobmatch_session', sessionId);
     } else {
-      sessionId = 'sess_temp_' + Math.random().toString(36).substring(7);
+      sessionId = 'temp_' + Date.now();
       localStorage.setItem('jobmatch_session', sessionId);
     }
   }
@@ -2979,37 +2074,23 @@ function regenerateCoverLetter() { if (currentJob) generateCoverLetter(currentJo
 // ========== TRACKER ==========
 async function saveJob(jobId) {
   const job = jobs.find(j => j.id === jobId);
-  if (!job) {
-    showToast('Job not found', 'error');
-    return;
-  }
-
-  // Ensure session exists
-  if (!sessionId) {
-    showToast('Please log in and upload your resume first', 'error');
-    return;
-  }
-
-  console.log('Saving job:', job.title, 'at', job.company, 'with sessionId:', sessionId);
-
+  if (!job) return;
+  
   try {
     const res = await fetch('/api/save-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, job, status: 'SAVED' })
     });
-
+    
     const data = await res.json();
-    console.log('Save job response:', data);
-
     if (!data.success) throw new Error(data.error);
-
+    
     savedJobs = data.data.savedJobs;
     updateTracker();
-    showToast(`✓ Saved ${job.company}!`, 'success');
+    showToast('Job saved!', 'success');
   } catch (err) {
-    console.error('Save job error:', err);
-    showToast(`Error: ${err.message}`, 'error');
+    showToast(err.message, 'error');
   }
 }
 
@@ -3076,92 +2157,11 @@ function updateTracker() {
           <option value="OFFER" ${job.status === 'OFFER' ? 'selected' : ''}>Offer</option>
           <option value="REJECTED" ${job.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="showReferralContacts('${job.id}', '${job.company.replace(/'/g, "\\'")}')">🤝 Find Referrals</button>
         <button class="btn btn-secondary btn-sm" onclick="generateCoverLetter('${job.id}')">📝 Cover Letter</button>
         <a href="${applyUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;">${job.applyUrl ? '🔗 Apply' : '🔗 Find Job'}</a>
       </div>
-      <div id="referrals-${job.id}" style="margin-top: 16px; display: none;"></div>
     </div>
   `;}).join('');
-}
-
-// ========== REFERRAL FINDER ==========
-async function showReferralContacts(jobId, company) {
-  const container = document.getElementById(`referrals-${jobId}`);
-
-  // Toggle visibility
-  if (container.style.display === 'block') {
-    container.style.display = 'none';
-    return;
-  }
-
-  container.innerHTML = '<div style="padding: 12px; color: #94a3b8;">🔍 Finding contacts at ' + company + '...</div>';
-  container.style.display = 'block';
-
-  try {
-    const response = await fetch(`/api/ica/referrals/${sessionId}?company=${encodeURIComponent(company)}`);
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to find contacts');
-    }
-
-    if (result.count === 0) {
-      container.innerHTML = `
-        <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border: 1px solid #2e2e3e;">
-          <div style="color: #94a3b8; margin-bottom: 8px;">No contacts found at ${company}</div>
-          <div style="font-size: 0.85rem; color: #64748b;">Upload your LinkedIn Connections to find referral opportunities</div>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = `
-      <div style="padding: 16px; background: #1e1e2e; border-radius: 8px; border: 1px solid #2e2e3e;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div style="font-weight: 600; color: #e2e8f0;">🤝 ${result.count} Referral Contact${result.count > 1 ? 's' : ''} at ${company}</div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          ${result.contacts.map(contact => `
-            <div style="padding: 12px; background: #0f0f1a; border-radius: 6px; border: 1px solid #2e2e3e;">
-              <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="flex: 1;">
-                  <div style="font-weight: 500; color: #e2e8f0; margin-bottom: 4px;">
-                    ${contact.first_name} ${contact.last_name}
-                    ${contact.ica_category === 'high_potential' ? '<span style="background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">HIGH</span>' : ''}
-                    ${contact.ica_category === 'medium_potential' ? '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">MED</span>' : ''}
-                  </div>
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">${contact.position || 'No position listed'}</div>
-                  ${contact.email_address ? `<div style="font-size: 0.8rem; color: #64748b;">📧 ${contact.email_address}</div>` : ''}
-                  ${contact.connected_on ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Connected: ${new Date(contact.connected_on).toLocaleDateString()}</div>` : ''}
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-sm" style="padding: 6px 12px; background: #0a66c2; border: none; color: white; text-decoration: none; font-size: 0.8rem;">LinkedIn</a>` : ''}
-                  <button class="btn btn-sm" onclick="requestReferral('${contact.id}', '${contact.first_name}', '${jobId}')" style="padding: 6px 12px; background: #6366f1; border: none; color: white; font-size: 0.8rem;">Request Referral</button>
-                </div>
-              </div>
-              ${contact.notes ? `<div style="margin-top: 8px; padding: 8px; background: #1e1e2e; border-radius: 4px; font-size: 0.8rem; color: #94a3b8;">📝 ${contact.notes}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  } catch (error) {
-    container.innerHTML = `<div style="padding: 12px; color: #ef4444;">Error: ${error.message}</div>`;
-  }
-}
-
-async function requestReferral(contactId, contactName, jobId) {
-  const job = savedJobs.find(j => j.id === jobId);
-  if (!job) return;
-
-  // TODO: Implement referral request tracking
-  showToast(`Opening referral request for ${contactName}...`, 'info');
-
-  // For now, just show a template message
-  const message = `Hi ${contactName},\n\nI hope you're doing well! I'm reaching out because I noticed you work at ${job.company}, and I recently applied for the ${job.title} position.\n\nWould you be open to providing a referral or sharing insights about the role and team? I'd really appreciate any help you can offer.\n\nThanks so much!\nBest regards`;
-
-  alert('Referral Request Template:\n\n' + message + '\n\n(Copy this and send via LinkedIn/Email)');
 }
 
 // ========== UTILITIES ==========
@@ -3179,25 +2179,6 @@ function showToast(msg, type = 'info') {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCoverLetterModal(); });
-
-// ========== INTERVIEW COACH STAGE SWITCHING ==========
-function showCoachStage(stageName) {
-  // Hide all stages
-  document.querySelectorAll('.coach-stage').forEach(stage => {
-    stage.style.display = 'none';
-  });
-
-  // Remove active class from all buttons
-  document.querySelectorAll('.coach-stage-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  // Show selected stage
-  document.getElementById(`stage-${stageName}`).style.display = 'block';
-
-  // Add active class to selected button
-  document.querySelector(`.coach-stage-btn[data-stage="${stageName}"]`).classList.add('active');
-}
 
 // Load saved on init
 async function loadSaved() {
@@ -3352,28 +2333,42 @@ async function loadIcaStats() {
 }
 
 async function loadIcaContacts() {
-  if (!sessionId) return;
+  if (!sessionId) {
+    console.log('❌ loadIcaContacts: No sessionId');
+    return;
+  }
   try {
     const category = icaFilter.value;
     const search = icaSearch.value;
     let url = `/api/ica/contacts/${sessionId}?category=${category}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
 
+    console.log('📡 Fetching contacts from:', url);
     const response = await fetch(url);
     const result = await response.json();
+    console.log('📥 Contacts API response:', result);
 
     if (result.success) {
       icaContacts = result.contacts;
+      console.log(`✅ Loaded ${icaContacts.length} contacts`);
       renderIcaContacts();
+    } else {
+      console.error('❌ API returned error:', result.error);
     }
   } catch (error) {
-    console.error('Failed to load contacts:', error);
+    console.error('❌ Failed to load contacts:', error);
   }
 }
 
 function renderIcaContacts() {
+  if (!icaContactsTbody) {
+    console.error('icaContactsTbody element not found');
+    return;
+  }
+
   if (icaContacts.length === 0) {
     icaContactsTbody.innerHTML = `<tr><td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">No contacts found</td></tr>`;
+    icaContactsCard.style.display = 'block'; // Show card even with no contacts
     return;
   }
 
@@ -3399,6 +2394,9 @@ function renderIcaContacts() {
       </td>
     </tr>
   `).join('');
+
+  // Ensure contacts card is visible after rendering
+  icaContactsCard.style.display = 'block';
 }
 
 window.updateIcaCategory = async (contactId, category) => {
@@ -3452,394 +2450,7 @@ icaSearch.addEventListener('input', () => {
 if (sessionId) {
   loadIcaStats().then(() => {
     loadIcaContacts().then(() => {
-      icaStatsCard.style.display = 'block';
-      icaContactsCard.style.display = 'block';
-      loadHotLeads();
-    });
-  });
-}
-
-// ============================================
-// Active Hiring Intelligence
-// ============================================
-
-async function loadHotLeads() {
-  if (!sessionId) return;
-
-  try {
-    // Get saved jobs to find target companies
-    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
-    const jobsData = await jobsRes.json();
-    const targetCompanies = [...new Set((jobsData.data?.savedJobs || []).map(j => j.company))];
-
-    if (targetCompanies.length === 0) {
-      document.getElementById('ica-hot-leads-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          Save some jobs in the Tracker to see contacts at those companies!
-        </div>
-      `;
-      document.getElementById('ica-hot-leads-card').style.display = 'block';
-      return;
-    }
-
-    // Get all high-potential contacts (recruiters, hiring managers)
-    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=high_potential`);
-    const contactsData = await contactsRes.json();
-
-    if (!contactsData.success || contactsData.contacts.length === 0) {
-      document.getElementById('ica-hot-leads-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          No high-potential contacts (recruiters/hiring managers) found
-        </div>
-      `;
-      document.getElementById('ica-hot-leads-card').style.display = 'block';
-      return;
-    }
-
-    const allHighPotential = contactsData.contacts;
-
-    // Categorize hot leads
-    const hotLeads = {
-      atTargetCompanies: [],
-      recruiters: [],
-      hiringManagers: []
-    };
-
-    allHighPotential.forEach(contact => {
-      const position = (contact.position || '').toLowerCase();
-      const isAtTargetCompany = targetCompanies.some(company =>
-        contact.company && contact.company.toLowerCase().includes(company.toLowerCase())
-      );
-
-      if (isAtTargetCompany) {
-        hotLeads.atTargetCompanies.push(contact);
-      } else if (position.includes('recruit')) {
-        hotLeads.recruiters.push(contact);
-      } else if (position.includes('hiring') || position.includes('director') || position.includes('head of')) {
-        hotLeads.hiringManagers.push(contact);
-      }
-    });
-
-    // Render hot leads
-    let html = '';
-
-    if (hotLeads.atTargetCompanies.length > 0) {
-      html += `
-        <div style="margin-bottom: 24px;">
-          <h4 style="color: #22c55e; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span>🎯</span>
-            <span>At Your Target Companies (${hotLeads.atTargetCompanies.length})</span>
-          </h4>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            ${hotLeads.atTargetCompanies.slice(0, 5).map(contact => renderHotLead(contact, 'target')).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    if (hotLeads.recruiters.length > 0) {
-      html += `
-        <div style="margin-bottom: 24px;">
-          <h4 style="color: #f59e0b; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span>👔</span>
-            <span>Active Recruiters (${hotLeads.recruiters.length})</span>
-          </h4>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            ${hotLeads.recruiters.slice(0, 5).map(contact => renderHotLead(contact, 'recruiter')).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    if (hotLeads.hiringManagers.length > 0) {
-      html += `
-        <div style="margin-bottom: 24px;">
-          <h4 style="color: #6366f1; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span>💼</span>
-            <span>Hiring Managers & Leaders (${hotLeads.hiringManagers.length})</span>
-          </h4>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            ${hotLeads.hiringManagers.slice(0, 5).map(contact => renderHotLead(contact, 'manager')).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    if (!html) {
-      html = '<div style="padding: 20px; text-align: center; color: #64748b;">No hot leads found</div>';
-    }
-
-    document.getElementById('ica-hot-leads-content').innerHTML = html;
-    document.getElementById('ica-hot-leads-card').style.display = 'block';
-
-  } catch (error) {
-    console.error('Failed to load hot leads:', error);
-  }
-}
-
-function renderHotLead(contact, type) {
-  const bgColor = type === 'target' ? '#0f2818' : type === 'recruiter' ? '#2a1f0f' : '#1a1a2e';
-  const badge = type === 'target' ? '🎯 TARGET' : type === 'recruiter' ? '👔 RECRUITER' : '💼 LEADER';
-  const badgeColor = type === 'target' ? '#22c55e' : type === 'recruiter' ? '#f59e0b' : '#6366f1';
-
-  return `
-    <div style="padding: 16px; background: ${bgColor}; border-radius: 8px; border: 1px solid #2e2e3e;">
-      <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
-        <div style="flex: 1;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <div style="font-weight: 600; color: #e2e8f0;">${contact.first_name} ${contact.last_name}</div>
-            <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${badge}</span>
-          </div>
-          <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px;">${contact.position || 'No position'}</div>
-          <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">📍 ${contact.company}</div>
-          ${contact.connected_on ? `<div style="font-size: 0.75rem; color: #64748b;">Connected: ${new Date(contact.connected_on).toLocaleDateString()}</div>` : ''}
-          ${type === 'target' ? '<div style="margin-top: 8px; padding: 8px; background: #22c55e20; border-left: 3px solid #22c55e; border-radius: 4px; font-size: 0.85rem; color: #22c55e;">💡 Reach out now - they work at a company you\'re targeting!</div>' : ''}
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${contact.linkedin_profile_url ? `<a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-sm" style="padding: 8px 16px; background: #0a66c2; border: none; color: white; text-decoration: none; font-size: 0.85rem; white-space: nowrap;">LinkedIn</a>` : ''}
-          <button class="btn btn-sm" onclick="startOutreach('${contact.id}', '${contact.first_name}', '${type}')" style="padding: 8px 16px; background: #6366f1; border: none; color: white; font-size: 0.85rem; white-space: nowrap;">Reach Out</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function startOutreach(contactId, contactName, type) {
-  showToast(`Starting outreach campaign with ${contactName}...`, 'info');
-  // TODO: Implement outreach campaign manager (Option 3)
-  alert(`Outreach Campaign Manager coming soon!\n\nFor now, connect with ${contactName} on LinkedIn and send a personalized message.`);
-}
-
-// ============================================
-// Companies Hiring Now & Helpful Contacts
-// ============================================
-
-async function loadCompaniesHiring() {
-  if (!sessionId) return;
-
-  try {
-    // Get saved jobs to find target companies
-    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
-    const jobsData = await jobsRes.json();
-    const savedJobs = jobsData.data?.savedJobs || [];
-
-    if (savedJobs.length === 0) {
-      document.getElementById('companies-hiring-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          Save jobs in Tracker to see which companies are hiring!
-        </div>
-      `;
-      document.getElementById('companies-hiring-card').style.display = 'block';
-      return;
-    }
-
-    // Get all contacts
-    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=all`);
-    const contactsData = await contactsRes.json();
-
-    if (!contactsData.success || contactsData.contacts.length === 0) {
-      document.getElementById('companies-hiring-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          Upload LinkedIn connections to see who you know at hiring companies!
-        </div>
-      `;
-      document.getElementById('companies-hiring-card').style.display = 'block';
-      return;
-    }
-
-    const allContacts = contactsData.contacts;
-
-    // Group companies by number of contacts + jobs
-    const companyMap = {};
-
-    savedJobs.forEach(job => {
-      const company = job.company;
-      if (!companyMap[company]) {
-        companyMap[company] = {
-          name: company,
-          jobs: [],
-          contacts: []
-        };
-      }
-      companyMap[company].jobs.push(job);
-    });
-
-    // Match contacts to companies
-    allContacts.forEach(contact => {
-      const contactCompany = contact.company || '';
-      Object.keys(companyMap).forEach(targetCompany => {
-        if (contactCompany.toLowerCase().includes(targetCompany.toLowerCase()) ||
-            targetCompany.toLowerCase().includes(contactCompany.toLowerCase())) {
-          companyMap[targetCompany].contacts.push(contact);
-        }
-      });
-    });
-
-    // Filter companies that have both jobs AND contacts
-    const companiesHiring = Object.values(companyMap)
-      .filter(c => c.contacts.length > 0)
-      .sort((a, b) => b.contacts.length - a.contacts.length);
-
-    if (companiesHiring.length === 0) {
-      document.getElementById('companies-hiring-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          No connections found at companies where you saved jobs<br>
-          <span style="font-size: 0.85rem;">Try expanding your LinkedIn network!</span>
-        </div>
-      `;
-    } else {
-      const html = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-          ${companiesHiring.map(company => `
-            <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px;">
-              <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 12px;">
-                <div style="flex: 1;">
-                  <h4 style="color: #22c55e; font-size: 1.1rem; margin-bottom: 4px;">${company.name}</h4>
-                  <div style="font-size: 0.85rem; color: #94a3b8;">
-                    ${company.jobs.length} job${company.jobs.length > 1 ? 's' : ''} saved • ${company.contacts.length} connection${company.contacts.length > 1 ? 's' : ''}
-                  </div>
-                </div>
-                <div style="background: #22c55e; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">HIRING</div>
-              </div>
-
-              <div style="margin-bottom: 12px;">
-                <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 6px;">Your connections:</div>
-                ${company.contacts.slice(0, 3).map(c => `
-                  <div style="font-size: 0.85rem; color: #e2e8f0; margin-bottom: 4px;">
-                    • ${c.first_name} ${c.last_name} - ${c.position || 'No title'}
-                  </div>
-                `).join('')}
-                ${company.contacts.length > 3 ? `<div style="font-size: 0.85rem; color: #64748b;">+${company.contacts.length - 3} more</div>` : ''}
-              </div>
-
-              <button class="btn btn-primary btn-sm btn-full" onclick="showCompanyContacts('${company.name}')" style="background: #22c55e; font-size: 0.85rem;">
-                👥 View All Connections
-              </button>
-            </div>
-          `).join('')}
-        </div>
-      `;
-      document.getElementById('companies-hiring-content').innerHTML = html;
-    }
-
-    document.getElementById('companies-hiring-card').style.display = 'block';
-
-  } catch (error) {
-    console.error('Failed to load companies hiring:', error);
-  }
-}
-
-async function loadHelpfulContacts() {
-  if (!sessionId) return;
-
-  try {
-    // Get saved jobs
-    const jobsRes = await fetch(`/api/saved-jobs?sessionId=${sessionId}`);
-    const jobsData = await jobsRes.json();
-    const savedJobs = jobsData.data?.savedJobs || [];
-
-    if (savedJobs.length === 0) {
-      document.getElementById('helpful-contacts-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          Save jobs in Tracker to see your connections at those companies!
-        </div>
-      `;
-      document.getElementById('helpful-contacts-card').style.display = 'block';
-      return;
-    }
-
-    // Get target companies from saved jobs
-    const targetCompanies = [...new Set(savedJobs.map(j => j.company))];
-
-    // Get all contacts
-    const contactsRes = await fetch(`/api/ica/contacts/${sessionId}?category=all`);
-    const contactsData = await contactsRes.json();
-
-    if (!contactsData.success || contactsData.contacts.length === 0) {
-      document.getElementById('helpful-contacts-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          Upload LinkedIn connections to see who can help!
-        </div>
-      `;
-      document.getElementById('helpful-contacts-card').style.display = 'block';
-      return;
-    }
-
-    // Find contacts at target companies
-    const helpfulContacts = contactsData.contacts.filter(contact => {
-      const contactCompany = (contact.company || '').toLowerCase();
-      return targetCompanies.some(target =>
-        contactCompany.includes(target.toLowerCase()) ||
-        target.toLowerCase().includes(contactCompany)
-      );
-    });
-
-    if (helpfulContacts.length === 0) {
-      document.getElementById('helpful-contacts-content').innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #64748b;">
-          No connections found at companies where you saved jobs
-        </div>
-      `;
-    } else {
-      const html = `
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          ${helpfulContacts.slice(0, 10).map(contact => {
-            // Find which saved jobs are at this company
-            const matchingJobs = savedJobs.filter(job =>
-              (contact.company || '').toLowerCase().includes(job.company.toLowerCase()) ||
-              job.company.toLowerCase().includes((contact.company || '').toLowerCase())
-            );
-
-            return `
-              <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <h4 style="color: #e2e8f0; font-size: 1rem; margin: 0;">${contact.first_name} ${contact.last_name}</h4>
-                    ${contact.ica_category === 'high_potential' ? '<span style="background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">HIGH POTENTIAL</span>' : ''}
-                  </div>
-                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px;">
-                    ${contact.position || 'No title'} at ${contact.company}
-                  </div>
-                  <div style="font-size: 0.8rem; color: #6366f1;">
-                    💼 You saved ${matchingJobs.length} job${matchingJobs.length > 1 ? 's' : ''} at this company
-                  </div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <a href="${contact.linkedin_profile_url}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 8px 16px; font-size: 0.85rem; white-space: nowrap;">LinkedIn</a>
-                  <button class="btn btn-primary btn-sm" onclick="requestReferral('${contact.id}', '${contact.first_name}', '${contact.company}')" style="padding: 8px 16px; font-size: 0.85rem; white-space: nowrap;">🤝 Ask for Referral</button>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-      document.getElementById('helpful-contacts-content').innerHTML = html;
-    }
-
-    document.getElementById('helpful-contacts-card').style.display = 'block';
-
-  } catch (error) {
-    console.error('Failed to load helpful contacts:', error);
-  }
-}
-
-function showCompanyContacts(companyName) {
-  // Use the existing findReferrals modal
-  findReferrals(companyName);
-}
-
-function requestReferral(contactId, contactName, company) {
-  const message = `Hi ${contactName},\n\nI hope you're doing well! I noticed you work at ${company} and I'm currently exploring opportunities there.\n\nI recently applied for [JOB TITLE] and would greatly appreciate if you could refer me or provide any insights about the role/team.\n\nMy background includes [YOUR KEY SKILLS/EXPERIENCE]. I've attached my resume for your reference.\n\nWould you be open to a quick chat about this opportunity?\n\nThank you!\nBest regards`;
-
-  navigator.clipboard.writeText(message).then(() => {
-    showToast('Referral request template copied! Customize and send via LinkedIn.', 'success');
-  });
-}
-
-// Call these when contacts load
-if (sessionId) {
-  loadIcaStats().then(() => {
-    loadIcaContacts().then(() => {
+      // Always show cards after successful load
       icaStatsCard.style.display = 'block';
       icaContactsCard.style.display = 'block';
       loadHotLeads();
