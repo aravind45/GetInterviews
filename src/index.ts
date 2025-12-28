@@ -1360,6 +1360,9 @@ app.use('/api/ica', require('./routes/ica').default);
 // Target Companies Routes
 app.use('/api/target-companies', require('./routes/targetCompanies').default);
 
+// Migration Routes
+app.use('/api/migrate-target-companies', require('./routes/migrate-target-companies').default);
+
 // LLM Providers endpoint
 app.get('/api/llm-providers', (req, res) => {
   try {

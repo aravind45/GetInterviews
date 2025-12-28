@@ -361,7 +361,46 @@
       </div>
     </div>
   </header>
-  
+
+  <!-- Global Resume Upload Bar -->
+  <div id="global-resume-bar" style="background: #12121a; border-bottom: 1px solid #1e1e2e; padding: 12px 24px;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <!-- No Resume Uploaded State -->
+      <div id="resume-empty-state" style="display: flex; align-items: center; gap: 16px; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">📄</span>
+          <div>
+            <div style="font-weight: 600; font-size: 0.95rem;">Upload Your Resume Once</div>
+            <div style="font-size: 0.8rem; color: #64748b;">Use it across all features - analyze, optimize, and find jobs</div>
+          </div>
+        </div>
+        <input type="file" id="global-resume-input" accept=".pdf,.doc,.docx" style="display: none;">
+        <button class="btn btn-primary" onclick="document.getElementById('global-resume-input').click()" style="white-space: nowrap;">
+          📤 Upload Resume
+        </button>
+      </div>
+
+      <!-- Resume Uploaded State -->
+      <div id="resume-loaded-state" style="display: none; align-items: center; gap: 16px; flex: 1; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.5rem;">✅</span>
+          <div>
+            <div style="font-weight: 600; font-size: 0.95rem;" id="global-resume-name">resume.pdf</div>
+            <div style="font-size: 0.8rem; color: #64748b;">
+              <span id="global-resume-status">Ready to use</span>
+              <span style="margin: 0 8px;">•</span>
+              <span id="global-resume-session">Session active</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="replaceGlobalResume()">🔄 Replace</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearGlobalResume()">❌ Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Auth Modal -->
   <div class="modal-overlay" id="auth-modal">
     <div class="modal" style="position: relative;">
@@ -847,6 +886,186 @@
 <script>
 // ========== AUTH & USER STATE ==========
 let currentUser = JSON.parse(localStorage.getItem('jobmatch_user') || 'null');
+
+// ========== GLOBAL RESUME MANAGER ==========
+// This manages ONE resume upload that works across ALL features
+let globalResumeState = {
+  file: null,
+  fileName: null,
+  sessionId: null,
+  resumeText: null,
+  profile: null,
+  uploadedAt: null
+};
+
+// Try to restore from sessionStorage on page load
+function restoreGlobalResume() {
+  const saved = sessionStorage.getItem('globalResumeState');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      // Check if session is still valid (24 hours)
+      if (parsed.uploadedAt && (Date.now() - parsed.uploadedAt < 24 * 60 * 60 * 1000)) {
+        globalResumeState = {
+          ...parsed,
+          file: null // Can't serialize File object, will need to re-upload if needed
+        };
+        window.sessionId = globalResumeState.sessionId; // Backward compatibility
+        updateGlobalResumeUI();
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to restore resume state:', e);
+    }
+  }
+  return false;
+}
+
+function saveGlobalResumeState() {
+  const toSave = {
+    ...globalResumeState,
+    file: null // Don't try to serialize File object
+  };
+  sessionStorage.setItem('globalResumeState', JSON.stringify(toSave));
+}
+
+function updateGlobalResumeUI() {
+  const emptyState = document.getElementById('resume-empty-state');
+  const loadedState = document.getElementById('resume-loaded-state');
+  const nameEl = document.getElementById('global-resume-name');
+  const statusEl = document.getElementById('global-resume-status');
+  const sessionEl = document.getElementById('global-resume-session');
+
+  if (globalResumeState.sessionId && globalResumeState.fileName) {
+    emptyState.style.display = 'none';
+    loadedState.style.display = 'flex';
+    nameEl.textContent = globalResumeState.fileName;
+
+    const age = Date.now() - (globalResumeState.uploadedAt || Date.now());
+    const hours = Math.floor(age / (1000 * 60 * 60));
+    const timeStr = hours < 1 ? 'Just now' : `${hours}h ago`;
+
+    statusEl.textContent = 'Ready to use';
+    sessionEl.textContent = `Uploaded ${timeStr}`;
+  } else {
+    emptyState.style.display = 'flex';
+    loadedState.style.display = 'none';
+  }
+}
+
+// Handle global resume upload
+document.getElementById('global-resume-input').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Show loading state
+  document.getElementById('resume-empty-state').innerHTML = `
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 1.5rem;">⏳</span>
+      <span>Processing ${file.name}...</span>
+    </div>
+  `;
+
+  try {
+    // Upload and extract profile in one go
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const response = await fetch('/api/extract-profile', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Store globally
+      globalResumeState = {
+        file: file,
+        fileName: file.name,
+        sessionId: data.data.sessionId,
+        resumeText: data.data.resumeText,
+        profile: data.data.profile,
+        uploadedAt: Date.now()
+      };
+
+      // Set for backward compatibility
+      window.sessionId = data.data.sessionId;
+
+      // Save to sessionStorage
+      saveGlobalResumeState();
+
+      // Update UI
+      updateGlobalResumeUI();
+
+      showToast(`✅ Resume uploaded! Now available to all features`, 'success');
+
+      // Refresh current tab's data
+      refreshCurrentTab();
+    } else {
+      throw new Error(data.error || 'Upload failed');
+    }
+  } catch (error) {
+    console.error('Global resume upload error:', error);
+    showToast('Failed to upload resume: ' + error.message, 'error');
+
+    // Reset UI
+    document.getElementById('resume-empty-state').innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.5rem;">📄</span>
+        <div>
+          <div style="font-weight: 600; font-size: 0.95rem;">Upload Your Resume Once</div>
+          <div style="font-size: 0.8rem; color: #64748b;">Use it across all features - analyze, optimize, and find jobs</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="document.getElementById('global-resume-input').click()" style="white-space: nowrap;">
+        📤 Upload Resume
+      </button>
+    `;
+  }
+
+  // Clear input so same file can be uploaded again
+  e.target.value = '';
+});
+
+function replaceGlobalResume() {
+  document.getElementById('global-resume-input').click();
+}
+
+function clearGlobalResume() {
+  if (!confirm('Clear your uploaded resume? You can always upload again.')) return;
+
+  globalResumeState = {
+    file: null,
+    fileName: null,
+    sessionId: null,
+    resumeText: null,
+    profile: null,
+    uploadedAt: null
+  };
+
+  window.sessionId = null;
+  sessionStorage.removeItem('globalResumeState');
+  updateGlobalResumeUI();
+  showToast('Resume cleared', 'info');
+}
+
+function refreshCurrentTab() {
+  const activeTab = document.querySelector('.main-tab.active');
+  if (!activeTab) return;
+
+  const tabName = activeTab.dataset.tab;
+
+  // Refresh tab-specific data
+  if (tabName === 'search' && globalResumeState.profile) {
+    displayProfile(globalResumeState.profile);
+  } else if (tabName === 'target-companies') {
+    loadTargetCompanies();
+  }
+}
+
+// Initialize on page load
+restoreGlobalResume();
 
 // Initialize auth UI on page load
 function initAuth() {
@@ -1545,6 +1764,15 @@ document.querySelectorAll('.main-tab').forEach(tab => {
     // Load data when switching to specific tabs
     if (tab.dataset.tab === 'target-companies') {
       loadTargetCompanies();
+    } else if (tab.dataset.tab === 'search' && globalResumeState.profile) {
+      // Auto-show profile if global resume exists
+      displayProfile(globalResumeState.profile);
+    } else if (tab.dataset.tab === 'analyze' || tab.dataset.tab === 'optimizer') {
+      // Enable buttons if global resume exists
+      if (globalResumeState.sessionId) {
+        checkAnalyzeReady();
+        checkOptimizerReady();
+      }
     }
   });
 });
@@ -1571,7 +1799,9 @@ function handleAnalyzeFile(file) {
 
 jobDescInput.addEventListener('input', checkAnalyzeReady);
 function checkAnalyzeReady() {
-  analyzeBtn.disabled = !(analyzeFile && jobDescInput.value.trim().length > 50);
+  // Check if we have EITHER a local file OR global resume
+  const hasResume = analyzeFile || (globalResumeState.file || globalResumeState.resumeText);
+  analyzeBtn.disabled = !(hasResume && jobDescInput.value.trim().length > 50);
 }
 
 analyzeBtn.addEventListener('click', async () => {
@@ -1580,11 +1810,23 @@ analyzeBtn.addEventListener('click', async () => {
   try {
     const selectedProvider = document.getElementById('llm-provider-select').value;
 
+    // Use global resume if no local file uploaded
+    const resumeToUse = analyzeFile || globalResumeState.file;
+
+    if (!resumeToUse) {
+      showToast('Please upload a resume first', 'error');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('resume', analyzeFile);
+    formData.append('resume', resumeToUse);
     formData.append('jobDescription', jobDescInput.value.trim());
     if (selectedProvider) {
       formData.append('llmProvider', selectedProvider);
+    }
+    // Pass existing sessionId to maintain session
+    if (globalResumeState.sessionId && !analyzeFile) {
+      formData.append('sessionId', globalResumeState.sessionId);
     }
 
     const res = await fetch('/api/analyze-match', { method: 'POST', body: formData });
@@ -2132,16 +2374,27 @@ extractBtn.addEventListener('click', async () => {
   }
 });
 
-function displayProfile() {
+function displayProfile(profileData) {
+  // Use provided profile or global resume profile or default profile variable
+  const profileToShow = profileData || globalResumeState.profile || profile;
+
+  if (!profileToShow) {
+    console.warn('No profile data available');
+    return;
+  }
+
   document.getElementById('search-upload-card').style.display = 'none';
   document.getElementById('profile-card').style.display = 'block';
-  
-  document.getElementById('profile-name').textContent = profile.name || 'Your Profile';
-  document.getElementById('profile-title').textContent = profile.currentTitle || '';
-  document.getElementById('profile-exp').textContent = `${profile.yearsExperience || '?'} years`;
-  document.getElementById('profile-level').textContent = profile.experienceLevel || '';
-  document.getElementById('profile-location').textContent = profile.location || '';
-  document.getElementById('profile-skills').innerHTML = (profile.hardSkills || []).slice(0, 8).map(s => `<span class="tag tag-info">${s}</span>`).join('');
+
+  document.getElementById('profile-name').textContent = profileToShow.name || 'Your Profile';
+  document.getElementById('profile-title').textContent = profileToShow.currentTitle || '';
+  document.getElementById('profile-exp').textContent = `${profileToShow.yearsExperience || '?'} years`;
+  document.getElementById('profile-level').textContent = profileToShow.experienceLevel || '';
+  document.getElementById('profile-location').textContent = profileToShow.location || '';
+  document.getElementById('profile-skills').innerHTML = (profileToShow.hardSkills || []).slice(0, 8).map(s => `<span class="tag tag-info">${s}</span>`).join('');
+
+  // Store for use in job search
+  profile = profileToShow;
   
   if (profile.targetTitles?.[0]) document.getElementById('search-query').value = profile.targetTitles[0];
   if (profile.location) document.getElementById('search-location').value = profile.location;
@@ -2883,7 +3136,8 @@ function handleOptimizerFile(file) {
 
 // Enable button when both inputs are ready
 function checkOptimizerReady() {
-  const hasFile = optimizerFile !== null;
+  // Check if we have EITHER a local file OR global resume
+  const hasFile = optimizerFile || globalResumeState.file || globalResumeState.resumeText;
   const hasJobDesc = optimizerJobDesc.value.trim().length >= 50;
   optimizerBtn.disabled = !(hasFile && hasJobDesc);
 }
@@ -2892,7 +3146,10 @@ optimizerJobDesc.addEventListener('input', checkOptimizerReady);
 
 // Optimize button click handler
 optimizerBtn.addEventListener('click', async () => {
-  if (!optimizerFile) {
+  // Use global resume if no local file uploaded
+  const resumeToUse = optimizerFile || globalResumeState.file;
+
+  if (!resumeToUse) {
     showToast('Please upload a resume first', 'error');
     return;
   }
@@ -2910,7 +3167,7 @@ optimizerBtn.addEventListener('click', async () => {
 
   try {
     const formData = new FormData();
-    formData.append('resume', optimizerFile);
+    formData.append('resume', resumeToUse);
     formData.append('jobDescription', jobDesc);
 
     const response = await fetch('/api/optimize-resume', {
@@ -3136,9 +3393,10 @@ async function loadTargetCompanies() {
   if (!sessionId) {
     document.getElementById('companies-container').innerHTML = `
       <div style="text-align: center; padding: 40px; color: #64748b;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
-        <h3 style="margin-bottom: 8px;">Session Required</h3>
-        <p>Please upload a resume first to start tracking companies</p>
+        <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
+        <h3 style="margin-bottom: 16px;">Get Started with Target Companies</h3>
+        <p style="margin-bottom: 16px;">Upload a resume to start tracking companies and their job openings</p>
+        <p style="font-size: 0.875rem; color: #94a3b8;">In the meantime, you can browse our suggestions to see what companies you might want to target!</p>
       </div>
     `;
     return;
