@@ -104,7 +104,7 @@
     /* Tags */
     .tag { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; margin: 3px; }
     .tag-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .tag-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .tag-danger { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
     .tag-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
     .tag-info { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
     
@@ -2874,26 +2874,29 @@ function downloadOptimizedResume() {
     return;
   }
 
-  // Build optimized resume text
+  // Build complete optimized resume text
   let resumeText = '';
   const data = window.lastOptimizationData;
 
   (data.sections || []).forEach(section => {
-    resumeText += `\n${section.title}\n${'='.repeat(section.title.length)}\n\n`;
+    resumeText += `${section.title}\n${'='.repeat(section.title.length)}\n\n`;
 
     if (section.bullets) {
+      // Experience section with bullets
       section.bullets.forEach(bullet => {
-        resumeText += `• ${bullet.after}\n`;
+        resumeText += `• ${bullet.after}\n\n`;
       });
     } else if (Array.isArray(section.after)) {
-      resumeText += section.after.join(', ') + '\n';
+      // Skills section
+      resumeText += section.after.join(', ') + '\n\n';
     } else {
-      resumeText += section.after + '\n';
+      // Summary or other text sections
+      resumeText += section.after + '\n\n';
     }
   });
 
-  // Create downloadable text file (PDF generation would need a library)
-  const blob = new Blob([resumeText], { type: 'text/plain' });
+  // Create downloadable text file
+  const blob = new Blob([resumeText.trim()], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -2901,7 +2904,7 @@ function downloadOptimizedResume() {
   a.click();
   URL.revokeObjectURL(url);
 
-  showToast('Resume downloaded! (Convert to PDF using Google Docs)', 'success');
+  showToast('Resume downloaded! Paste into Google Docs and save as PDF', 'success');
 }
 
 function copyOptimizedResume() {
@@ -2914,20 +2917,20 @@ function copyOptimizedResume() {
   const data = window.lastOptimizationData;
 
   (data.sections || []).forEach(section => {
-    resumeText += `\n${section.title}\n${'='.repeat(section.title.length)}\n\n`;
+    resumeText += `${section.title}\n${'='.repeat(section.title.length)}\n\n`;
 
     if (section.bullets) {
       section.bullets.forEach(bullet => {
-        resumeText += `• ${bullet.after}\n`;
+        resumeText += `• ${bullet.after}\n\n`;
       });
     } else if (Array.isArray(section.after)) {
-      resumeText += section.after.join(', ') + '\n';
+      resumeText += section.after.join(', ') + '\n\n';
     } else {
-      resumeText += section.after + '\n';
+      resumeText += section.after + '\n\n';
     }
   });
 
-  navigator.clipboard.writeText(resumeText).then(() => {
+  navigator.clipboard.writeText(resumeText.trim()).then(() => {
     showToast('Optimized resume copied to clipboard!', 'success');
   }).catch(() => {
     showToast('Failed to copy', 'error');
