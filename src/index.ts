@@ -351,45 +351,99 @@ Return ONLY this JSON:
 
     // Save resume to database
     const encryptedContent = Buffer.from(resumeText); // In production, encrypt this
-    const resumeAnalysis = await pool.query(
-      `INSERT INTO resume_analyses
-       (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
-        target_job_title, job_description, llm_provider, status, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', NOW() + INTERVAL '30 days')
-       RETURNING id`,
-      [
-        sessionUuid,
-        fileHash,
-        encryptedContent,
-        req.file.originalname,
-        path.extname(req.file.originalname).substring(1),
-        req.file.size,
-        'General Position', // Could extract from JD
-        jobDescription,
-        selectedProvider
-      ]
-    );
+
+    // Try with llm_provider column first, fallback to without if column doesn't exist
+    let resumeAnalysis;
+    try {
+      resumeAnalysis = await pool.query(
+        `INSERT INTO resume_analyses
+         (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
+          target_job_title, job_description, llm_provider, status, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', NOW() + INTERVAL '30 days')
+         RETURNING id`,
+        [
+          sessionUuid,
+          fileHash,
+          encryptedContent,
+          req.file.originalname,
+          path.extname(req.file.originalname).substring(1),
+          req.file.size,
+          'General Position', // Could extract from JD
+          jobDescription,
+          selectedProvider
+        ]
+      );
+    } catch (colError: any) {
+      // Fallback: column might not exist yet
+      if (colError.message && colError.message.includes('llm_provider')) {
+        console.warn('llm_provider column not found, using legacy insert');
+        resumeAnalysis = await pool.query(
+          `INSERT INTO resume_analyses
+           (session_id, file_hash, encrypted_content, original_filename, file_type, file_size,
+            target_job_title, job_description, status, expires_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', NOW() + INTERVAL '30 days')
+           RETURNING id`,
+          [
+            sessionUuid,
+            fileHash,
+            encryptedContent,
+            req.file.originalname,
+            path.extname(req.file.originalname).substring(1),
+            req.file.size,
+            'General Position',
+            jobDescription
+          ]
+        );
+      } else {
+        throw colError;
+      }
+    }
 
     const analysisId = resumeAnalysis.rows[0].id;
 
-    // Cache the analysis result
-    await pool.query(
-      `INSERT INTO diagnosis_results
-       (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
-        model_used, llm_provider, resume_processing_time, analysis_time)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        analysisId,
-        realisticScore,
-        JSON.stringify(analysis),
-        realisticScore >= 70,
-        100,
-        modelUsed,
-        selectedProvider,
-        0,
-        0
-      ]
-    );
+    // Cache the analysis result with backwards compatibility
+    try {
+      await pool.query(
+        `INSERT INTO diagnosis_results
+         (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
+          model_used, llm_provider, resume_processing_time, analysis_time)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          analysisId,
+          realisticScore,
+          JSON.stringify(analysis),
+          realisticScore >= 70,
+          100,
+          modelUsed,
+          selectedProvider,
+          0,
+          0
+        ]
+      );
+    } catch (diagError: any) {
+      // Fallback: column might not exist yet
+      if (diagError.message && diagError.message.includes('llm_provider')) {
+        console.warn('llm_provider column not found in diagnosis_results, using legacy insert');
+        await pool.query(
+          `INSERT INTO diagnosis_results
+           (analysis_id, overall_confidence, confidence_explanation, is_competitive, data_completeness,
+            model_used, resume_processing_time, analysis_time)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            analysisId,
+            realisticScore,
+            JSON.stringify(analysis),
+            realisticScore >= 70,
+            100,
+            modelUsed,
+            0,
+            0
+          ]
+        );
+      } else {
+        throw diagError;
+      }
+    }
 
     console.log(`✅ Saved analysis to database with realistic score: ${realisticScore}%`);
 
