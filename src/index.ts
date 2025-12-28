@@ -1,3 +1,7 @@
+// Load environment variables (for local development - Vercel handles this automatically)
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -1352,6 +1356,9 @@ Return ONLY the JSON array, no additional text.`;
 
 // ICA Routes
 app.use('/api/ica', require('./routes/ica').default);
+
+// Target Companies Routes
+app.use('/api/target-companies', require('./routes/targetCompanies').default);
 
 // LLM Providers endpoint
 app.get('/api/llm-providers', (req, res) => {

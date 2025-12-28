@@ -29,7 +29,8 @@
       "Bash(git fetch:*)",
       "Bash(npm run test:providers:*)",
       "Bash(git restore:*)",
-      "Bash(vercel logs:*)"
+      "Bash(vercel logs:*)",
+      "Bash(echo $OPENAI_API_KEY)"
     ]
   }
 }
