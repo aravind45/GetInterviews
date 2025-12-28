@@ -2655,6 +2655,59 @@ if (sessionId) {
     });
   });
 }
+
+// ========== RESUME OPTIMIZER TAB ==========
+let optimizerFile = null;
+
+// Upload zone handlers
+const optimizerZone = document.getElementById('optimizer-upload-zone');
+const optimizerInput = document.getElementById('optimizer-resume-input');
+const optimizerJobDesc = document.getElementById('optimizer-job-description');
+const optimizerBtn = document.getElementById('optimize-resume-btn');
+
+optimizerZone.addEventListener('click', () => optimizerInput.click());
+optimizerZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  optimizerZone.style.borderColor = '#6366f1';
+});
+optimizerZone.addEventListener('dragleave', () => {
+  optimizerZone.style.borderColor = optimizerFile ? '#10b981' : '#2e2e3e';
+});
+optimizerZone.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleOptimizerFile(e.dataTransfer.files[0]);
+});
+optimizerInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleOptimizerFile(e.target.files[0]);
+});
+
+function handleOptimizerFile(file) {
+  if (!file.name.match(/\.(pdf|doc|docx)$/i)) {
+    showToast('Please upload PDF or Word document', 'error');
+    return;
+  }
+  optimizerFile = file;
+  document.getElementById('optimizer-file-name').textContent = '✓ ' + file.name;
+  document.getElementById('optimizer-file-name').style.display = 'block';
+  optimizerZone.classList.add('has-file');
+  checkOptimizerReady();
+}
+
+// Enable button when both inputs are ready
+function checkOptimizerReady() {
+  const hasFile = optimizerFile !== null;
+  const hasJobDesc = optimizerJobDesc.value.trim().length >= 50;
+  optimizerBtn.disabled = !(hasFile && hasJobDesc);
+}
+
+optimizerJobDesc.addEventListener('input', checkOptimizerReady);
+
+// Optimize button click handler (will add API call in Phase 3)
+optimizerBtn.addEventListener('click', async () => {
+  console.log('Optimize button clicked - API call will be added in Phase 3');
+  showToast('Optimization feature coming in next phase!', 'success');
+});
+
 </script>
 </body>
 </html>
