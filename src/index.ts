@@ -1164,6 +1164,173 @@ app.use('/api/ica', require('./routes/ica').default);
 
 // Health & Static
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// ========== RESUME OPTIMIZER ENDPOINT ==========
+app.post('/api/optimize-resume', upload.single('resume'), async (req, res) => {
+  try {
+    const { jobDescription } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Resume file required' });
+    }
+
+    if (!jobDescription || jobDescription.trim().length < 50) {
+      return res.status(400).json({ success: false, error: 'Job description required (min 50 chars)' });
+    }
+
+    // Extract resume text
+    const resumeText = await extractResumeText(req.file);
+
+    // Build comprehensive audit and optimization prompt
+    const prompt = `You are a professional resume writer and ATS optimization expert.
+
+RESUME:
+${resumeText}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+TASK: Audit this resume using the 10-point checklist below, then provide an optimized version.
+
+AUDIT CHECKLIST:
+1. Target Role Alignment (3 checks)
+   - Job title matches target role
+   - Keywords aligned with job description
+   - Industry-specific language used
+
+2. Summary Section (4 checks if present)
+   - No buzzwords (results-driven, dynamic, etc.)
+   - Clearly states who, what, business impact
+   - Tailored to specific role
+   - 2-3 lines maximum
+
+3. Experience Section (4 checks)
+   - Each role supports target job
+   - Irrelevant/junior roles removed or condensed
+   - Most recent 5-10 years emphasized
+   - No task-only bullets
+
+4. Bullet Quality (6 checks per bullet)
+   - Starts with strong action verb
+   - Describes problem, action, outcome
+   - Includes metrics (%, $, time, scale)
+   - Shows ownership/decision-making
+   - Avoids internal jargon
+   - No task-only descriptions
+
+5. Skills Section (4 checks)
+   - Only modern, relevant skills
+   - Tools match job description
+   - No outdated or obvious skills
+   - Grouped logically
+
+6. Formatting & Readability (4 checks)
+   - One page (mid) or two (senior+)
+   - No long paragraphs; bullets ≤2 lines
+   - Consistent formatting
+   - Easy to scan in 10 seconds
+
+7. ATS Optimization (4 checks)
+   - Standard section headers
+   - No tables/text boxes/graphics
+   - No headers/footers with critical info
+   - PDF or DOCX format
+
+8. Results & Impact Test (3 checks)
+   - Clear what changed because of candidate
+   - Outcomes tied to revenue/efficiency/risk/scale/users
+   - Recruiter wants to interview after 30 seconds
+
+9. Customization Check (4 checks)
+   - Customized for THIS job
+   - Skills reordered to match job priority
+   - Bullets adjusted for role expectations
+   - Keywords mirrored from JD
+
+10. Final Sanity (4 checks)
+    - No spelling/grammar issues
+    - No unexplained acronyms
+    - LinkedIn matches resume
+    - Clear career story, not task list
+
+OUTPUT FORMAT (JSON):
+{
+  "auditScore": {
+    "total": "6/10",
+    "sections": [
+      {
+        "name": "Target Role Alignment",
+        "passed": 2,
+        "total": 3,
+        "issues": ["Missing keywords: X, Y", "Title doesn't match"]
+      },
+      ... (all 10 sections)
+    ]
+  },
+  "sections": [
+    {
+      "title": "Summary",
+      "before": "original text",
+      "after": "optimized text",
+      "changes": ["Removed buzzword 'results-driven'", "Added specific value: Director of AI"]
+    },
+    {
+      "title": "Experience - Senior Data Engineer",
+      "bullets": [
+        {
+          "before": "Responsible for data pipelines",
+          "after": "Built and optimized data pipelines supporting 50M+ records, reducing processing time by 32%",
+          "changes": ["Added metrics", "Converted task to outcome"]
+        }
+      ]
+    },
+    {
+      "title": "Skills",
+      "before": ["MS Office", "SDLC", "Python", "React"],
+      "after": ["Python", "React", "TensorFlow", "AWS"],
+      "changes": ["Removed: MS Office (outdated)", "Removed: SDLC (generic)", "Added: TensorFlow (matches JD)"]
+    }
+  ],
+  "changesSummary": "Removed 3 generic buzzwords, rewrote 5 bullets with metrics, removed 2 outdated skills, added 4 JD keywords"
+}`;
+
+    // Call Groq API
+    const completion = await groq.chat.completions.create({
+      messages: [{
+        role: 'system',
+        content: 'You are a professional resume writer. Return ONLY valid JSON, no markdown.'
+      }, {
+        role: 'user',
+        content: prompt
+      }],
+      model: 'llama-3.1-8b-instant',
+      temperature: 0.3,
+      max_tokens: 4000
+    });
+
+    const content = completion.choices[0]?.message?.content || '';
+
+    // Extract JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Invalid AI response format');
+    }
+
+    const optimization = JSON.parse(jsonMatch[0]);
+
+    res.json({
+      success: true,
+      data: optimization
+    });
+
+  } catch (error: any) {
+    console.error('Resume optimization error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Optimization failed'
+    });
+  }
+});
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 const PORT = process.env.PORT || 3000;
