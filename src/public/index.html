@@ -1533,7 +1533,11 @@ function displayAnalysisResults(d) {
       ${d.llmProvider || d.modelUsed ? `
         <div style="margin-top:16px; padding:8px 16px; background:rgba(100,116,139,0.1); border-radius:8px; display:inline-block;">
           <span style="font-size:0.75rem; color:#94a3b8;">🤖 Analyzed by:</span>
-          <span style="font-size:0.85rem; color:#cbd5e1; margin-left:8px; font-weight:500;">${d.llmProvider === 'claude' ? 'Claude (Anthropic)' : 'Groq (Llama)'}</span>
+          <span style="font-size:0.85rem; color:#cbd5e1; margin-left:8px; font-weight:500;">${
+            d.llmProvider === 'claude' ? 'Claude (Anthropic)' :
+            d.llmProvider === 'openai' ? 'GPT-4 (OpenAI)' :
+            'Groq (Llama)'
+          }</span>
           ${d.modelUsed ? `<span style="font-size:0.7rem; color:#64748b; margin-left:6px;">(${d.modelUsed})</span>` : ''}
         </div>
       ` : ''}
