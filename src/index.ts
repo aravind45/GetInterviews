@@ -1201,20 +1201,28 @@ app.use('/api/ica', require('./routes/ica').default);
 
 // LLM Providers endpoint
 app.get('/api/llm-providers', (req, res) => {
-  const { getAvailableProviders, getDefaultProvider } = require('./services/llmProvider');
-  const providers = getAvailableProviders();
+  try {
+    const { getAvailableProviders, getDefaultProvider } = require('./services/llmProvider');
+    const providers = getAvailableProviders();
 
-  res.json({
-    success: true,
-    data: {
-      providers: providers.map((p: any) => ({
-        name: p.name,
-        displayName: p.displayName,
-        available: p.isAvailable()
-      })),
-      default: getDefaultProvider()
-    }
-  });
+    res.json({
+      success: true,
+      data: {
+        providers: providers.map((p: any) => ({
+          name: p.name,
+          displayName: p.displayName,
+          available: p.isAvailable()
+        })),
+        default: getDefaultProvider()
+      }
+    });
+  } catch (error: any) {
+    console.error('Error in /api/llm-providers:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to load providers'
+    });
+  }
 });
 
 // Health & Static
