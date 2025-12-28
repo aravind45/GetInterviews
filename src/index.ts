@@ -283,16 +283,8 @@ Return ONLY this JSON:
           selectedProvider = 'groq';
         } else {
           try {
-            // Try different import methods for Anthropic SDK
-            let Anthropic;
-            try {
-              Anthropic = require('@anthropic-ai/sdk').default;
-              if (!Anthropic) {
-                Anthropic = require('@anthropic-ai/sdk');
-              }
-            } catch {
-              Anthropic = require('@anthropic-ai/sdk');
-            }
+            // Import Anthropic SDK (CommonJS syntax)
+            const Anthropic = require('@anthropic-ai/sdk');
 
             console.log('✓ Anthropic SDK loaded');
             const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

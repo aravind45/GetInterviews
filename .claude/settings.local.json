@@ -25,7 +25,11 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nRedesign Find Jobs - Job URL Analyzer + Company Watchlist\n\nMAJOR REDESIGN:\nComplete overhaul of Find Jobs tab to make it actually useful for job seekers\n\nNEW FEATURE 1: Job URL Analyzer\n- Paste any job URL (LinkedIn, Indeed, company career page)\n- Redirects to Analyze tab with URL pre-filled\n- Get instant match score, gap analysis, referrals\n- One workflow: Find job → Paste URL → Analyze → Save\n\nNEW FEATURE 2: Company Watchlist  \n- Track 10-20 target companies in one place\n- Add companies: Google, Microsoft, Amazon, etc.\n- Each card shows \"View Connections\" button\n- Instantly see your LinkedIn referrals at each company\n- Persisted in localStorage\n\nWHAT''S PRESERVED (No Breaking Changes):\n- Legacy resume upload still available (hidden by default)\n- Click \"Or upload resume to search\" to access old workflow\n- All existing profile extraction code intact\n- Job search with external links still works\n- Analyze, Tracker, Networking tabs unchanged\n\nWHY THIS IS BETTER:\nOLD APPROACH (Useless):\n- Generated fake sample jobs\n- No real job data\n- External links to Google searches\n- Not helpful for actual job hunting\n\nNEW APPROACH (Useful):\n- Works with real jobs you found\n- Analyze any job posting instantly\n- Strategic company targeting\n- Referral discovery built-in\n- Organized watchlist of target companies\n\nTECHNICAL:\n- Company watchlist stored in localStorage\n- renderWatchlist() displays company cards\n- addToWatchlist() / removeFromWatchlist() CRUD operations\n- Job URL analyzer redirects to Analyze tab\n- All existing event listeners and APIs preserved\n\nUSER WORKFLOW:\n1. Find job on LinkedIn/Indeed\n2. Copy URL → Paste in Find Jobs\n3. Analyze match score + find referrals\n4. Save to Tracker\n5. Add company to watchlist for future monitoring\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git revert:*)",
       "Bash(git branch:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git fetch:*)",
+      "Bash(npm run test:providers:*)",
+      "Bash(git restore:*)",
+      "Bash(vercel logs:*)"
     ]
   }
 }
