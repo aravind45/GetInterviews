@@ -365,15 +365,18 @@ Return ONLY this JSON:
       if (selectedProvider === 'groq') {
         // Use Groq (default or fallback)
         console.log('🤖 Calling Groq API...');
+        const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+        console.log(`✓ Using Groq model: ${groqModel}`);
+
         const completion = await groq.chat.completions.create({
-          model: 'llama-3.1-8b-instant',
+          model: groqModel,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
           max_tokens: 3000
         });
 
         responseText = completion.choices[0]?.message?.content || '';
-        modelUsed = 'llama-3.1-8b-instant';
+        modelUsed = groqModel;
         selectedProvider = 'groq';
         console.log('✅ Groq response received');
       }
@@ -381,15 +384,16 @@ Return ONLY this JSON:
       console.error('❌ LLM Error:', llmError.message);
       // Fallback to Groq if there's any error with provider selection
       console.log('⚠️  Falling back to Groq due to error');
+      const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
       const completion = await groq.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: groqModel,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
         max_tokens: 3000
       });
 
       responseText = completion.choices[0]?.message?.content || '';
-      modelUsed = 'llama-3.1-8b-instant';
+      modelUsed = groqModel;
       selectedProvider = 'groq';
     }
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
