@@ -1471,13 +1471,23 @@ function displayAnalysisResults(d) {
         <div class="score-label">Skill Match</div>
       </div>
       <div class="verdict-badge ${scoreClass}">${accurateVerdict}</div>
-      ${d.aiOriginalScore && d.aiOriginalScore !== score ? `
-        <p style="color:#64748b; font-size:0.85rem; margin-top:8px;">
-          AI Assessment: ${d.aiOriginalScore}%
-          <span style="color:#94a3b8;">| Skill-Based: ${score}%</span>
-        </p>
+      ${d.aiOriginalScore ? `
+        <div style="margin-top:12px; padding:10px; background:rgba(100,116,139,0.1); border-radius:8px; max-width:400px; margin-left:auto; margin-right:auto;">
+          <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:4px;">Score Comparison:</div>
+          <div style="display:flex; justify-content:space-around; gap:16px;">
+            <div>
+              <div style="font-size:0.75rem; color:#64748b;">AI Assessment</div>
+              <div style="font-size:1.1rem; font-weight:600; color:#a5b4fc;">${d.aiOriginalScore}%</div>
+            </div>
+            <div style="border-left:1px solid #2e2e3e;"></div>
+            <div>
+              <div style="font-size:0.75rem; color:#64748b;">Skill-Based</div>
+              <div style="font-size:1.1rem; font-weight:600; color:#10b981;">${score}%</div>
+            </div>
+          </div>
+        </div>
       ` : ''}
-      <p style="color:#94a3b8; max-width:600px; margin:0 auto;">${d.summary || ''}</p>
+      <p style="color:#94a3b8; max-width:600px; margin:0 auto; margin-top:12px;">${d.summary || ''}</p>
     </div>
 
     <!-- 4-COLUMN ACTION CARDS -->
