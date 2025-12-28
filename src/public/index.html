@@ -1472,18 +1472,14 @@ function displayAnalysisResults(d) {
       </div>
       <div class="verdict-badge ${scoreClass}">${accurateVerdict}</div>
       ${d.aiOriginalScore ? `
-        <div style="margin-top:12px; padding:10px; background:rgba(100,116,139,0.1); border-radius:8px; max-width:400px; margin-left:auto; margin-right:auto;">
-          <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:4px;">Score Comparison:</div>
-          <div style="display:flex; justify-content:space-around; gap:16px;">
-            <div>
-              <div style="font-size:0.75rem; color:#64748b;">AI Assessment</div>
-              <div style="font-size:1.1rem; font-weight:600; color:#a5b4fc;">${d.aiOriginalScore}%</div>
-            </div>
-            <div style="border-left:1px solid #2e2e3e;"></div>
-            <div>
-              <div style="font-size:0.75rem; color:#64748b;">Skill-Based</div>
-              <div style="font-size:1.1rem; font-weight:600; color:#10b981;">${score}%</div>
-            </div>
+        <div style="display:flex; justify-content:center; gap:20px; margin-top:16px;">
+          <div style="background:linear-gradient(135deg, rgba(165,180,252,0.15), rgba(139,92,246,0.1)); padding:12px 20px; border-radius:10px; border:1px solid rgba(165,180,252,0.2);">
+            <div style="font-size:0.75rem; color:#a5b4fc; margin-bottom:4px; text-align:center;">AI Assessment</div>
+            <div style="font-size:1.2rem; font-weight:600; color:#c4b5fd; text-align:center;">${d.aiOriginalScore}%</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1)); padding:12px 20px; border-radius:10px; border:1px solid rgba(16,185,129,0.2);">
+            <div style="font-size:0.75rem; color:#10b981; margin-bottom:4px; text-align:center;">Skill-Based</div>
+            <div style="font-size:1.2rem; font-weight:600; color:#34d399; text-align:center;">${score}%</div>
           </div>
         </div>
       ` : ''}
