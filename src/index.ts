@@ -277,25 +277,52 @@ Return ONLY this JSON:
       if (selectedProvider === 'claude') {
         // Use Claude
         console.log('🤖 Calling Claude API...');
-        const Anthropic = require('@anthropic-ai/sdk').default;
 
         if (!process.env.ANTHROPIC_API_KEY) {
           console.warn('⚠️  ANTHROPIC_API_KEY not set, falling back to Groq');
           selectedProvider = 'groq';
         } else {
-          const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-          const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
+          try {
+            // Try different import methods for Anthropic SDK
+            let Anthropic;
+            try {
+              Anthropic = require('@anthropic-ai/sdk').default;
+              if (!Anthropic) {
+                Anthropic = require('@anthropic-ai/sdk');
+              }
+            } catch {
+              Anthropic = require('@anthropic-ai/sdk');
+            }
 
-          const response = await claude.messages.create({
-            model: claudeModel,
-            max_tokens: 4000,
-            temperature: 0.3,
-            messages: [{ role: 'user', content: prompt }]
-          });
+            console.log('✓ Anthropic SDK loaded');
+            const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+            const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
 
-          responseText = response.content[0].type === 'text' ? response.content[0].text : '';
-          modelUsed = claudeModel;
-          console.log('✅ Claude response received');
+            console.log(`✓ Calling Claude with model: ${claudeModel}`);
+
+            const response = await claude.messages.create({
+              model: claudeModel,
+              max_tokens: 4000,
+              temperature: 0.3,
+              messages: [{ role: 'user', content: prompt }]
+            });
+
+            const content = response.content[0];
+            responseText = content.type === 'text' ? content.text : '';
+            modelUsed = claudeModel;
+            console.log('✅ Claude response received');
+          } catch (claudeError: any) {
+            console.error('❌ Claude API Error:', claudeError.message);
+            if (claudeError.status) {
+              console.error(`   HTTP Status: ${claudeError.status}`);
+            }
+            if (claudeError.error) {
+              console.error(`   Error details:`, JSON.stringify(claudeError.error));
+            }
+            console.log('   Falling back to Groq...');
+            // Fall back to Groq
+            selectedProvider = 'groq';
+          }
         }
       }
 
