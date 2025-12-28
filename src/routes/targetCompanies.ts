@@ -238,43 +238,43 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   let paramCounter = 3;
 
   if (companyName !== undefined) {
-    updates.push(`company_name = $${paramCounter++}`);
+    updates.push(`company_name = $${String(paramCounter++)}`);
     values.push(companyName);
   }
   if (companyDomain !== undefined) {
-    updates.push(`company_domain = $${paramCounter++}`);
+    updates.push(`company_domain = $${String(paramCounter++)}`);
     values.push(companyDomain);
   }
   if (industry !== undefined) {
-    updates.push(`industry = $${paramCounter++}`);
+    updates.push(`industry = $${String(paramCounter++)}`);
     values.push(industry);
   }
   if (companySize !== undefined) {
-    updates.push(`company_size = $${paramCounter++}`);
+    updates.push(`company_size = $${String(paramCounter++)}`);
     values.push(companySize);
   }
   if (priority !== undefined) {
-    updates.push(`priority = $${paramCounter++}`);
+    updates.push(`priority = $${String(paramCounter++)}`);
     values.push(priority);
   }
   if (notes !== undefined) {
-    updates.push(`notes = $${paramCounter++}`);
+    updates.push(`notes = $${String(paramCounter++)}`);
     values.push(notes);
   }
   if (targetRoles !== undefined) {
-    updates.push(`target_roles = $${paramCounter++}`);
+    updates.push(`target_roles = $${String(paramCounter++)}`);
     values.push(targetRoles);
   }
   if (locationPreference !== undefined) {
-    updates.push(`location_preference = $${paramCounter++}`);
+    updates.push(`location_preference = $${String(paramCounter++)}`);
     values.push(locationPreference);
   }
   if (referralContact !== undefined) {
-    updates.push(`referral_contact = $${paramCounter++}`);
+    updates.push(`referral_contact = $${String(paramCounter++)}`);
     values.push(referralContact);
   }
   if (isActive !== undefined) {
-    updates.push(`is_active = $${paramCounter++}`);
+    updates.push(`is_active = $${String(paramCounter++)}`);
     values.push(isActive);
   }
 
