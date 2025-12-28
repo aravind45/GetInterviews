@@ -235,6 +235,59 @@
     .saved-indicator { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
     .saved-indicator .icon { font-size: 1.2rem; }
     .saved-indicator .text { font-size: 0.9rem; color: #10b981; }
+
+    /* Target Companies Styles */
+    .stat-card { background: #1e1e2e; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .stat-label { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; }
+
+    .company-card { background: #1e1e2e; border-radius: 12px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #6366f1; position: relative; transition: all 0.2s; }
+    .company-card:hover { background: #252530; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    .company-card.priority-1 { border-left-color: #ef4444; }
+    .company-card.priority-2 { border-left-color: #f59e0b; }
+    .company-card.priority-3 { border-left-color: #6366f1; }
+    .company-card.priority-4 { border-left-color: #64748b; }
+    .company-card.priority-5 { border-left-color: #475569; }
+    .company-card.inactive { opacity: 0.5; }
+
+    .company-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+    .company-info { flex: 1; }
+    .company-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .company-meta { font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .company-meta-item { display: flex; align-items: center; gap: 4px; }
+
+    .priority-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .priority-badge.p1 { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .priority-badge.p2 { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .priority-badge.p3 { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+    .priority-badge.p4 { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    .priority-badge.p5 { background: rgba(71, 85, 105, 0.2); color: #64748b; }
+
+    .company-actions { display: flex; gap: 8px; }
+    .company-actions .btn { padding: 8px 12px; font-size: 0.8rem; }
+    .checkbox-container { display: flex; align-items: center; margin-right: 12px; }
+    .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+
+    .company-notes { background: #0a0a0f; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; color: #94a3b8; }
+
+    .suggestions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; max-height: 60vh; overflow-y: auto; padding: 4px; }
+    .suggestion-card { background: #1e1e2e; border: 2px solid #2e2e3e; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .suggestion-card:hover { border-color: #6366f1; background: #252530; }
+    .suggestion-card.selected { border-color: #6366f1; background: rgba(99, 102, 241, 0.1); }
+    .suggestion-card h4 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .suggestion-card .industry { font-size: 0.75rem; color: #6366f1; background: rgba(99, 102, 241, 0.15); padding: 2px 8px; border-radius: 8px; display: inline-block; margin-bottom: 8px; }
+    .suggestion-card .description { font-size: 0.85rem; color: #94a3b8; line-height: 1.4; }
+
+    .modal.large { max-width: 800px; }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+    .job-card { background: #1e1e2e; border-radius: 12px; padding: 18px; margin-bottom: 12px; border-left: 3px solid #6366f1; }
+    .job-card:hover { background: #252530; }
+    .job-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .job-company { font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px; }
+    .job-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.85rem; color: #64748b; margin-bottom: 12px; }
+    .job-actions { display: flex; gap: 8px; }
+    .badge-new { background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -278,6 +331,7 @@
         <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
         <div class="main-tab" data-tab="optimizer">📝 Resume Optimizer</div>
         <div class="main-tab" data-tab="search">💼 Find Jobs</div>
+        <div class="main-tab" data-tab="target-companies">🏢 Target Companies</div>
         <div class="main-tab" data-tab="networking">👥 Networking</div>
       </nav>
       
@@ -624,7 +678,71 @@
       </div>
     </section>
 
-    <!-- TAB 3: Find Jobs -->
+    <!-- TAB 4: Target Companies -->
+    <section class="section" id="tab-target-companies">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🏢 Target Companies</h2>
+          <p class="card-subtitle">Manage your dream companies and search for jobs specifically at those organizations</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div id="target-companies-stats" class="grid-4" style="margin-bottom: 24px; display: none;">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total-companies">0</div>
+            <div class="stat-label">Target Companies</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-new-jobs">0</div>
+            <div class="stat-label">New Jobs Found</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-high-priority">0</div>
+            <div class="stat-label">High Priority</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total-jobs">0</div>
+            <div class="stat-label">Total Jobs</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <button class="btn btn-primary" onclick="showAddCompanyModal()">
+            ➕ Add Company
+          </button>
+          <button class="btn btn-secondary" onclick="showSuggestionsModal()">
+            💡 Browse Suggestions
+          </button>
+          <button class="btn btn-secondary" onclick="searchSelectedCompanies()">
+            🔍 Search Selected Companies
+          </button>
+        </div>
+
+        <!-- Companies List -->
+        <div id="companies-container">
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
+            <h3 style="margin-bottom: 8px;">No target companies yet</h3>
+            <p>Add companies you're interested in working for</p>
+            <button class="btn btn-primary" onclick="showSuggestionsModal()" style="margin-top: 16px;">
+              Get Started with Suggestions
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jobs Found at Target Companies -->
+      <div class="card" id="target-company-jobs-card" style="display: none;">
+        <div class="card-header">
+          <h2 class="card-title">📋 Jobs at Target Companies</h2>
+          <p class="card-subtitle">Openings discovered at your target companies</p>
+        </div>
+        <div id="target-company-jobs-container"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Networking (ICA) -->
     <section class="section" id="tab-networking">
       <div class="card">
         <div class="card-header">
@@ -1423,6 +1541,11 @@ document.querySelectorAll('.main-tab').forEach(tab => {
     tab.classList.add('active');
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+
+    // Load data when switching to specific tabs
+    if (tab.dataset.tab === 'target-companies') {
+      loadTargetCompanies();
+    }
   });
 });
 
@@ -3000,6 +3123,320 @@ function copyOptimizedResume() {
   }).catch(() => {
     showToast('Failed to copy', 'error');
   });
+}
+
+// ========================================
+// TARGET COMPANIES FUNCTIONALITY
+// ========================================
+let targetCompaniesData = [];
+let selectedCompanyIds = new Set();
+
+async function loadTargetCompanies() {
+  const sessionId = window.sessionId;
+  if (!sessionId) {
+    document.getElementById('companies-container').innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #64748b;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
+        <h3 style="margin-bottom: 8px;">Session Required</h3>
+        <p>Please upload a resume first to start tracking companies</p>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/target-companies?sessionId=${sessionId}`);
+    const data = await response.json();
+
+    if (data.success) {
+      targetCompaniesData = data.data.companies || [];
+      renderTargetCompanies(targetCompaniesData);
+      updateTargetCompaniesStats(data.data.stats);
+    }
+  } catch (error) {
+    console.error('Error loading target companies:', error);
+    showToast('Failed to load target companies', 'error');
+  }
+}
+
+function renderTargetCompanies(companies) {
+  const container = document.getElementById('companies-container');
+
+  if (!companies || companies.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #64748b;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">🏢</div>
+        <h3 style="margin-bottom: 8px;">No target companies yet</h3>
+        <p>Add companies you're interested in working for</p>
+        <button class="btn btn-primary" onclick="showSuggestionsModal()" style="margin-top: 16px;">
+          Get Started with Suggestions
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const priorityLabels = { 1: 'High', 2: 'Med-High', 3: 'Medium', 4: 'Med-Low', 5: 'Low' };
+
+  const html = companies.map(company => `
+    <div class="company-card priority-${company.priority || 3} ${!company.is_active ? 'inactive' : ''}">
+      <div class="company-header">
+        <div class="checkbox-container">
+          <input type="checkbox" id="select-${company.company_id}"
+                 onchange="toggleCompanySelection('${company.company_id}')">
+        </div>
+        <div class="company-info">
+          <div class="company-name">
+            ${company.company_name}
+            <span class="priority-badge p${company.priority || 3}">
+              ${priorityLabels[company.priority || 3]}
+            </span>
+          </div>
+          <div class="company-meta">
+            ${company.industry ? `<span class="company-meta-item">🏭 ${company.industry}</span>` : ''}
+            ${company.total_jobs_found > 0 ? `
+              <span class="company-meta-item">📋 ${company.total_jobs_found} jobs</span>
+            ` : ''}
+            ${company.new_jobs_count > 0 ? `
+              <span class="badge-new">${company.new_jobs_count} new</span>
+            ` : ''}
+            ${company.last_searched_at ? `
+              <span class="company-meta-item">🔍 Last searched: ${new Date(company.last_searched_at).toLocaleDateString()}</span>
+            ` : ''}
+          </div>
+        </div>
+        <div class="company-actions">
+          <button class="btn btn-secondary btn-sm" onclick="searchCompanyJobs('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
+            🔍 Search
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="deleteCompany('${company.company_id}', '${company.company_name.replace(/'/g, "\\'")}')">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+function updateTargetCompaniesStats(stats) {
+  if (!stats) return;
+
+  const statsDiv = document.getElementById('target-companies-stats');
+  if (stats.total > 0) {
+    statsDiv.style.display = 'grid';
+    document.getElementById('stat-total-companies').textContent = stats.total || 0;
+    document.getElementById('stat-new-jobs').textContent = stats.newJobsCount || 0;
+    document.getElementById('stat-high-priority').textContent = stats.totalJobsFound || 0;
+    document.getElementById('stat-total-jobs').textContent = stats.totalJobsFound || 0;
+  } else {
+    statsDiv.style.display = 'none';
+  }
+}
+
+async function showSuggestionsModal() {
+  try {
+    const response = await fetch('/api/target-companies/suggestions');
+    const data = await response.json();
+
+    if (data.success && data.data.suggestions) {
+      renderSuggestionsModal(data.data.suggestions);
+    }
+  } catch (error) {
+    console.error('Error loading suggestions:', error);
+    showToast('Failed to load company suggestions', 'error');
+  }
+}
+
+function renderSuggestionsModal(suggestions) {
+  const modalHtml = `
+    <div class="modal-overlay" id="suggestions-modal" style="display: flex;">
+      <div class="modal large">
+        <button class="modal-close" onclick="closeModalById('suggestions-modal')">&times;</button>
+        <div class="modal-header">
+          <h2>Browse Popular Companies</h2>
+          <p>Select companies you'd like to target for your job search</p>
+        </div>
+        <div class="suggestions-grid">
+          ${suggestions.map((company, idx) => `
+            <div class="suggestion-card" id="suggestion-${idx}" onclick="toggleSuggestionCard(${idx}, '${company.company_name}')">
+              <h4>
+                <input type="checkbox" class="company-checkbox" id="checkbox-${idx}" data-company="${company.company_name}" onclick="event.stopPropagation()">
+                ${company.company_name}
+              </h4>
+              <div class="industry">${company.industry}</div>
+              <div class="description">${company.description || 'Leading company in ' + company.industry}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModalById('suggestions-modal')">Cancel</button>
+          <button class="btn btn-primary" onclick="addSelectedSuggestions()">
+            Add Selected Companies
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existingModal = document.getElementById('suggestions-modal');
+  if (existingModal) existingModal.remove();
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function toggleSuggestionCard(idx, companyName) {
+  const card = document.getElementById(`suggestion-${idx}`);
+  const checkbox = document.getElementById(`checkbox-${idx}`);
+  checkbox.checked = !checkbox.checked;
+  card.classList.toggle('selected');
+}
+
+async function addSelectedSuggestions() {
+  const checkboxes = document.querySelectorAll('.company-checkbox:checked');
+  const companyNames = Array.from(checkboxes).map(cb => cb.dataset.company);
+
+  if (companyNames.length === 0) {
+    showToast('Please select at least one company', 'warning');
+    return;
+  }
+
+  const sessionId = window.sessionId;
+  if (!sessionId) {
+    showToast('Session required. Please upload a resume first.', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/target-companies/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, companyNames })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast(`${data.data.added.length} companies added successfully!`, 'success');
+      closeModalById('suggestions-modal');
+      loadTargetCompanies();
+    } else {
+      showToast(data.error || 'Failed to add companies', 'error');
+    }
+  } catch (error) {
+    console.error('Error adding companies:', error);
+    showToast('Failed to add companies', 'error');
+  }
+}
+
+async function searchCompanyJobs(companyId, companyName) {
+  const sessionId = window.sessionId;
+  if (!sessionId) {
+    showToast('Session required', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/target-companies/${companyId}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.data.searchUrls) {
+      showJobSearchModal(data.data.searchUrls, companyName);
+    } else {
+      showToast('Search failed', 'error');
+    }
+  } catch (error) {
+    console.error('Error searching jobs:', error);
+    showToast('Search failed', 'error');
+  }
+}
+
+function showJobSearchModal(searchUrls, companyName) {
+  const modalHtml = `
+    <div class="modal-overlay" id="search-results-modal" style="display: flex;">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModalById('search-results-modal')">&times;</button>
+        <div class="modal-header">
+          <h2>🔍 Search Jobs at ${companyName}</h2>
+          <p>Click below to search on each platform</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${searchUrls.map(search => `
+            <a href="${search.url}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+              🔗 Search on ${search.platform}
+            </a>
+          `).join('')}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModalById('search-results-modal')">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existingModal = document.getElementById('search-results-modal');
+  if (existingModal) existingModal.remove();
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+async function deleteCompany(companyId, companyName) {
+  if (!confirm(`Remove ${companyName} from your target companies?`)) {
+    return;
+  }
+
+  const sessionId = window.sessionId;
+
+  try {
+    const response = await fetch(`/api/target-companies/${companyId}?sessionId=${sessionId}`, {
+      method: 'DELETE'
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast(data.message, 'success');
+      loadTargetCompanies();
+    } else {
+      showToast(data.error || 'Failed to delete', 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting company:', error);
+    showToast('Failed to delete company', 'error');
+  }
+}
+
+function toggleCompanySelection(companyId) {
+  if (selectedCompanyIds.has(companyId)) {
+    selectedCompanyIds.delete(companyId);
+  } else {
+    selectedCompanyIds.add(companyId);
+  }
+}
+
+function searchSelectedCompanies() {
+  if (selectedCompanyIds.size === 0) {
+    showToast('Please select companies first', 'warning');
+    return;
+  }
+  showToast('Bulk search feature coming soon!', 'info');
+}
+
+function showAddCompanyModal() {
+  showToast('Custom company addition coming soon! Use suggestions for now.', 'info');
+}
+
+function closeModalById(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.remove();
+  }
 }
 
 </script>
