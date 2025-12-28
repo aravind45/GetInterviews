@@ -276,6 +276,7 @@
       <div class="logo">🎯 <span>JobMatch AI</span></div>
       <nav class="main-tabs">
         <div class="main-tab active" data-tab="analyze">🔍 Analyze Resume</div>
+        <div class="main-tab" data-tab="optimizer">📝 Resume Optimizer</div>
         <div class="main-tab" data-tab="search">💼 Find Jobs</div>
         <div class="main-tab" data-tab="networking">👥 Networking</div>
       </nav>
@@ -569,7 +570,51 @@
       </div>
     </section>
 
-    <!-- TAB 3: Networking (ICA) Section -->
+    <!-- TAB 2: RESUME OPTIMIZER -->
+    <section class="section" id="tab-optimizer">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📝 Resume Optimizer</h2>
+          <p class="card-subtitle">Transform your resume for maximum ATS compatibility and interview conversion</p>
+        </div>
+
+        <div class="grid-2" style="margin-top: 24px;">
+          <!-- Upload Resume -->
+          <div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Your Resume</h3>
+            <div class="upload-zone" id="optimizer-upload-zone">
+              <div class="upload-icon">📄</div>
+              <h3>Drop resume or click to browse</h3>
+              <p>PDF, DOC, or DOCX</p>
+              <input type="file" id="optimizer-resume-input" accept=".pdf,.doc,.docx" style="display:none">
+            </div>
+            <div id="optimizer-file-name" style="margin-top: 12px; color: #10b981; display: none;"></div>
+          </div>
+
+          <!-- Job Description -->
+          <div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Target Job Description</h3>
+            <textarea
+              id="optimizer-job-description"
+              placeholder="Paste the job description here..."
+              style="width: 100%; min-height: 200px; padding: 16px; background: #1e1e2e; border: 2px solid #2e2e3e; border-radius: 12px; color: #e2e8f0; font-family: inherit; resize: vertical;"
+            ></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="optimize-resume-btn" style="margin-top: 24px; background: linear-gradient(135deg, #8b5cf6, #3b82f6);" disabled>
+          <span id="optimize-btn-text">🚀 Optimize My Resume</span>
+          <span class="loading" id="optimize-loading" style="display:none"></span>
+        </button>
+      </div>
+
+      <!-- Results Section (Hidden Initially) -->
+      <div id="optimizer-results" style="display: none; margin-top: 24px;">
+        <!-- Will be populated with results -->
+      </div>
+    </section>
+
+    <!-- TAB 3: Find Jobs -->
     <section class="section" id="tab-networking">
       <div class="card">
         <div class="card-header">
