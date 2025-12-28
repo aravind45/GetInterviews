@@ -2702,11 +2702,237 @@ function checkOptimizerReady() {
 
 optimizerJobDesc.addEventListener('input', checkOptimizerReady);
 
-// Optimize button click handler (will add API call in Phase 3)
+// Optimize button click handler
 optimizerBtn.addEventListener('click', async () => {
-  console.log('Optimize button clicked - API call will be added in Phase 3');
-  showToast('Optimization feature coming in next phase!', 'success');
+  if (!optimizerFile) {
+    showToast('Please upload a resume first', 'error');
+    return;
+  }
+
+  const jobDesc = optimizerJobDesc.value.trim();
+  if (jobDesc.length < 50) {
+    showToast('Job description too short (min 50 chars)', 'error');
+    return;
+  }
+
+  // Show loading
+  document.getElementById('optimize-btn-text').textContent = 'Optimizing...';
+  document.getElementById('optimize-loading').style.display = 'inline-block';
+  optimizerBtn.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('resume', optimizerFile);
+    formData.append('jobDescription', jobDesc);
+
+    const response = await fetch('/api/optimize-resume', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Optimization failed');
+    }
+
+    // Display results
+    displayOptimizationResults(data.data);
+    showToast('Resume optimized successfully!', 'success');
+
+  } catch (error) {
+    console.error('Optimization error:', error);
+    showToast(error.message || 'Optimization failed', 'error');
+  } finally {
+    document.getElementById('optimize-btn-text').textContent = '🚀 Optimize My Resume';
+    document.getElementById('optimize-loading').style.display = 'none';
+    checkOptimizerReady(); // Re-enable if inputs still valid
+  }
 });
+
+function displayOptimizationResults(data) {
+  const resultsDiv = document.getElementById('optimizer-results');
+
+  // Build audit score section
+  const auditHtml = data.auditScore ? `
+    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(139, 92, 246, 0.3);">
+      <h3 style="margin-bottom: 16px;">📊 Audit Score: ${data.auditScore.total}</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+        ${(data.auditScore.sections || []).map(section => `
+          <div style="background: #1e1e2e; padding: 12px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-weight: 600; font-size: 0.9rem;">${section.name}</span>
+              <span class="${section.passed === section.total ? 'text-success' : 'text-warning'}">${section.passed}/${section.total}</span>
+            </div>
+            ${section.issues && section.issues.length > 0 ? `
+              <div style="font-size: 0.8rem; color: #ef4444;">
+                ${section.issues.map(issue => `• ${issue}`).join('<br>')}
+              </div>
+            ` : '<div style="font-size: 0.8rem; color: #10b981;">✓ All checks passed</div>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  // Build sections comparison
+  const sectionsHtml = (data.sections || []).map(section => {
+    if (section.bullets) {
+      // Experience section with bullets
+      return `
+        <div class="card" style="margin-top: 24px;">
+          <h3 style="margin-bottom: 16px;">${section.title}</h3>
+          ${section.bullets.map(bullet => `
+            <div class="grid-2" style="gap: 16px; margin-bottom: 16px; padding: 12px; background: #1e1e2e; border-radius: 8px;">
+              <div>
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">BEFORE</div>
+                <div style="color: #e2e8f0; text-decoration: line-through; opacity: 0.7;">${bullet.before}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 4px;">AFTER ✨</div>
+                <div style="color: #10b981;">${bullet.after}</div>
+                ${bullet.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">${bullet.changes.join(', ')}</div>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else if (Array.isArray(section.before)) {
+      // Skills section
+      return `
+        <div class="card" style="margin-top: 24px;">
+          <h3 style="margin-bottom: 16px;">${section.title}</h3>
+          <div class="grid-2" style="gap: 16px;">
+            <div>
+              <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">BEFORE</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${section.before.map(skill => `<span class="tag tag-danger" style="text-decoration: line-through;">${skill}</span>`).join('')}
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 8px;">AFTER ✨</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${section.after.map(skill => `<span class="tag tag-success">${skill}</span>`).join('')}
+              </div>
+              ${section.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">${section.changes.join('<br>')}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Simple text section (Summary, etc.)
+      return `
+        <div class="card" style="margin-top: 24px;">
+          <h3 style="margin-bottom: 16px;">${section.title}</h3>
+          <div class="grid-2" style="gap: 16px;">
+            <div>
+              <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">BEFORE</div>
+              <div style="color: #e2e8f0; text-decoration: line-through; opacity: 0.7;">${section.before}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 8px;">AFTER ✨</div>
+              <div style="color: #10b981;">${section.after}</div>
+              ${section.changes ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">${section.changes.join('<br>')}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
+
+  // Summary card
+  const summaryHtml = data.changesSummary ? `
+    <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.05)); border-color: rgba(16, 185, 129, 0.3); margin-top: 24px;">
+      <h3 style="margin-bottom: 8px;">📝 Changes Summary</h3>
+      <p style="color: #94a3b8;">${data.changesSummary}</p>
+    </div>
+  ` : '';
+
+  // Download buttons
+  const actionsHtml = `
+    <div style="display: flex; gap: 12px; margin-top: 24px;">
+      <button class="btn btn-primary" onclick="downloadOptimizedResume()">
+        📥 Download PDF
+      </button>
+      <button class="btn btn-secondary" onclick="copyOptimizedResume()">
+        📋 Copy Text
+      </button>
+    </div>
+  `;
+
+  resultsDiv.innerHTML = auditHtml + summaryHtml + sectionsHtml + actionsHtml;
+  resultsDiv.style.display = 'block';
+  resultsDiv.scrollIntoView({ behavior: 'smooth' });
+
+  // Store for download/copy
+  window.lastOptimizationData = data;
+}
+
+function downloadOptimizedResume() {
+  if (!window.lastOptimizationData) {
+    showToast('No optimization data available', 'error');
+    return;
+  }
+
+  // Build optimized resume text
+  let resumeText = '';
+  const data = window.lastOptimizationData;
+
+  (data.sections || []).forEach(section => {
+    resumeText += `\n${section.title}\n${'='.repeat(section.title.length)}\n\n`;
+
+    if (section.bullets) {
+      section.bullets.forEach(bullet => {
+        resumeText += `• ${bullet.after}\n`;
+      });
+    } else if (Array.isArray(section.after)) {
+      resumeText += section.after.join(', ') + '\n';
+    } else {
+      resumeText += section.after + '\n';
+    }
+  });
+
+  // Create downloadable text file (PDF generation would need a library)
+  const blob = new Blob([resumeText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'optimized-resume.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('Resume downloaded! (Convert to PDF using Google Docs)', 'success');
+}
+
+function copyOptimizedResume() {
+  if (!window.lastOptimizationData) {
+    showToast('No optimization data available', 'error');
+    return;
+  }
+
+  let resumeText = '';
+  const data = window.lastOptimizationData;
+
+  (data.sections || []).forEach(section => {
+    resumeText += `\n${section.title}\n${'='.repeat(section.title.length)}\n\n`;
+
+    if (section.bullets) {
+      section.bullets.forEach(bullet => {
+        resumeText += `• ${bullet.after}\n`;
+      });
+    } else if (Array.isArray(section.after)) {
+      resumeText += section.after.join(', ') + '\n';
+    } else {
+      resumeText += section.after + '\n';
+    }
+  });
+
+  navigator.clipboard.writeText(resumeText).then(() => {
+    showToast('Optimized resume copied to clipboard!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
 
 </script>
 </body>
