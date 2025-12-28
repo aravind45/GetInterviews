@@ -321,7 +321,48 @@ Return ONLY this JSON:
         }
       }
 
-      if (selectedProvider !== 'claude') {
+      if (selectedProvider === 'openai') {
+        // Use OpenAI
+        console.log('🤖 Calling OpenAI API...');
+
+        if (!process.env.OPENAI_API_KEY) {
+          console.warn('⚠️  OPENAI_API_KEY not set, falling back to Groq');
+          selectedProvider = 'groq';
+        } else {
+          try {
+            const OpenAI = require('openai');
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+            console.log('✓ OpenAI SDK loaded');
+            console.log(`✓ Calling OpenAI with model: ${openaiModel}`);
+
+            const response = await openai.chat.completions.create({
+              model: openaiModel,
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.3,
+              max_tokens: 4000,
+              response_format: { type: 'json_object' }
+            });
+
+            responseText = response.choices[0]?.message?.content || '';
+            modelUsed = openaiModel;
+            console.log('✅ OpenAI response received');
+          } catch (openaiError: any) {
+            console.error('❌ OpenAI API Error:', openaiError.message);
+            if (openaiError.status) {
+              console.error(`   HTTP Status: ${openaiError.status}`);
+            }
+            if (openaiError.error) {
+              console.error(`   Error details:`, JSON.stringify(openaiError.error));
+            }
+            console.log('   Falling back to Groq...');
+            selectedProvider = 'groq';
+          }
+        }
+      }
+
+      if (selectedProvider === 'groq') {
         // Use Groq (default or fallback)
         console.log('🤖 Calling Groq API...');
         const completion = await groq.chat.completions.create({
