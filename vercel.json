@@ -1,29 +1,21 @@
 {
   "version": 2,
-  "name": "resume-diagnosis-engine",
+  "name": "jobmatch-ai",
   "builds": [
     {
-      "src": "dist/index.js",
+      "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "dist/**"
+          "src/public/**"
         ]
       }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "dist/index.js"
-    },
-    {
-      "src": "/health",
-      "dest": "dist/index.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "dist/index.js"
+      "dest": "src/index.ts"
     }
   ],
   "env": {
