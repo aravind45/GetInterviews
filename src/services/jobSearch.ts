@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 // ATS Platforms and their domains
-const ATS_PLATFORMS = {
+export const ATS_PLATFORMS = {
   workday: 'myworkdayjobs.com',
   greenhouse: 'greenhouse.io',
   lever: 'lever.co',
@@ -54,19 +54,19 @@ export interface GeneratedSearch {
  */
 export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch => {
   const { jobTitle, location, locationType, experienceLevel, platforms, excludeKeywords, includeKeywords } = config;
-  
+
   // Build site: operators for ATS platforms
-  const selectedPlatforms = platforms && platforms.length > 0 
-    ? platforms 
+  const selectedPlatforms = platforms && platforms.length > 0
+    ? platforms
     : Object.keys(ATS_PLATFORMS);
-  
+
   const siteOperators = selectedPlatforms
     .map(p => `site:${ATS_PLATFORMS[p as keyof typeof ATS_PLATFORMS] || p}`)
     .join(' OR ');
-  
+
   // Build job title part
   const titlePart = `("${jobTitle}")`;
-  
+
   // Build location part
   let locationPart = '';
   if (locationType === 'remote') {
@@ -83,7 +83,7 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
       locationPart = `(${allKeywords})`;
     }
   }
-  
+
   // Build experience level part
   let experiencePart = '';
   if (experienceLevel) {
@@ -94,25 +94,25 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
       lead: ['lead', 'principal', 'staff', '8+ years'],
       executive: ['director', 'vp', 'vice president', 'head of', 'c-level', 'chief']
     };
-    
+
     if (expKeywords[experienceLevel]) {
       experiencePart = `(${expKeywords[experienceLevel].map(k => `"${k}"`).join(' OR ')})`;
     }
   }
-  
+
   // Build exclusions
   let excludePart = '';
   if (excludeKeywords && excludeKeywords.length > 0) {
     excludePart = excludeKeywords.map(k => `-"${k}"`).join(' ');
   }
-  
+
   // Build inclusions
   let includePart = '';
   if (includeKeywords && includeKeywords.length > 0) {
     includePart = includeKeywords.map(k => `"${k}"`).join(' OR ');
     includePart = `(${includePart})`;
   }
-  
+
   // Combine all parts
   const parts = [
     `(${siteOperators})`,
@@ -122,13 +122,13 @@ export const generateBooleanSearch = (config: JobSearchConfig): GeneratedSearch 
     includePart,
     excludePart
   ].filter(p => p.length > 0);
-  
+
   const booleanString = parts.join(' ');
-  
+
   // Generate Google search URLs
   const baseUrl = 'https://www.google.com/search?q=';
   const encodedQuery = encodeURIComponent(booleanString);
-  
+
   return {
     booleanString,
     searchUrl: `${baseUrl}${encodedQuery}`,
@@ -147,7 +147,7 @@ export const saveJobSearch = async (
   config: JobSearchConfig
 ): Promise<{ id: string; search: GeneratedSearch }> => {
   const search = generateBooleanSearch(config);
-  
+
   const result = await query(
     `INSERT INTO job_searches (
       session_id, diagnosis_id, job_title, location, location_type,
@@ -165,12 +165,12 @@ export const saveJobSearch = async (
       search.searchUrlLast24h
     ]
   );
-  
-  logger.info('Job search saved', { 
-    searchId: result.rows[0].id, 
-    jobTitle: config.jobTitle 
+
+  logger.info('Job search saved', {
+    searchId: result.rows[0].id,
+    jobTitle: config.jobTitle
   });
-  
+
   return {
     id: result.rows[0].id,
     search
@@ -190,7 +190,7 @@ export const getJobSearches = async (sessionId: string): Promise<any[]> => {
      ORDER BY js.created_at DESC`,
     [sessionId]
   );
-  
+
   return result.rows.map(row => ({
     id: row.id,
     jobTitle: row.job_title,
@@ -216,7 +216,7 @@ export const deleteJobSearch = async (searchId: string, sessionId: string): Prom
     `UPDATE job_searches SET is_active = false WHERE id = $1 AND session_id = $2`,
     [searchId, sessionId]
   );
-  return result.rowCount > 0;
+  return (result.rowCount || 0) > 0;
 };
 
 // ============================================
@@ -269,13 +269,13 @@ export const addJobApplication = async (app: JobApplication): Promise<string> =>
       app.referralSource || null
     ]
   );
-  
-  logger.info('Job application added', { 
-    applicationId: result.rows[0].id, 
+
+  logger.info('Job application added', {
+    applicationId: result.rows[0].id,
     company: app.company,
     status: app.status
   });
-  
+
   return result.rows[0].id;
 };
 
@@ -290,24 +290,24 @@ export const updateApplicationStatus = async (
 ): Promise<boolean> => {
   const updates: string[] = ['status = $3', 'updated_at = NOW()'];
   const values: any[] = [applicationId, sessionId, status];
-  
+
   if (status === 'interviewing' || status === 'offer' || status === 'rejected') {
     updates.push(`response_date = COALESCE(response_date, CURRENT_DATE)`);
   }
-  
+
   if (notes !== undefined) {
     values.push(notes);
     updates.push(`notes = $${values.length}`);
   }
-  
+
   const result = await query(
     `UPDATE job_applications 
      SET ${updates.join(', ')}
      WHERE id = $1 AND session_id = $2`,
     values
   );
-  
-  return result.rowCount > 0;
+
+  return (result.rowCount || 0) > 0;
 };
 
 /**
@@ -319,29 +319,29 @@ export const getApplications = async (
 ): Promise<any[]> => {
   let whereClause = 'session_id = $1';
   const values: any[] = [sessionId];
-  
+
   if (filters?.status) {
     values.push(filters.status);
     whereClause += ` AND status = $${values.length}`;
   }
-  
+
   if (filters?.fromDate) {
     values.push(filters.fromDate);
     whereClause += ` AND applied_date >= $${values.length}`;
   }
-  
+
   if (filters?.toDate) {
     values.push(filters.toDate);
     whereClause += ` AND applied_date <= $${values.length}`;
   }
-  
+
   const result = await query(
     `SELECT * FROM job_applications 
      WHERE ${whereClause}
      ORDER BY applied_date DESC, created_at DESC`,
     values
   );
-  
+
   return result.rows.map(row => ({
     id: row.id,
     jobTitle: row.job_title,
@@ -370,7 +370,7 @@ export const getApplicationStats = async (sessionId: string): Promise<any> => {
     `SELECT * FROM application_stats WHERE session_id = $1`,
     [sessionId]
   );
-  
+
   if (result.rows.length === 0) {
     return {
       totalApplications: 0,
@@ -385,7 +385,7 @@ export const getApplicationStats = async (sessionId: string): Promise<any> => {
       interviewRate: 0
     };
   }
-  
+
   const row = result.rows[0];
   return {
     totalApplications: parseInt(row.total_applications),
@@ -411,7 +411,7 @@ export const deleteApplication = async (applicationId: string, sessionId: string
     `DELETE FROM job_applications WHERE id = $1 AND session_id = $2`,
     [applicationId, sessionId]
   );
-  return result.rowCount > 0;
+  return (result.rowCount || 0) > 0;
 };
 
 /**
@@ -423,13 +423,107 @@ export const getQuickSearchUrls = (jobTitle: string): Record<string, string> => 
     location: 'remote',
     locationType: 'remote'
   });
-  
+
   return {
     last24Hours: remoteSearch.searchUrlLast24h,
     lastWeek: remoteSearch.searchUrlLastWeek,
     allTime: remoteSearch.searchUrl
   };
 };
+
+/**
+ * Generate smart job board search URLs
+ */
+export function generateJobSearchLinks(profile: any, customQuery?: string, customLocation?: string) {
+  const title = customQuery || profile.targetTitles?.[0] || profile.currentTitle || 'software engineer';
+  const location = customLocation || profile.location || '';
+  const skills = (profile.hardSkills || []).slice(0, 3).join(' ');
+
+  const encode = encodeURIComponent;
+
+  return {
+    primary: [
+      {
+        name: 'LinkedIn',
+        icon: '💼',
+        url: `https://www.linkedin.com/jobs/search/?keywords=${encode(title)}&location=${encode(location)}`,
+        description: 'Most professional jobs'
+      },
+      {
+        name: 'Indeed',
+        icon: '🔍',
+        url: `https://www.indeed.com/jobs?q=${encode(title)}&l=${encode(location)}`,
+        description: 'Largest job board'
+      },
+      {
+        name: 'Glassdoor',
+        icon: '🚪',
+        url: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encode(title)}&locT=C&locKeyword=${encode(location)}`,
+        description: 'Jobs + salary info'
+      }
+    ],
+    secondary: [
+      {
+        name: 'Google Jobs',
+        icon: '🔎',
+        url: `https://www.google.com/search?q=${encode(title + ' jobs ' + location)}&ibp=htl;jobs`
+      },
+      {
+        name: 'ZipRecruiter',
+        icon: '⚡',
+        url: `https://www.ziprecruiter.com/jobs-search?search=${encode(title)}&location=${encode(location)}`
+      },
+      {
+        name: 'Dice (Tech)',
+        icon: '🎲',
+        url: `https://www.dice.com/jobs?q=${encode(title)}&location=${encode(location)}`
+      },
+      {
+        name: 'Wellfound (Startups)',
+        icon: '🚀',
+        url: `https://wellfound.com/jobs?query=${encode(title)}`
+      }
+    ],
+    bySkill: (profile.hardSkills || []).slice(0, 4).map((skill: string) => ({
+      skill,
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encode(skill + ' ' + (profile.experienceLevel || ''))}&location=${encode(location)}`
+    })),
+    byTitle: (profile.targetTitles || []).slice(0, 4).map((t: string) => ({
+      title: t,
+      linkedin: `https://www.linkedin.com/jobs/search/?keywords=${encode(t)}&location=${encode(location)}`,
+      indeed: `https://www.indeed.com/jobs?q=${encode(t)}&l=${encode(location)}`
+    }))
+  };
+}
+
+/**
+ * Quick match score without AI (fast)
+ */
+export function quickMatchScore(profile: any, job: any) {
+  const jobText = (job.job_title + ' ' + job.job_description + ' ' + (job.job_required_skills || []).join(' ')).toLowerCase();
+  const profileSkills = (profile.hardSkills || []).map((s: string) => s.toLowerCase());
+
+  let matched = 0;
+  let matchingSkills: string[] = [];
+
+  profileSkills.forEach((skill: string) => {
+    if (jobText.includes(skill.toLowerCase())) {
+      matched++;
+      matchingSkills.push(skill);
+    }
+  });
+
+  // Realistic scoring: actual percentage without artificial bonus
+  const rawScore = Math.round((matched / Math.max(profileSkills.length, 1)) * 100);
+  const score = Math.min(95, rawScore);
+
+  return {
+    matchScore: score,
+    matchingSkills,
+    recommendation: score >= 70 ? 'APPLY_NOW' : score >= 50 ? 'WORTH_APPLYING' : 'CUSTOMIZE_FIRST',
+    quickTake: score >= 70 ? 'Strong match for your skills!' : score >= 50 ? 'Good potential - worth applying' : 'Consider customizing your resume'
+  };
+}
 
 export default {
   generateBooleanSearch,
@@ -442,5 +536,7 @@ export default {
   getApplicationStats,
   deleteApplication,
   getQuickSearchUrls,
+  generateJobSearchLinks,
+  quickMatchScore,
   ATS_PLATFORMS
 };

@@ -13,7 +13,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Get companies with statistics
@@ -83,7 +83,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   } = req.body;
 
   if (!sessionId || !companyName) {
-    throw createError(400, 'sessionId and companyName are required');
+    throw createError('sessionId and companyName are required', 400);
   }
 
   // Verify session exists
@@ -93,7 +93,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   );
 
   if (sessionCheck.rows.length === 0) {
-    throw createError(404, 'Session not found or expired');
+    throw createError('Session not found or expired', 404);
   }
 
   // Insert new company
@@ -140,7 +140,7 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, companyNames } = req.body;
 
   if (!sessionId || !Array.isArray(companyNames) || companyNames.length === 0) {
-    throw createError(400, 'sessionId and companyNames array are required');
+    throw createError('sessionId and companyNames array are required', 400);
   }
 
   // Verify session exists
@@ -150,7 +150,7 @@ router.post('/bulk', asyncHandler(async (req: Request, res: Response) => {
   );
 
   if (sessionCheck.rows.length === 0) {
-    throw createError(404, 'Session not found or expired');
+    throw createError('Session not found or expired', 404);
   }
 
   // Get company details from suggestions
@@ -229,7 +229,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   } = req.body;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Build update query dynamically
@@ -279,7 +279,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   }
 
   if (updates.length === 0) {
-    throw createError(400, 'No fields to update');
+    throw createError('No fields to update', 400);
   }
 
   const result = await query(`
@@ -290,7 +290,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   `, values);
 
   if (result.rows.length === 0) {
-    throw createError(404, 'Company not found or access denied');
+    throw createError('Company not found or access denied', 404);
   }
 
   logger.info('Target company updated', {
@@ -317,7 +317,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   const result = await query(`
@@ -327,7 +327,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   `, [id, sessionId]);
 
   if (result.rows.length === 0) {
-    throw createError(404, 'Company not found or access denied');
+    throw createError('Company not found or access denied', 404);
   }
 
   logger.info('Target company deleted', {
@@ -351,7 +351,7 @@ router.get('/:id/jobs', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, includeApplied = 'true' } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   let jobsQuery = `
@@ -390,7 +390,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, searchQuery, roles } = req.body;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   // Get company details
@@ -400,7 +400,7 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
   `, [id, sessionId]);
 
   if (companyResult.rows.length === 0) {
-    throw createError(404, 'Company not found');
+    throw createError('Company not found', 404);
   }
 
   const company = companyResult.rows[0];
@@ -456,6 +456,126 @@ router.post('/:id/search', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 /**
+ * GET /api/target-companies/:id/dashboard
+ * Get comprehensive dashboard for a target company:
+ * - Job Search URLs
+ * - Match Score (AI Analysis)
+ * - LinkedIn Contacts (Referrals)
+ * - Cover Letter Prompt
+ */
+router.get('/:id/dashboard', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { sessionId } = req.query;
+
+  if (!sessionId) {
+    throw createError('sessionId is required', 400);
+  }
+
+  // 1. Get Company Details
+  const companyResult = await query(`
+    SELECT * FROM target_companies
+    WHERE id = $1 AND session_id = $2
+  `, [id, sessionId]);
+
+  if (companyResult.rows.length === 0) {
+    throw createError('Company not found', 404);
+  }
+  const company = companyResult.rows[0];
+
+  // 2. Get User Profile (latest analysis)
+  const profileResult = await query(`
+    SELECT ra.profile_data
+    FROM resume_analyses ra
+    WHERE ra.session_id = $1 AND ra.status = 'completed'
+    ORDER BY ra.created_at DESC
+    LIMIT 1
+  `, [sessionId]);
+
+  const profile = profileResult.rows[0]?.profile_data || {};
+
+  // 3. Generate Search URLs
+  const searchPlatforms = generateSearchUrls(
+    company.company_name,
+    company.target_roles ? company.target_roles.join(' OR ') : (profile.targetTitles?.[0] || ''),
+    company.location_preference || profile.location
+  );
+
+  // 4. Find Key Contacts (Referrals)
+  const contactsResult = await query(`
+    SELECT id, first_name, last_name, position, linkedin_profile_url, ica_category
+    FROM linkedin_contacts
+    WHERE session_id = $1
+    AND LOWER(company) LIKE LOWER($2)
+    ORDER BY 
+      CASE ica_category
+        WHEN 'high_potential' THEN 1
+        WHEN 'medium_potential' THEN 2
+  `, [sessionId, `%${company.company_name}%`]);
+
+  // 5. Calculate Match Score (AI Analysis)
+  // We use the new Company Fit Analysis service
+  const targetRoles = company.target_roles || [];
+
+  let matchAnalysis = {
+    score: 50,
+    status: 'Pending Analysis',
+    notes: 'Could not analyze fit at this time.'
+  };
+
+  try {
+    const { analyzeCompanyFit } = require('../services/aiService');
+    const aiResult = await analyzeCompanyFit(
+      profile,
+      company.company_name,
+      company.industry,
+      targetRoles
+    );
+
+    matchAnalysis = {
+      score: aiResult.score,
+      status: aiResult.status,
+      notes: aiResult.analysis
+    };
+  } catch (err) {
+    logger.error('Failed to get company fit analysis', err);
+    // Fallback to heuristic if AI fails
+    if (targetRoles.some((r: string) => (profile.targetTitles || []).some((pr: string) => pr.toLowerCase().includes(r.toLowerCase())))) {
+      matchAnalysis.score = 70;
+      matchAnalysis.status = 'Potential Match';
+      matchAnalysis.notes = 'Role title match found (AI analysis unavailable).';
+    }
+  }
+
+  // Return Aggregated Data
+  res.json({
+    success: true,
+    data: {
+      company: {
+        id: company.id,
+        name: company.company_name,
+        domain: company.company_domain,
+        industry: company.industry,
+        notes: company.notes
+      },
+      jobSearch: {
+        urls: searchPlatforms,
+        lastSearch: company.last_search_at
+      },
+      matchAnalysis: matchAnalysis,
+      network: {
+        contacts: contactsResult.rows,
+        totalFound: contactsResult.rows.length,
+        action: contactsResult.rows.length > 0 ? "Ask for a referral" : "Connect with employees on LinkedIn"
+      },
+      actions: {
+        generateCoverLetter: true, // Frontend triggers prompt
+        findJobs: true
+      }
+    }
+  });
+}));
+
+/**
  * Helper: Generate search URLs for various platforms
  */
 function generateSearchUrls(
@@ -495,7 +615,7 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
   const { sessionId } = req.query;
 
   if (!sessionId) {
-    throw createError(400, 'sessionId is required');
+    throw createError('sessionId is required', 400);
   }
 
   const stats = await query(`
