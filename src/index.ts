@@ -53,7 +53,8 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-if (process.env.VERCEL !== '1') {
+// Start Server
+if (require.main === module && process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);

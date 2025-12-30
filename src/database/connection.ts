@@ -6,7 +6,7 @@ let pool: Pool | null = null;
 export const connectDatabase = async (): Promise<void> => {
   try {
     const connectionString = process.env.DATABASE_URL;
-    
+
     if (!connectionString) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
@@ -22,15 +22,12 @@ export const connectDatabase = async (): Promise<void> => {
       connectionTimeoutMillis: 10000,
     });
 
-    // Test the connection
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW() as now, current_database() as db');
-    client.release();
 
-    logger.info('PostgreSQL connected successfully', {
-      database: result.rows[0].db,
-      serverTime: result.rows[0].now,
-      ssl: isProduction || isNeonDb
+    // In serverless, we don't eager connect. We just initialize the pool.
+    // The connection will happen on the first query.
+    logger.info('PostgreSQL pool initialized', {
+      ssl: isProduction || isNeonDb,
+      max: 20
     });
   } catch (error) {
     logger.error('Failed to connect to PostgreSQL:', error);
@@ -77,7 +74,7 @@ export const transaction = async <T>(
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> => {
   const client = await getClient();
-  
+
   try {
     await client.query('BEGIN');
     const result = await callback(client);
