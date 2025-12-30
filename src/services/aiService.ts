@@ -1,19 +1,28 @@
 
 import { Groq } from 'groq-sdk';
 import { getProvider, getDefaultProvider } from './llmProvider';
+import { getGroqClient } from './groq';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
+// Helper to get safe client
+const getClient = (): Groq => {
+  const client = getGroqClient();
+  if (!client) {
+    throw new Error('Groq client not initialized. Please configure GROQ_API_KEY.');
+  }
+  return client;
+};
 
 // ============================================================
 // CORE RESUME ANALYSIS
 // ============================================================
 export async function analyzeMatch(
-    resumeText: string,
-    jobDescription: string,
-    provider: string = 'groq'
+  resumeText: string,
+  jobDescription: string,
+  provider: string = 'groq'
 ): Promise<any> {
-    const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews.
+  const prompt = `You are a brutally honest career coach who has reviewed 10,000+ resumes and knows exactly why people don't get interviews.
 
 RESUME:
 ${resumeText.substring(0, 5000)}
@@ -103,38 +112,39 @@ Return ONLY this JSON:
   }
 }`;
 
-    // Get LLM provider (using llmProvider service would be better, but implementing logic here for now)
-    const { getProvider } = require('./llmProvider');
-    const llmService = getProvider(provider);
+  // Get LLM provider (using llmProvider service would be better, but implementing logic here for now)
+  const { getProvider } = require('./llmProvider');
+  const llmService = getProvider(provider);
 
-    // NOTE: In a real refactor we should normalize all providers to accept a generic 'chat' request
-    // or use a unified interface. For now, since index.ts had specific logic per provider 
-    // (Groq vs Claude vs OpenAI), we will stick to Groq here or replicate index.ts logic.
-    // The previous index.ts logic manually instantiated Anthropic/OpenAI SDKs.
+  // NOTE: In a real refactor we should normalize all providers to accept a generic 'chat' request
+  // or use a unified interface. For now, since index.ts had specific logic per provider 
+  // (Groq vs Claude vs OpenAI), we will stick to Groq here or replicate index.ts logic.
+  // The previous index.ts logic manually instantiated Anthropic/OpenAI SDKs.
 
-    // To simplify: We will use the 'Groq' instance we have for defaults, 
-    // or if the user selected Claude/OpenAI, we'd need those SDKs.
-    // Ideally llmProvider should handle this 'analyze' call generically.
-    // But llmProvider.analyzeResume is for the DIAGNOSTIC structure (different JSON).
+  // To simplify: We will use the 'Groq' instance we have for defaults, 
+  // or if the user selected Claude/OpenAI, we'd need those SDKs.
+  // Ideally llmProvider should handle this 'analyze' call generically.
+  // But llmProvider.analyzeResume is for the DIAGNOSTIC structure (different JSON).
 
-    // I will implement the Groq call here as a baseline since it's the default.
-    // Support for others should be added by refactoring llmProvider eventually.
+  // I will implement the Groq call here as a baseline since it's the default.
+  // Support for others should be added by refactoring llmProvider eventually.
 
-    const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 3000
-    });
+  const client = getClient();
+  const completion = await client.chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.3,
+    max_tokens: 3000
+  });
 
-    const responseText = completion.choices[0]?.message?.content || '';
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+  const responseText = completion.choices[0]?.message?.content || '';
+  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
-    if (!jsonMatch) {
-        throw new Error('Failed to analyze');
-    }
+  if (!jsonMatch) {
+    throw new Error('Failed to analyze');
+  }
 
-    return JSON.parse(jsonMatch[0]);
+  return JSON.parse(jsonMatch[0]);
 }
 
 
@@ -142,82 +152,83 @@ Return ONLY this JSON:
 // COMPANY RESEARCH HELPER
 // ============================================================
 export async function researchCompany(companyName: string): Promise<string> {
-    if (!companyName || companyName.length < 2) {
-        return 'No company information available.';
-    }
+  if (!companyName || companyName.length < 2) {
+    return 'No company information available.';
+  }
 
-    try {
-        // Use Tavily API for company research if available
-        const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+  try {
+    // Use Tavily API for company research if available
+    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
-        if (TAVILY_API_KEY) {
-            const searchQuery = `${companyName} company products services recent news 2024 2025`;
-            const response = await fetch('https://api.tavily.com/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    api_key: TAVILY_API_KEY,
-                    query: searchQuery,
-                    search_depth: 'basic',
-                    max_results: 5,
-                    include_answer: true
-                })
-            });
+    if (TAVILY_API_KEY) {
+      const searchQuery = `${companyName} company products services recent news 2024 2025`;
+      const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          api_key: TAVILY_API_KEY,
+          query: searchQuery,
+          search_depth: 'basic',
+          max_results: 5,
+          include_answer: true
+        })
+      });
 
-            if (response.ok) {
-                const data: any = await response.json();
-                let companyInfo = '';
+      if (response.ok) {
+        const data: any = await response.json();
+        let companyInfo = '';
 
-                if (data.answer) {
-                    companyInfo += `Overview: ${data.answer}\n\n`;
-                }
-
-                if (data.results && data.results.length > 0) {
-                    companyInfo += 'Key Information:\n';
-                    data.results.slice(0, 3).forEach((result: any, i: number) => {
-                        companyInfo += `${i + 1}. ${result.title}\n${result.content}\n\n`;
-                    });
-                }
-
-                return companyInfo || 'Limited company information found.';
-            }
+        if (data.answer) {
+          companyInfo += `Overview: ${data.answer}\n\n`;
         }
 
-        // Fallback: Use Groq to generate a research summary based on company name
-        const prompt = `Provide factual, publicly known information about ${companyName}. Include:
+        if (data.results && data.results.length > 0) {
+          companyInfo += 'Key Information:\n';
+          data.results.slice(0, 3).forEach((result: any, i: number) => {
+            companyInfo += `${i + 1}. ${result.title}\n${result.content}\n\n`;
+          });
+        }
+
+        return companyInfo || 'Limited company information found.';
+      }
+    }
+
+    // Fallback: Use Groq to generate a research summary based on company name
+    const prompt = `Provide factual, publicly known information about ${companyName}. Include:
 1. What industry/sector they operate in
 2. Main products or services (if well-known)
 3. Company size/type (startup, enterprise, etc.) if publicly known
 
 Keep it brief (3-4 sentences). ONLY include verified, publicly known facts. If you don't have reliable information, say "Limited public information available about this company."`;
 
-        const completion = await groq.chat.completions.create({
-            model: GROQ_MODEL,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 300
-        });
+    const client = getClient();
+    const completion = await client.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 300
+    });
 
-        return completion.choices[0]?.message?.content?.trim() || 'No additional company information available.';
+    return completion.choices[0]?.message?.content?.trim() || 'No additional company information available.';
 
-    } catch (error) {
-        console.error('Company research error:', error);
-        return 'Unable to retrieve company information.';
-    }
+  } catch (error) {
+    console.error('Company research error:', error);
+    return 'Unable to retrieve company information.';
+  }
 }
 
 // ============================================================
 // COVER LETTER GENERATOR
 // ============================================================
 export async function generateCoverLetter(
-    resumeText: string,
-    jobTitle: string,
-    companyName: string,
-    jobDescription: string
+  resumeText: string,
+  jobTitle: string,
+  companyName: string,
+  jobDescription: string
 ): Promise<string> {
-    const prompt = `Write a compelling cover letter.
+  const prompt = `Write a compelling cover letter.
 
 CANDIDATE:
 ${resumeText.substring(0, 3000)}
@@ -235,26 +246,27 @@ Write a cover letter that:
 
 Return ONLY the cover letter text.`;
 
-    const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 800
-    });
+  const client = getClient();
+  const completion = await client.chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 800
+  });
 
-    return completion.choices[0]?.message?.content?.trim() || '';
+  return completion.choices[0]?.message?.content?.trim() || '';
 }
 
 export async function generateSpecificCoverLetter(
-    profile: any,
-    resumeText: string,
-    jobDescription: string,
-    companyName: string,
-    companyResearch: string,
-    achievements: string[],
-    analysisData?: any
+  profile: any,
+  resumeText: string,
+  jobDescription: string,
+  companyName: string,
+  companyResearch: string,
+  achievements: string[],
+  analysisData?: any
 ): Promise<string> {
-    const prompt = `You are a cover letter expert. Write a professional, factual cover letter using ONLY information provided below.
+  const prompt = `You are a cover letter expert. Write a professional, factual cover letter using ONLY information provided below.
 
 CANDIDATE PROFILE:
 Name: ${profile.name || 'Candidate'}
@@ -319,53 +331,54 @@ CRITICAL RULES - ABSOLUTE REQUIREMENTS:
 
 Return ONLY the cover letter text, no additional commentary.`;
 
-    const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 1500
-    });
+  const client = getClient();
+  const completion = await client.chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 1500
+  });
 
-    return completion.choices[0]?.message?.content?.trim() || '';
+  return completion.choices[0]?.message?.content?.trim() || '';
 }
 
 // ============================================================
 // INTERVIEW PREP GENERATOR
 // ============================================================
 export async function generateInterviewPrep(
-    profile: any,
-    resumeText: string,
-    jobDescription: string,
-    companyName: string,
-    companyResearch: string,
-    achievements: string[],
-    analysisData?: any
+  profile: any,
+  resumeText: string,
+  jobDescription: string,
+  companyName: string,
+  companyResearch: string,
+  achievements: string[],
+  analysisData?: any
 ): Promise<any> {
-    // The 20 standard interview questions
-    const interviewQuestions = [
-        "Tell me about yourself",
-        "What are your strengths / weaknesses?",
-        "What do you like to do outside of work?",
-        "How do you handle difficult situations?",
-        "Do you like working alone or in a team?",
-        "Why did you leave your previous job?",
-        "Why should we hire you?",
-        "What do you know about this company?",
-        "Have you applied anywhere else?",
-        "Where do you see yourself in 5 years?",
-        "What are your salary expectations?",
-        "Describe your ability to work under pressure",
-        "What is the most challenging thing about working with you?",
-        "Talk about your achievements",
-        "How do you handle conflict?",
-        "What was your biggest challenge with your previous boss?",
-        "Why do you want to work with us?",
-        "Why do you think you deserve this job?",
-        "What motivates you?",
-        "Do you have any questions for us?"
-    ];
+  // The 20 standard interview questions
+  const interviewQuestions = [
+    "Tell me about yourself",
+    "What are your strengths / weaknesses?",
+    "What do you like to do outside of work?",
+    "How do you handle difficult situations?",
+    "Do you like working alone or in a team?",
+    "Why did you leave your previous job?",
+    "Why should we hire you?",
+    "What do you know about this company?",
+    "Have you applied anywhere else?",
+    "Where do you see yourself in 5 years?",
+    "What are your salary expectations?",
+    "Describe your ability to work under pressure",
+    "What is the most challenging thing about working with you?",
+    "Talk about your achievements",
+    "How do you handle conflict?",
+    "What was your biggest challenge with your previous boss?",
+    "Why do you want to work with us?",
+    "Why do you think you deserve this job?",
+    "What motivates you?",
+    "Do you have any questions for us?"
+  ];
 
-    const prompt = `You are an interview preparation coach. Generate personalized answers for interview questions using ONLY the information provided below.
+  const prompt = `You are an interview preparation coach. Generate personalized answers for interview questions using ONLY the information provided below.
 
 CANDIDATE PROFILE:
 Name: ${profile.name || 'Candidate'}
@@ -415,31 +428,32 @@ CRITICAL RULES:
 
 Return ONLY the JSON array, no additional text.`;
 
-    const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-        max_tokens: 4000
-    });
+  const client = getClient();
+  const completion = await client.chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.5,
+    max_tokens: 4000
+  });
 
-    const responseText = completion.choices[0]?.message?.content || '';
-    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+  const responseText = completion.choices[0]?.message?.content || '';
+  const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
-    if (!jsonMatch) {
-        throw new Error('Failed to generate interview preparation');
-    }
+  if (!jsonMatch) {
+    throw new Error('Failed to generate interview preparation');
+  }
 
-    return JSON.parse(jsonMatch[0]);
+  return JSON.parse(jsonMatch[0]);
 }
 
 // ============================================================
 // RESUME OPTIMIZER
 // ============================================================
 export async function optimizeResume(
-    resumeText: string,
-    jobDescription: string
+  resumeText: string,
+  jobDescription: string
 ): Promise<any> {
-    const prompt = `You are a professional resume writer and ATS optimization expert.
+  const prompt = `You are a professional resume writer and ATS optimization expert.
 
 CRITICAL INSTRUCTIONS:
 - Read the ACTUAL resume text below carefully
@@ -512,38 +526,39 @@ OUTPUT FORMAT (JSON):
   "changesSummary": "Summary of what was changed"
 }`;
 
-    const completion = await groq.chat.completions.create({
-        messages: [{
-            role: 'system',
-            content: 'You are a professional resume writer. Return ONLY valid JSON, no markdown.'
-        }, {
-            role: 'user',
-            content: prompt
-        }],
-        model: GROQ_MODEL,
-        temperature: 0.3,
-        max_tokens: 4000
-    });
+  const client = getClient();
+  const completion = await client.chat.completions.create({
+    messages: [{
+      role: 'system',
+      content: 'You are a professional resume writer. Return ONLY valid JSON, no markdown.'
+    }, {
+      role: 'user',
+      content: prompt
+    }],
+    model: GROQ_MODEL,
+    temperature: 0.3,
+    max_tokens: 4000
+  });
 
-    const content = completion.choices[0]?.message?.content || '';
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-        throw new Error('Invalid AI response format');
-    }
+  const content = completion.choices[0]?.message?.content || '';
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Invalid AI response format');
+  }
 
-    return JSON.parse(jsonMatch[0]);
+  return JSON.parse(jsonMatch[0]);
 }
 
 // ============================================================
 // COMPANY FIT ANALYSIS
 // ============================================================
 export async function analyzeCompanyFit(
-    profile: any,
-    companyName: string,
-    industry?: string,
-    roleKeywords?: string[]
+  profile: any,
+  companyName: string,
+  industry?: string,
+  roleKeywords?: string[]
 ): Promise<any> {
-    const prompt = `You are a career strategist. Analyze the fit between a candidate and a target company.
+  const prompt = `You are a career strategist. Analyze the fit between a candidate and a target company.
     
     CANDIDATE:
     Title: ${profile.currentTitle || 'Professional'}
@@ -567,35 +582,36 @@ export async function analyzeCompanyFit(
     }
     `;
 
-    try {
-        const { getProvider } = require('./llmProvider');
-        // Use default provider (likely Groq)
-        const completion = await groq.chat.completions.create({
-            model: GROQ_MODEL,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 500
-        });
+  try {
+    const { getProvider } = require('./llmProvider');
+    // Use default provider (likely Groq)
+    const client = getClient();
+    const completion = await client.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 500
+    });
 
-        const content = completion.choices[0]?.message?.content || '';
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const content = completion.choices[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
 
-        if (!jsonMatch) {
-            // Fallback if JSON parsing fails
-            return {
-                score: 50,
-                status: "Analysis Failed",
-                analysis: "Could not retrieve AI analysis at this time."
-            };
-        }
-
-        return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-        console.error('Company fit analysis error:', error);
-        return {
-            score: 0,
-            status: "Error",
-            analysis: "Service unavailable."
-        };
+    if (!jsonMatch) {
+      // Fallback if JSON parsing fails
+      return {
+        score: 50,
+        status: "Analysis Failed",
+        analysis: "Could not retrieve AI analysis at this time."
+      };
     }
+
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('Company fit analysis error:', error);
+    return {
+      score: 0,
+      status: "Error",
+      analysis: "Service unavailable."
+    };
+  }
 }
