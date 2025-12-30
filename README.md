@@ -359,6 +359,8 @@ vercel
    - `TAVILY_API_KEY` (optional)
    - `JSEARCH_API_KEY` (optional)
 
+   > **IMPORTANT**: After adding environment variables in Vercel, you MUST **Redeploy** the project for them to take effect. Go to Deployments -> (three dots) -> Redeploy.
+
 4. **Deploy to production**
 ```bash
 vercel --prod
