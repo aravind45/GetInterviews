@@ -130,21 +130,41 @@ Return ONLY this JSON:
   // Support for others should be added by refactoring llmProvider eventually.
 
   const client = getClient();
-  const completion = await client.chat.completions.create({
-    model: GROQ_MODEL,
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.3,
-    max_tokens: 3000
-  });
+  console.log(`[AI] Sending analysis request to Groq... Resume len: ${resumeText.length}, JD len: ${jobDescription.length}`);
 
-  const responseText = completion.choices[0]?.message?.content || '';
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+  try {
+    const completion = await client.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 3000
+    });
 
-  if (!jsonMatch) {
-    throw new Error('Failed to analyze');
+    const responseText = completion.choices[0]?.message?.content || '';
+    console.log('[AI] Groq response received. Length:', responseText.length);
+    // console.log('[AI] Raw response preview:', responseText.substring(0, 200)); 
+
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) {
+      console.error('[AI] No JSON found in response:', responseText);
+      throw new Error('Failed to parse AI response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log(`[AI] Parsed successfully. Score: ${parsed.overallScore}`);
+
+    // Fallback if score is missing
+    if (parsed.overallScore === undefined) {
+      console.warn('[AI] overallScore missing, defaulting to 0');
+      parsed.overallScore = 0;
+    }
+
+    return parsed;
+  } catch (err: any) {
+    console.error('[AI] Analysis failed:', err.message);
+    throw err;
   }
-
-  return JSON.parse(jsonMatch[0]);
 }
 
 

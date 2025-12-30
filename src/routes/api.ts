@@ -87,6 +87,11 @@ router.post('/extract-profile', upload.single('resume'), async (req, res) => {
 
     // 1. Parse Resume
     const resumeText = await resumeService.parseResume(req.file.path, req.file.mimetype);
+    console.log(`[Parse] Resume parsed. Length: ${resumeText.length} chars`);
+
+    if (resumeText.length < 50) {
+      console.warn('[Parse] Resume text extremely short/empty');
+    }
 
     // 2. Extract Profile
     const profile = await resumeService.extractProfileFromResume(resumeText);

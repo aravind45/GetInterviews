@@ -51,20 +51,18 @@ ${resumeText.substring(0, 6000)}
 }`;
 
     // Get provider
-    const selectedProvider = (providerName as any) || getDefaultProvider();
-    const providerService = getProvider(selectedProvider);
+    // const selectedProvider = (providerName as any) || getDefaultProvider();
+    // const providerService = getProvider(selectedProvider);
 
-    // We need to use the provider's generic chat/analyze method. 
-    // However, llmProvider currently has 'analyzeResume' which is specific for the diagnostic.
-    // We might need to expose a raw 'chat' or 'complete' method in llmProvider or just instantiate Groq here for now 
-    // to match index.ts behavior, OR refactor llmProvider to be more generic.
+    // Use shared Groq client
+    const { getGroqClient } = require('./groq'); // Lazy load to avoid circular dependency if any
+    const groq = getGroqClient();
 
-    // For now, to minimize risk, we will replicate the Groq call here as it was in index.ts
-    // but we should eventually improve llmProvider.
-    // index.ts used Groq directly for this.
+    if (!groq) {
+      console.warn('Groq client not ready for profile extraction');
+      return {};
+    }
 
-    const { Groq } = require('groq-sdk');
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
     const completion = await groq.chat.completions.create({
@@ -77,11 +75,11 @@ ${resumeText.substring(0, 6000)}
     const responseText = completion.choices[0]?.message?.content || '';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
-    if (!jsonMatch) return null;
+    if (!jsonMatch) return {};
 
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     console.error('Profile extraction error:', error);
-    return null;
+    return {};
   }
 }
