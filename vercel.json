@@ -23,7 +23,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "public/index.html"
+      "dest": "dist/index.js"
     }
   ],
   "env": {
